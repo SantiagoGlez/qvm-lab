@@ -1,0 +1,871 @@
+==========================================
+CompaniesMarketCap Historical Financials Audit
+==========================================
+
+Files audited             30
+
+Universe summary
+----------------
+Total rows                450
+Historical years (min/max) 15/15
+Historical years (avg)    15.00
+Companies with all required columns 30/30
+Companies with sanity issues 2/30
+Total sanity issue flags  2
+
+Required columns missing by company count
+-----------------------------------------
+cash                      0
+eps                       0
+net_assets                0
+net_income                0
+operating_margin          0
+pe_ratio                  0
+revenue                   0
+total_assets              0
+total_debt                0
+year                      0
+
+Optional columns missing by company count
+-----------------------------------------
+dividend_yield            2
+price_to_book             0
+price_to_sales            0
+shares_outstanding        0
+total_liabilities         0
+
+Missing value rates across universe
+-----------------------------------
+cash                        25 missing (  5.6%)
+dividend_yield               4 missing (  1.0%)
+eps                         24 missing (  5.3%)
+net_assets                  66 missing ( 14.7%)
+net_income                  11 missing (  2.4%)
+operating_margin            25 missing (  5.6%)
+pe_ratio                    62 missing ( 13.8%)
+price_to_book               32 missing (  7.1%)
+price_to_sales               4 missing (  0.9%)
+revenue                      2 missing (  0.4%)
+shares_outstanding          84 missing ( 18.7%)
+total_assets                25 missing (  5.6%)
+total_debt                  32 missing (  7.1%)
+total_liabilities           25 missing (  5.6%)
+year                         0 missing (  0.0%)
+
+Sanity issue type counts
+------------------------
+dividend_yield_gt_100               1
+operating_margin_out_of_range       1
+
+Per-company summary
+-------------------
+ADBE     years=15 range=2012-2026 available=14 missing=1  sanity=0 
+AMZN     years=15 range=2012-2026 available=14 missing=1  sanity=0 
+ASML     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+COST     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+CRM      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+DPZ      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+GOOGL    years=15 range=2012-2026 available=15 missing=0  sanity=0 
+INTU     years=15 range=2012-2026 available=15 missing=0  sanity=1 
+JNJ      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+KLAC     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+KO       years=15 range=2012-2026 available=15 missing=0  sanity=0 
+LIN      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+LOW      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+LRCX     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+MA       years=15 range=2012-2026 available=15 missing=0  sanity=0 
+MCD      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+MDT      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+META     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+MO       years=15 range=2012-2026 available=15 missing=0  sanity=1 
+MSFT     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+NKE      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+NVDA     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+OXY      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+PFE      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+RHHBY    years=15 range=2012-2026 available=15 missing=0  sanity=0 
+RNO      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+SBUX     years=15 range=2012-2026 available=15 missing=0  sanity=0 
+TXN      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+UNH      years=15 range=2012-2026 available=15 missing=0  sanity=0 
+V        years=15 range=2012-2026 available=15 missing=0  sanity=0 
+
+Detailed reports
+----------------
+[1] ADBE (adbe_adobe_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: dividend_yield
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[2] AMZN (amzn_amazon_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: dividend_yield
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - eps: 0
+    - net_assets: 1
+    - net_income: 1
+    - operating_margin: 1
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 10
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[3] ASML (asml_asml_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[4] COST (cost_costco_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 4
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 5
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[5] CRM (crm_salesforce_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 0
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 0
+    - net_income: 3
+    - operating_margin: 0
+    - pe_ratio: 6
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 1
+    - total_assets: 0
+    - total_debt: 0
+    - total_liabilities: 0
+    - year: 0
+  sanity_issues:
+    - none
+
+[6] DPZ (dpz_dominos-pizza_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 5
+    - net_assets: 15
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 6
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[7] GOOGL (googl_alphabet-google_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 3
+    - price_to_sales: 2
+    - revenue: 0
+    - shares_outstanding: 10
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[8] INTU (intu_intuit_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 4
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 5
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - dividend_yield_gt_100=1
+
+[9] JNJ (jnj_johnson-and-johnson_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[10] KLAC (klac_kla_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 14
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[11] KO (ko_coca-cola_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[12] LIN (lin_linde_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 2
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 3
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[13] LOW (low_lowes-companies_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 0
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 5
+    - net_income: 0
+    - operating_margin: 0
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 0
+    - total_debt: 0
+    - total_liabilities: 0
+    - year: 0
+  sanity_issues:
+    - none
+
+[14] LRCX (lrcx_lam-research_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 12
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[15] MA (ma_mastercard_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 2
+    - total_assets: 1
+    - total_debt: 3
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[16] MCD (mcd_mcdonald_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 11
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[17] MDT (mdt_medtronic_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 0
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 0
+    - net_income: 0
+    - operating_margin: 0
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 0
+    - total_debt: 0
+    - total_liabilities: 0
+    - year: 0
+  sanity_issues:
+    - none
+
+[18] META (meta_meta-platforms_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 2
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[19] MO (mo_altria-group_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 5
+    - net_assets: 6
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 6
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - operating_margin_out_of_range=1
+
+[20] MSFT (msft_microsoft_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[21] NKE (nke_nike_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 0
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 0
+    - net_income: 0
+    - operating_margin: 0
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 3
+    - total_assets: 0
+    - total_debt: 0
+    - total_liabilities: 0
+    - year: 0
+  sanity_issues:
+    - none
+
+[22] NVDA (nvda_nvidia_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 0
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 0
+    - net_income: 0
+    - operating_margin: 0
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 12
+    - total_assets: 0
+    - total_debt: 0
+    - total_liabilities: 0
+    - year: 0
+  sanity_issues:
+    - none
+
+[23] OXY (oxy_occidental-petroleum_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 1
+    - net_income: 3
+    - operating_margin: 1
+    - pe_ratio: 2
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 4
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[24] PFE (pfe_pfizer_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 8
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[25] RHHBY (rhhby_roche_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 1
+    - net_income: 1
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 1
+    - revenue: 1
+    - shares_outstanding: 1
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[26] RNO (rno_renault_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 1
+    - net_assets: 1
+    - net_income: 3
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 1
+    - revenue: 1
+    - shares_outstanding: 1
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[27] SBUX (sbux_starbucks_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 8
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 3
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[28] TXN (txn_texas-instruments_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[29] UNH (unh_united-health_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 0
+    - total_assets: 1
+    - total_debt: 1
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none
+
+[30] V (v_visa_financials.csv)
+  historical_years: 15
+  first_year: 2012
+  last_year: 2026
+  available_columns: cash, dividend_yield, eps, net_assets, net_income, operating_margin, pe_ratio, price_to_book, price_to_sales, revenue, shares_outstanding, total_assets, total_debt, total_liabilities, year
+  missing_columns: -
+  extra_columns: -
+  missing_values:
+    - cash: 1
+    - dividend_yield: 0
+    - eps: 0
+    - net_assets: 1
+    - net_income: 0
+    - operating_margin: 1
+    - pe_ratio: 1
+    - price_to_book: 1
+    - price_to_sales: 0
+    - revenue: 0
+    - shares_outstanding: 3
+    - total_assets: 1
+    - total_debt: 5
+    - total_liabilities: 1
+    - year: 0
+  sanity_issues:
+    - none

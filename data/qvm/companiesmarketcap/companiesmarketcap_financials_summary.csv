@@ -1,0 +1,421 @@
+ticker,name,slug,metric,metric_slug,status,rows
+RHHBY,Roche,roche,revenue,revenue,ok,15
+RHHBY,Roche,roche,eps,eps,ok,15
+RHHBY,Roche,roche,net_income,earnings,ok,15
+RHHBY,Roche,roche,operating_margin,operating-margin,ok,15
+RHHBY,Roche,roche,cash,cash-on-hand,ok,15
+RHHBY,Roche,roche,total_debt,total-debt,ok,15
+RHHBY,Roche,roche,total_assets,total-assets,ok,15
+RHHBY,Roche,roche,net_assets,net-assets,ok,15
+RHHBY,Roche,roche,pe_ratio,pe-ratio,ok,15
+RHHBY,Roche,roche,total_liabilities,total-liabilities,ok,15
+RHHBY,Roche,roche,shares_outstanding,shares-outstanding,ok,15
+RHHBY,Roche,roche,dividend_yield,dividend-yield,ok,15
+RHHBY,Roche,roche,price_to_sales,ps-ratio,ok,15
+RHHBY,Roche,roche,price_to_book,pb-ratio,ok,15
+RNO,Renault SA,renault,revenue,revenue,ok,15
+RNO,Renault SA,renault,eps,eps,ok,15
+RNO,Renault SA,renault,net_income,earnings,ok,15
+RNO,Renault SA,renault,operating_margin,operating-margin,ok,15
+RNO,Renault SA,renault,cash,cash-on-hand,ok,15
+RNO,Renault SA,renault,total_debt,total-debt,ok,15
+RNO,Renault SA,renault,total_assets,total-assets,ok,15
+RNO,Renault SA,renault,net_assets,net-assets,ok,15
+RNO,Renault SA,renault,pe_ratio,pe-ratio,ok,15
+RNO,Renault SA,renault,total_liabilities,total-liabilities,ok,15
+RNO,Renault SA,renault,shares_outstanding,shares-outstanding,ok,15
+RNO,Renault SA,renault,dividend_yield,dividend-yield,ok,15
+RNO,Renault SA,renault,price_to_sales,ps-ratio,ok,15
+RNO,Renault SA,renault,price_to_book,pb-ratio,ok,15
+MCD,McDonald's,mcdonald,revenue,revenue,ok,15
+MCD,McDonald's,mcdonald,eps,eps,ok,15
+MCD,McDonald's,mcdonald,net_income,earnings,ok,15
+MCD,McDonald's,mcdonald,operating_margin,operating-margin,ok,15
+MCD,McDonald's,mcdonald,cash,cash-on-hand,ok,15
+MCD,McDonald's,mcdonald,total_debt,total-debt,ok,15
+MCD,McDonald's,mcdonald,total_assets,total-assets,ok,15
+MCD,McDonald's,mcdonald,net_assets,net-assets,ok,15
+MCD,McDonald's,mcdonald,pe_ratio,pe-ratio,ok,15
+MCD,McDonald's,mcdonald,total_liabilities,total-liabilities,ok,15
+MCD,McDonald's,mcdonald,shares_outstanding,shares-outstanding,ok,15
+MCD,McDonald's,mcdonald,dividend_yield,dividend-yield,ok,15
+MCD,McDonald's,mcdonald,price_to_sales,ps-ratio,ok,15
+MCD,McDonald's,mcdonald,price_to_book,pb-ratio,ok,15
+KO,Coca-Cola,coca-cola,revenue,revenue,ok,15
+KO,Coca-Cola,coca-cola,eps,eps,ok,15
+KO,Coca-Cola,coca-cola,net_income,earnings,ok,15
+KO,Coca-Cola,coca-cola,operating_margin,operating-margin,ok,15
+KO,Coca-Cola,coca-cola,cash,cash-on-hand,ok,15
+KO,Coca-Cola,coca-cola,total_debt,total-debt,ok,15
+KO,Coca-Cola,coca-cola,total_assets,total-assets,ok,15
+KO,Coca-Cola,coca-cola,net_assets,net-assets,ok,15
+KO,Coca-Cola,coca-cola,pe_ratio,pe-ratio,ok,15
+KO,Coca-Cola,coca-cola,total_liabilities,total-liabilities,ok,15
+KO,Coca-Cola,coca-cola,shares_outstanding,shares-outstanding,ok,15
+KO,Coca-Cola,coca-cola,dividend_yield,dividend-yield,ok,15
+KO,Coca-Cola,coca-cola,price_to_sales,ps-ratio,ok,15
+KO,Coca-Cola,coca-cola,price_to_book,pb-ratio,ok,15
+DPZ,Domino's Pizza,dominos-pizza,revenue,revenue,ok,15
+DPZ,Domino's Pizza,dominos-pizza,eps,eps,ok,15
+DPZ,Domino's Pizza,dominos-pizza,net_income,earnings,ok,15
+DPZ,Domino's Pizza,dominos-pizza,operating_margin,operating-margin,ok,15
+DPZ,Domino's Pizza,dominos-pizza,cash,cash-on-hand,ok,15
+DPZ,Domino's Pizza,dominos-pizza,total_debt,total-debt,ok,15
+DPZ,Domino's Pizza,dominos-pizza,total_assets,total-assets,ok,15
+DPZ,Domino's Pizza,dominos-pizza,net_assets,net-assets,ok,15
+DPZ,Domino's Pizza,dominos-pizza,pe_ratio,pe-ratio,ok,15
+DPZ,Domino's Pizza,dominos-pizza,total_liabilities,total-liabilities,ok,15
+DPZ,Domino's Pizza,dominos-pizza,shares_outstanding,shares-outstanding,ok,15
+DPZ,Domino's Pizza,dominos-pizza,dividend_yield,dividend-yield,ok,15
+DPZ,Domino's Pizza,dominos-pizza,price_to_sales,ps-ratio,ok,15
+DPZ,Domino's Pizza,dominos-pizza,price_to_book,pb-ratio,ok,15
+MO,Altria Group,altria-group,revenue,revenue,ok,15
+MO,Altria Group,altria-group,eps,eps,ok,15
+MO,Altria Group,altria-group,net_income,earnings,ok,15
+MO,Altria Group,altria-group,operating_margin,operating-margin,ok,15
+MO,Altria Group,altria-group,cash,cash-on-hand,ok,15
+MO,Altria Group,altria-group,total_debt,total-debt,ok,15
+MO,Altria Group,altria-group,total_assets,total-assets,ok,15
+MO,Altria Group,altria-group,net_assets,net-assets,ok,15
+MO,Altria Group,altria-group,pe_ratio,pe-ratio,ok,15
+MO,Altria Group,altria-group,total_liabilities,total-liabilities,ok,15
+MO,Altria Group,altria-group,shares_outstanding,shares-outstanding,ok,15
+MO,Altria Group,altria-group,dividend_yield,dividend-yield,ok,15
+MO,Altria Group,altria-group,price_to_sales,ps-ratio,ok,15
+MO,Altria Group,altria-group,price_to_book,pb-ratio,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,revenue,revenue,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,eps,eps,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,net_income,earnings,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,operating_margin,operating-margin,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,cash,cash-on-hand,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,total_debt,total-debt,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,total_assets,total-assets,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,net_assets,net-assets,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,pe_ratio,pe-ratio,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,total_liabilities,total-liabilities,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,shares_outstanding,shares-outstanding,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,dividend_yield,dividend-yield,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,price_to_sales,ps-ratio,ok,15
+OXY,Occidental Petroleum,occidental-petroleum,price_to_book,pb-ratio,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,revenue,revenue,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,eps,eps,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,net_income,earnings,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,operating_margin,operating-margin,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,cash,cash-on-hand,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,total_debt,total-debt,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,total_assets,total-assets,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,net_assets,net-assets,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,pe_ratio,pe-ratio,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,total_liabilities,total-liabilities,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,shares_outstanding,shares-outstanding,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,dividend_yield,dividend-yield,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,price_to_sales,ps-ratio,ok,15
+JNJ,Johnson & Johnson,johnson-and-johnson,price_to_book,pb-ratio,ok,15
+V,Visa,visa,revenue,revenue,ok,15
+V,Visa,visa,eps,eps,ok,15
+V,Visa,visa,net_income,earnings,ok,15
+V,Visa,visa,operating_margin,operating-margin,ok,15
+V,Visa,visa,cash,cash-on-hand,ok,15
+V,Visa,visa,total_debt,total-debt,ok,15
+V,Visa,visa,total_assets,total-assets,ok,15
+V,Visa,visa,net_assets,net-assets,ok,15
+V,Visa,visa,pe_ratio,pe-ratio,ok,15
+V,Visa,visa,total_liabilities,total-liabilities,ok,15
+V,Visa,visa,shares_outstanding,shares-outstanding,ok,15
+V,Visa,visa,dividend_yield,dividend-yield,ok,15
+V,Visa,visa,price_to_sales,ps-ratio,ok,15
+V,Visa,visa,price_to_book,pb-ratio,ok,15
+MA,Mastercard,mastercard,revenue,revenue,ok,15
+MA,Mastercard,mastercard,eps,eps,ok,15
+MA,Mastercard,mastercard,net_income,earnings,ok,15
+MA,Mastercard,mastercard,operating_margin,operating-margin,ok,15
+MA,Mastercard,mastercard,cash,cash-on-hand,ok,15
+MA,Mastercard,mastercard,total_debt,total-debt,ok,15
+MA,Mastercard,mastercard,total_assets,total-assets,ok,15
+MA,Mastercard,mastercard,net_assets,net-assets,ok,15
+MA,Mastercard,mastercard,pe_ratio,pe-ratio,ok,15
+MA,Mastercard,mastercard,total_liabilities,total-liabilities,ok,15
+MA,Mastercard,mastercard,shares_outstanding,shares-outstanding,ok,15
+MA,Mastercard,mastercard,dividend_yield,dividend-yield,ok,15
+MA,Mastercard,mastercard,price_to_sales,ps-ratio,ok,15
+MA,Mastercard,mastercard,price_to_book,pb-ratio,ok,15
+MSFT,Microsoft,microsoft,revenue,revenue,ok,15
+MSFT,Microsoft,microsoft,eps,eps,ok,15
+MSFT,Microsoft,microsoft,net_income,earnings,ok,15
+MSFT,Microsoft,microsoft,operating_margin,operating-margin,ok,15
+MSFT,Microsoft,microsoft,cash,cash-on-hand,ok,15
+MSFT,Microsoft,microsoft,total_debt,total-debt,ok,15
+MSFT,Microsoft,microsoft,total_assets,total-assets,ok,15
+MSFT,Microsoft,microsoft,net_assets,net-assets,ok,15
+MSFT,Microsoft,microsoft,pe_ratio,pe-ratio,ok,15
+MSFT,Microsoft,microsoft,total_liabilities,total-liabilities,ok,15
+MSFT,Microsoft,microsoft,shares_outstanding,shares-outstanding,ok,15
+MSFT,Microsoft,microsoft,dividend_yield,dividend-yield,ok,15
+MSFT,Microsoft,microsoft,price_to_sales,ps-ratio,ok,15
+MSFT,Microsoft,microsoft,price_to_book,pb-ratio,ok,15
+GOOGL,Alphabet,alphabet-google,revenue,revenue,ok,15
+GOOGL,Alphabet,alphabet-google,eps,eps,ok,15
+GOOGL,Alphabet,alphabet-google,net_income,earnings,ok,15
+GOOGL,Alphabet,alphabet-google,operating_margin,operating-margin,ok,15
+GOOGL,Alphabet,alphabet-google,cash,cash-on-hand,ok,15
+GOOGL,Alphabet,alphabet-google,total_debt,total-debt,ok,15
+GOOGL,Alphabet,alphabet-google,total_assets,total-assets,ok,15
+GOOGL,Alphabet,alphabet-google,net_assets,net-assets,ok,15
+GOOGL,Alphabet,alphabet-google,pe_ratio,pe-ratio,ok,15
+GOOGL,Alphabet,alphabet-google,total_liabilities,total-liabilities,ok,15
+GOOGL,Alphabet,alphabet-google,shares_outstanding,shares-outstanding,ok,15
+GOOGL,Alphabet,alphabet-google,dividend_yield,dividend-yield,ok,15
+GOOGL,Alphabet,alphabet-google,price_to_sales,ps-ratio,ok,15
+GOOGL,Alphabet,alphabet-google,price_to_book,pb-ratio,ok,15
+ASML,ASML,asml,revenue,revenue,ok,15
+ASML,ASML,asml,eps,eps,ok,15
+ASML,ASML,asml,net_income,earnings,ok,15
+ASML,ASML,asml,operating_margin,operating-margin,ok,15
+ASML,ASML,asml,cash,cash-on-hand,ok,15
+ASML,ASML,asml,total_debt,total-debt,ok,15
+ASML,ASML,asml,total_assets,total-assets,ok,15
+ASML,ASML,asml,net_assets,net-assets,ok,15
+ASML,ASML,asml,pe_ratio,pe-ratio,ok,15
+ASML,ASML,asml,total_liabilities,total-liabilities,ok,15
+ASML,ASML,asml,shares_outstanding,shares-outstanding,ok,15
+ASML,ASML,asml,dividend_yield,dividend-yield,ok,15
+ASML,ASML,asml,price_to_sales,ps-ratio,ok,15
+ASML,ASML,asml,price_to_book,pb-ratio,ok,15
+COST,Costco,costco,revenue,revenue,ok,15
+COST,Costco,costco,eps,eps,ok,15
+COST,Costco,costco,net_income,earnings,ok,15
+COST,Costco,costco,operating_margin,operating-margin,ok,15
+COST,Costco,costco,cash,cash-on-hand,ok,15
+COST,Costco,costco,total_debt,total-debt,ok,15
+COST,Costco,costco,total_assets,total-assets,ok,15
+COST,Costco,costco,net_assets,net-assets,ok,15
+COST,Costco,costco,pe_ratio,pe-ratio,ok,15
+COST,Costco,costco,total_liabilities,total-liabilities,ok,15
+COST,Costco,costco,shares_outstanding,shares-outstanding,ok,15
+COST,Costco,costco,dividend_yield,dividend-yield,ok,15
+COST,Costco,costco,price_to_sales,ps-ratio,ok,15
+COST,Costco,costco,price_to_book,pb-ratio,ok,15
+META,Meta Platforms,meta-platforms,revenue,revenue,ok,15
+META,Meta Platforms,meta-platforms,eps,eps,ok,15
+META,Meta Platforms,meta-platforms,net_income,earnings,ok,15
+META,Meta Platforms,meta-platforms,operating_margin,operating-margin,ok,15
+META,Meta Platforms,meta-platforms,cash,cash-on-hand,ok,15
+META,Meta Platforms,meta-platforms,total_debt,total-debt,ok,15
+META,Meta Platforms,meta-platforms,total_assets,total-assets,ok,15
+META,Meta Platforms,meta-platforms,net_assets,net-assets,ok,15
+META,Meta Platforms,meta-platforms,pe_ratio,pe-ratio,ok,15
+META,Meta Platforms,meta-platforms,total_liabilities,total-liabilities,ok,15
+META,Meta Platforms,meta-platforms,shares_outstanding,shares-outstanding,ok,15
+META,Meta Platforms,meta-platforms,dividend_yield,dividend-yield,ok,15
+META,Meta Platforms,meta-platforms,price_to_sales,ps-ratio,ok,15
+META,Meta Platforms,meta-platforms,price_to_book,pb-ratio,ok,15
+AMZN,Amazon.com,amazon,revenue,revenue,ok,15
+AMZN,Amazon.com,amazon,eps,eps,ok,15
+AMZN,Amazon.com,amazon,net_income,earnings,ok,15
+AMZN,Amazon.com,amazon,operating_margin,operating-margin,ok,15
+AMZN,Amazon.com,amazon,cash,cash-on-hand,ok,15
+AMZN,Amazon.com,amazon,total_debt,total-debt,ok,15
+AMZN,Amazon.com,amazon,total_assets,total-assets,ok,15
+AMZN,Amazon.com,amazon,net_assets,net-assets,ok,15
+AMZN,Amazon.com,amazon,pe_ratio,pe-ratio,ok,15
+AMZN,Amazon.com,amazon,total_liabilities,total-liabilities,ok,15
+AMZN,Amazon.com,amazon,shares_outstanding,shares-outstanding,ok,15
+AMZN,Amazon.com,amazon,dividend_yield,,missing,15
+AMZN,Amazon.com,amazon,price_to_sales,ps-ratio,ok,15
+AMZN,Amazon.com,amazon,price_to_book,pb-ratio,ok,15
+ADBE,Adobe,adobe,revenue,revenue,ok,15
+ADBE,Adobe,adobe,eps,eps,ok,15
+ADBE,Adobe,adobe,net_income,earnings,ok,15
+ADBE,Adobe,adobe,operating_margin,operating-margin,ok,15
+ADBE,Adobe,adobe,cash,cash-on-hand,ok,15
+ADBE,Adobe,adobe,total_debt,total-debt,ok,15
+ADBE,Adobe,adobe,total_assets,total-assets,ok,15
+ADBE,Adobe,adobe,net_assets,net-assets,ok,15
+ADBE,Adobe,adobe,pe_ratio,pe-ratio,ok,15
+ADBE,Adobe,adobe,total_liabilities,total-liabilities,ok,15
+ADBE,Adobe,adobe,shares_outstanding,shares-outstanding,ok,15
+ADBE,Adobe,adobe,dividend_yield,,missing,15
+ADBE,Adobe,adobe,price_to_sales,ps-ratio,ok,15
+ADBE,Adobe,adobe,price_to_book,pb-ratio,ok,15
+CRM,Salesforce,salesforce,revenue,revenue,ok,15
+CRM,Salesforce,salesforce,eps,eps,ok,15
+CRM,Salesforce,salesforce,net_income,earnings,ok,15
+CRM,Salesforce,salesforce,operating_margin,operating-margin,ok,15
+CRM,Salesforce,salesforce,cash,cash-on-hand,ok,15
+CRM,Salesforce,salesforce,total_debt,total-debt,ok,15
+CRM,Salesforce,salesforce,total_assets,total-assets,ok,15
+CRM,Salesforce,salesforce,net_assets,net-assets,ok,15
+CRM,Salesforce,salesforce,pe_ratio,pe-ratio,ok,15
+CRM,Salesforce,salesforce,total_liabilities,total-liabilities,ok,15
+CRM,Salesforce,salesforce,shares_outstanding,shares-outstanding,ok,15
+CRM,Salesforce,salesforce,dividend_yield,dividend-yield,ok,15
+CRM,Salesforce,salesforce,price_to_sales,ps-ratio,ok,15
+CRM,Salesforce,salesforce,price_to_book,pb-ratio,ok,15
+INTU,Intuit,intuit,revenue,revenue,ok,15
+INTU,Intuit,intuit,eps,eps,ok,15
+INTU,Intuit,intuit,net_income,earnings,ok,15
+INTU,Intuit,intuit,operating_margin,operating-margin,ok,15
+INTU,Intuit,intuit,cash,cash-on-hand,ok,15
+INTU,Intuit,intuit,total_debt,total-debt,ok,15
+INTU,Intuit,intuit,total_assets,total-assets,ok,15
+INTU,Intuit,intuit,net_assets,net-assets,ok,15
+INTU,Intuit,intuit,pe_ratio,pe-ratio,ok,15
+INTU,Intuit,intuit,total_liabilities,total-liabilities,ok,15
+INTU,Intuit,intuit,shares_outstanding,shares-outstanding,ok,15
+INTU,Intuit,intuit,dividend_yield,dividend-yield,ok,15
+INTU,Intuit,intuit,price_to_sales,ps-ratio,ok,15
+INTU,Intuit,intuit,price_to_book,pb-ratio,ok,15
+LRCX,Lam Research,lam-research,revenue,revenue,ok,15
+LRCX,Lam Research,lam-research,eps,eps,ok,15
+LRCX,Lam Research,lam-research,net_income,earnings,ok,15
+LRCX,Lam Research,lam-research,operating_margin,operating-margin,ok,15
+LRCX,Lam Research,lam-research,cash,cash-on-hand,ok,15
+LRCX,Lam Research,lam-research,total_debt,total-debt,ok,15
+LRCX,Lam Research,lam-research,total_assets,total-assets,ok,15
+LRCX,Lam Research,lam-research,net_assets,net-assets,ok,15
+LRCX,Lam Research,lam-research,pe_ratio,pe-ratio,ok,15
+LRCX,Lam Research,lam-research,total_liabilities,total-liabilities,ok,15
+LRCX,Lam Research,lam-research,shares_outstanding,shares-outstanding,ok,15
+LRCX,Lam Research,lam-research,dividend_yield,dividend-yield,ok,15
+LRCX,Lam Research,lam-research,price_to_sales,ps-ratio,ok,15
+LRCX,Lam Research,lam-research,price_to_book,pb-ratio,ok,15
+KLAC,KLA,kla,revenue,revenue,ok,15
+KLAC,KLA,kla,eps,eps,ok,15
+KLAC,KLA,kla,net_income,earnings,ok,15
+KLAC,KLA,kla,operating_margin,operating-margin,ok,15
+KLAC,KLA,kla,cash,cash-on-hand,ok,15
+KLAC,KLA,kla,total_debt,total-debt,ok,15
+KLAC,KLA,kla,total_assets,total-assets,ok,15
+KLAC,KLA,kla,net_assets,net-assets,ok,15
+KLAC,KLA,kla,pe_ratio,pe-ratio,ok,15
+KLAC,KLA,kla,total_liabilities,total-liabilities,ok,15
+KLAC,KLA,kla,shares_outstanding,shares-outstanding,ok,15
+KLAC,KLA,kla,dividend_yield,dividend-yield,ok,15
+KLAC,KLA,kla,price_to_sales,ps-ratio,ok,15
+KLAC,KLA,kla,price_to_book,pb-ratio,ok,15
+TXN,Texas Instruments,texas-instruments,revenue,revenue,ok,15
+TXN,Texas Instruments,texas-instruments,eps,eps,ok,15
+TXN,Texas Instruments,texas-instruments,net_income,earnings,ok,15
+TXN,Texas Instruments,texas-instruments,operating_margin,operating-margin,ok,15
+TXN,Texas Instruments,texas-instruments,cash,cash-on-hand,ok,15
+TXN,Texas Instruments,texas-instruments,total_debt,total-debt,ok,15
+TXN,Texas Instruments,texas-instruments,total_assets,total-assets,ok,15
+TXN,Texas Instruments,texas-instruments,net_assets,net-assets,ok,15
+TXN,Texas Instruments,texas-instruments,pe_ratio,pe-ratio,ok,15
+TXN,Texas Instruments,texas-instruments,total_liabilities,total-liabilities,ok,15
+TXN,Texas Instruments,texas-instruments,shares_outstanding,shares-outstanding,ok,15
+TXN,Texas Instruments,texas-instruments,dividend_yield,dividend-yield,ok,15
+TXN,Texas Instruments,texas-instruments,price_to_sales,ps-ratio,ok,15
+TXN,Texas Instruments,texas-instruments,price_to_book,pb-ratio,ok,15
+PFE,Pfizer,pfizer,revenue,revenue,ok,15
+PFE,Pfizer,pfizer,eps,eps,ok,15
+PFE,Pfizer,pfizer,net_income,earnings,ok,15
+PFE,Pfizer,pfizer,operating_margin,operating-margin,ok,15
+PFE,Pfizer,pfizer,cash,cash-on-hand,ok,15
+PFE,Pfizer,pfizer,total_debt,total-debt,ok,15
+PFE,Pfizer,pfizer,total_assets,total-assets,ok,15
+PFE,Pfizer,pfizer,net_assets,net-assets,ok,15
+PFE,Pfizer,pfizer,pe_ratio,pe-ratio,ok,15
+PFE,Pfizer,pfizer,total_liabilities,total-liabilities,ok,15
+PFE,Pfizer,pfizer,shares_outstanding,shares-outstanding,ok,15
+PFE,Pfizer,pfizer,dividend_yield,dividend-yield,ok,15
+PFE,Pfizer,pfizer,price_to_sales,ps-ratio,ok,15
+PFE,Pfizer,pfizer,price_to_book,pb-ratio,ok,15
+MDT,Medtronic,medtronic,revenue,revenue,ok,15
+MDT,Medtronic,medtronic,eps,eps,ok,15
+MDT,Medtronic,medtronic,net_income,earnings,ok,15
+MDT,Medtronic,medtronic,operating_margin,operating-margin,ok,15
+MDT,Medtronic,medtronic,cash,cash-on-hand,ok,15
+MDT,Medtronic,medtronic,total_debt,total-debt,ok,15
+MDT,Medtronic,medtronic,total_assets,total-assets,ok,15
+MDT,Medtronic,medtronic,net_assets,net-assets,ok,15
+MDT,Medtronic,medtronic,pe_ratio,pe-ratio,ok,15
+MDT,Medtronic,medtronic,total_liabilities,total-liabilities,ok,15
+MDT,Medtronic,medtronic,shares_outstanding,shares-outstanding,ok,15
+MDT,Medtronic,medtronic,dividend_yield,dividend-yield,ok,15
+MDT,Medtronic,medtronic,price_to_sales,ps-ratio,ok,15
+MDT,Medtronic,medtronic,price_to_book,pb-ratio,ok,15
+SBUX,Starbucks,starbucks,revenue,revenue,ok,15
+SBUX,Starbucks,starbucks,eps,eps,ok,15
+SBUX,Starbucks,starbucks,net_income,earnings,ok,15
+SBUX,Starbucks,starbucks,operating_margin,operating-margin,ok,15
+SBUX,Starbucks,starbucks,cash,cash-on-hand,ok,15
+SBUX,Starbucks,starbucks,total_debt,total-debt,ok,15
+SBUX,Starbucks,starbucks,total_assets,total-assets,ok,15
+SBUX,Starbucks,starbucks,net_assets,net-assets,ok,15
+SBUX,Starbucks,starbucks,pe_ratio,pe-ratio,ok,15
+SBUX,Starbucks,starbucks,total_liabilities,total-liabilities,ok,15
+SBUX,Starbucks,starbucks,shares_outstanding,shares-outstanding,ok,15
+SBUX,Starbucks,starbucks,dividend_yield,dividend-yield,ok,15
+SBUX,Starbucks,starbucks,price_to_sales,ps-ratio,ok,15
+SBUX,Starbucks,starbucks,price_to_book,pb-ratio,ok,15
+NKE,Nike,nike,revenue,revenue,ok,15
+NKE,Nike,nike,eps,eps,ok,15
+NKE,Nike,nike,net_income,earnings,ok,15
+NKE,Nike,nike,operating_margin,operating-margin,ok,15
+NKE,Nike,nike,cash,cash-on-hand,ok,15
+NKE,Nike,nike,total_debt,total-debt,ok,15
+NKE,Nike,nike,total_assets,total-assets,ok,15
+NKE,Nike,nike,net_assets,net-assets,ok,15
+NKE,Nike,nike,pe_ratio,pe-ratio,ok,15
+NKE,Nike,nike,total_liabilities,total-liabilities,ok,15
+NKE,Nike,nike,shares_outstanding,shares-outstanding,ok,15
+NKE,Nike,nike,dividend_yield,dividend-yield,ok,15
+NKE,Nike,nike,price_to_sales,ps-ratio,ok,15
+NKE,Nike,nike,price_to_book,pb-ratio,ok,15
+LOW,Lowe's,lowes-companies,revenue,revenue,ok,15
+LOW,Lowe's,lowes-companies,eps,eps,ok,15
+LOW,Lowe's,lowes-companies,net_income,earnings,ok,15
+LOW,Lowe's,lowes-companies,operating_margin,operating-margin,ok,15
+LOW,Lowe's,lowes-companies,cash,cash-on-hand,ok,15
+LOW,Lowe's,lowes-companies,total_debt,total-debt,ok,15
+LOW,Lowe's,lowes-companies,total_assets,total-assets,ok,15
+LOW,Lowe's,lowes-companies,net_assets,net-assets,ok,15
+LOW,Lowe's,lowes-companies,pe_ratio,pe-ratio,ok,15
+LOW,Lowe's,lowes-companies,total_liabilities,total-liabilities,ok,15
+LOW,Lowe's,lowes-companies,shares_outstanding,shares-outstanding,ok,15
+LOW,Lowe's,lowes-companies,dividend_yield,dividend-yield,ok,15
+LOW,Lowe's,lowes-companies,price_to_sales,ps-ratio,ok,15
+LOW,Lowe's,lowes-companies,price_to_book,pb-ratio,ok,15
+UNH,UnitedHealth Group,united-health,revenue,revenue,ok,15
+UNH,UnitedHealth Group,united-health,eps,eps,ok,15
+UNH,UnitedHealth Group,united-health,net_income,earnings,ok,15
+UNH,UnitedHealth Group,united-health,operating_margin,operating-margin,ok,15
+UNH,UnitedHealth Group,united-health,cash,cash-on-hand,ok,15
+UNH,UnitedHealth Group,united-health,total_debt,total-debt,ok,15
+UNH,UnitedHealth Group,united-health,total_assets,total-assets,ok,15
+UNH,UnitedHealth Group,united-health,net_assets,net-assets,ok,15
+UNH,UnitedHealth Group,united-health,pe_ratio,pe-ratio,ok,15
+UNH,UnitedHealth Group,united-health,total_liabilities,total-liabilities,ok,15
+UNH,UnitedHealth Group,united-health,shares_outstanding,shares-outstanding,ok,15
+UNH,UnitedHealth Group,united-health,dividend_yield,dividend-yield,ok,15
+UNH,UnitedHealth Group,united-health,price_to_sales,ps-ratio,ok,15
+UNH,UnitedHealth Group,united-health,price_to_book,pb-ratio,ok,15
+LIN,Linde,linde,revenue,revenue,ok,15
+LIN,Linde,linde,eps,eps,ok,15
+LIN,Linde,linde,net_income,earnings,ok,15
+LIN,Linde,linde,operating_margin,operating-margin,ok,15
+LIN,Linde,linde,cash,cash-on-hand,ok,15
+LIN,Linde,linde,total_debt,total-debt,ok,15
+LIN,Linde,linde,total_assets,total-assets,ok,15
+LIN,Linde,linde,net_assets,net-assets,ok,15
+LIN,Linde,linde,pe_ratio,pe-ratio,ok,15
+LIN,Linde,linde,total_liabilities,total-liabilities,ok,15
+LIN,Linde,linde,shares_outstanding,shares-outstanding,ok,15
+LIN,Linde,linde,dividend_yield,dividend-yield,ok,15
+LIN,Linde,linde,price_to_sales,ps-ratio,ok,15
+LIN,Linde,linde,price_to_book,pb-ratio,ok,15
+NVDA,NVIDIA,nvidia,revenue,revenue,ok,15
+NVDA,NVIDIA,nvidia,eps,eps,ok,15
+NVDA,NVIDIA,nvidia,net_income,earnings,ok,15
+NVDA,NVIDIA,nvidia,operating_margin,operating-margin,ok,15
+NVDA,NVIDIA,nvidia,cash,cash-on-hand,ok,15
+NVDA,NVIDIA,nvidia,total_debt,total-debt,ok,15
+NVDA,NVIDIA,nvidia,total_assets,total-assets,ok,15
+NVDA,NVIDIA,nvidia,net_assets,net-assets,ok,15
+NVDA,NVIDIA,nvidia,pe_ratio,pe-ratio,ok,15
+NVDA,NVIDIA,nvidia,total_liabilities,total-liabilities,ok,15
+NVDA,NVIDIA,nvidia,shares_outstanding,shares-outstanding,ok,15
+NVDA,NVIDIA,nvidia,dividend_yield,dividend-yield,ok,15
+NVDA,NVIDIA,nvidia,price_to_sales,ps-ratio,ok,15
+NVDA,NVIDIA,nvidia,price_to_book,pb-ratio,ok,15
