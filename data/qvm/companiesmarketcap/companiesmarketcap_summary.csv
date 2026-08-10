@@ -1,0 +1,181 @@
+ticker,name,slug,metric,status,rows
+RHHBY,Roche,roche,revenue,skipped,28
+RHHBY,Roche,roche,net_income,skipped,28
+RHHBY,Roche,roche,pe_ratio,skipped,28
+RHHBY,Roche,roche,cash,skipped,28
+RHHBY,Roche,roche,total_assets,skipped,28
+RHHBY,Roche,roche,dividend_yield,skipped,28
+RNO,Renault SA,renault,revenue,skipped,24
+RNO,Renault SA,renault,net_income,skipped,24
+RNO,Renault SA,renault,pe_ratio,skipped,24
+RNO,Renault SA,renault,cash,skipped,24
+RNO,Renault SA,renault,total_assets,skipped,24
+RNO,Renault SA,renault,dividend_yield,skipped,24
+MCD,McDonald's,mcdonald,revenue,skipped,31
+MCD,McDonald's,mcdonald,net_income,skipped,31
+MCD,McDonald's,mcdonald,pe_ratio,skipped,31
+MCD,McDonald's,mcdonald,cash,skipped,31
+MCD,McDonald's,mcdonald,total_assets,skipped,31
+MCD,McDonald's,mcdonald,dividend_yield,skipped,31
+KO,Coca-Cola,coca-cola,revenue,skipped,31
+KO,Coca-Cola,coca-cola,net_income,skipped,31
+KO,Coca-Cola,coca-cola,pe_ratio,skipped,31
+KO,Coca-Cola,coca-cola,cash,skipped,31
+KO,Coca-Cola,coca-cola,total_assets,skipped,31
+KO,Coca-Cola,coca-cola,dividend_yield,skipped,31
+DPZ,Domino's Pizza,dominos-pizza,revenue,skipped,27
+DPZ,Domino's Pizza,dominos-pizza,net_income,skipped,27
+DPZ,Domino's Pizza,dominos-pizza,pe_ratio,skipped,27
+DPZ,Domino's Pizza,dominos-pizza,cash,skipped,27
+DPZ,Domino's Pizza,dominos-pizza,total_assets,skipped,27
+DPZ,Domino's Pizza,dominos-pizza,dividend_yield,skipped,27
+MO,Altria Group,altria-group,revenue,skipped,31
+MO,Altria Group,altria-group,net_income,skipped,31
+MO,Altria Group,altria-group,pe_ratio,skipped,31
+MO,Altria Group,altria-group,cash,skipped,31
+MO,Altria Group,altria-group,total_assets,skipped,31
+MO,Altria Group,altria-group,dividend_yield,skipped,31
+OXY,Occidental Petroleum,occidental-petroleum,revenue,skipped,31
+OXY,Occidental Petroleum,occidental-petroleum,net_income,skipped,31
+OXY,Occidental Petroleum,occidental-petroleum,pe_ratio,skipped,31
+OXY,Occidental Petroleum,occidental-petroleum,cash,skipped,31
+OXY,Occidental Petroleum,occidental-petroleum,total_assets,skipped,31
+OXY,Occidental Petroleum,occidental-petroleum,dividend_yield,skipped,31
+JNJ,Johnson & Johnson,johnson-and-johnson,revenue,skipped,31
+JNJ,Johnson & Johnson,johnson-and-johnson,net_income,skipped,31
+JNJ,Johnson & Johnson,johnson-and-johnson,pe_ratio,skipped,31
+JNJ,Johnson & Johnson,johnson-and-johnson,cash,skipped,31
+JNJ,Johnson & Johnson,johnson-and-johnson,total_assets,skipped,31
+JNJ,Johnson & Johnson,johnson-and-johnson,dividend_yield,skipped,31
+V,Visa,visa,revenue,skipped,22
+V,Visa,visa,net_income,skipped,22
+V,Visa,visa,pe_ratio,skipped,22
+V,Visa,visa,cash,skipped,22
+V,Visa,visa,total_assets,skipped,22
+V,Visa,visa,dividend_yield,skipped,22
+MA,Mastercard,mastercard,revenue,skipped,26
+MA,Mastercard,mastercard,net_income,skipped,26
+MA,Mastercard,mastercard,pe_ratio,skipped,26
+MA,Mastercard,mastercard,cash,skipped,26
+MA,Mastercard,mastercard,total_assets,skipped,26
+MA,Mastercard,mastercard,dividend_yield,skipped,26
+MSFT,Microsoft,microsoft,revenue,skipped,31
+MSFT,Microsoft,microsoft,net_income,skipped,31
+MSFT,Microsoft,microsoft,pe_ratio,skipped,31
+MSFT,Microsoft,microsoft,cash,skipped,31
+MSFT,Microsoft,microsoft,total_assets,skipped,31
+MSFT,Microsoft,microsoft,dividend_yield,skipped,31
+GOOGL,Alphabet,alphabet-google,revenue,skipped,25
+GOOGL,Alphabet,alphabet-google,net_income,skipped,25
+GOOGL,Alphabet,alphabet-google,pe_ratio,skipped,25
+GOOGL,Alphabet,alphabet-google,cash,skipped,25
+GOOGL,Alphabet,alphabet-google,total_assets,skipped,25
+GOOGL,Alphabet,alphabet-google,dividend_yield,skipped,25
+ASML,ASML,asml,revenue,skipped,31
+ASML,ASML,asml,net_income,skipped,31
+ASML,ASML,asml,pe_ratio,skipped,31
+ASML,ASML,asml,cash,skipped,31
+ASML,ASML,asml,total_assets,skipped,31
+ASML,ASML,asml,dividend_yield,skipped,31
+COST,Costco,costco,revenue,skipped,31
+COST,Costco,costco,net_income,skipped,31
+COST,Costco,costco,pe_ratio,skipped,31
+COST,Costco,costco,cash,skipped,31
+COST,Costco,costco,total_assets,skipped,31
+COST,Costco,costco,dividend_yield,skipped,31
+META,Meta Platforms,meta-platforms,revenue,skipped,17
+META,Meta Platforms,meta-platforms,net_income,skipped,17
+META,Meta Platforms,meta-platforms,pe_ratio,skipped,17
+META,Meta Platforms,meta-platforms,cash,skipped,17
+META,Meta Platforms,meta-platforms,total_assets,skipped,17
+META,Meta Platforms,meta-platforms,dividend_yield,skipped,17
+AMZN,Amazon.com,amazon,revenue,skipped,31
+AMZN,Amazon.com,amazon,net_income,skipped,31
+AMZN,Amazon.com,amazon,pe_ratio,skipped,31
+AMZN,Amazon.com,amazon,cash,skipped,31
+AMZN,Amazon.com,amazon,total_assets,skipped,31
+AMZN,Amazon.com,amazon,dividend_yield,skipped,31
+ADBE,Adobe,adobe,revenue,skipped,31
+ADBE,Adobe,adobe,net_income,skipped,31
+ADBE,Adobe,adobe,pe_ratio,skipped,31
+ADBE,Adobe,adobe,cash,skipped,31
+ADBE,Adobe,adobe,total_assets,skipped,31
+ADBE,Adobe,adobe,dividend_yield,skipped,31
+CRM,Salesforce,salesforce,revenue,skipped,26
+CRM,Salesforce,salesforce,net_income,skipped,26
+CRM,Salesforce,salesforce,pe_ratio,skipped,26
+CRM,Salesforce,salesforce,cash,skipped,26
+CRM,Salesforce,salesforce,total_assets,skipped,26
+CRM,Salesforce,salesforce,dividend_yield,skipped,26
+INTU,Intuit,intuit,revenue,skipped,31
+INTU,Intuit,intuit,net_income,skipped,31
+INTU,Intuit,intuit,pe_ratio,skipped,31
+INTU,Intuit,intuit,cash,skipped,31
+INTU,Intuit,intuit,total_assets,skipped,31
+INTU,Intuit,intuit,dividend_yield,skipped,31
+LRCX,Lam Research,lam-research,revenue,skipped,31
+LRCX,Lam Research,lam-research,net_income,skipped,31
+LRCX,Lam Research,lam-research,pe_ratio,skipped,31
+LRCX,Lam Research,lam-research,cash,skipped,31
+LRCX,Lam Research,lam-research,total_assets,skipped,31
+LRCX,Lam Research,lam-research,dividend_yield,skipped,31
+KLAC,KLA,kla,revenue,skipped,31
+KLAC,KLA,kla,net_income,skipped,31
+KLAC,KLA,kla,pe_ratio,skipped,31
+KLAC,KLA,kla,cash,skipped,31
+KLAC,KLA,kla,total_assets,skipped,31
+KLAC,KLA,kla,dividend_yield,skipped,31
+TXN,Texas Instruments,texas-instruments,revenue,skipped,31
+TXN,Texas Instruments,texas-instruments,net_income,skipped,31
+TXN,Texas Instruments,texas-instruments,pe_ratio,skipped,31
+TXN,Texas Instruments,texas-instruments,cash,skipped,31
+TXN,Texas Instruments,texas-instruments,total_assets,skipped,31
+TXN,Texas Instruments,texas-instruments,dividend_yield,skipped,31
+PFE,Pfizer,pfizer,revenue,skipped,31
+PFE,Pfizer,pfizer,net_income,skipped,31
+PFE,Pfizer,pfizer,pe_ratio,skipped,31
+PFE,Pfizer,pfizer,cash,skipped,31
+PFE,Pfizer,pfizer,total_assets,skipped,31
+PFE,Pfizer,pfizer,dividend_yield,skipped,31
+MDT,Medtronic,medtronic,revenue,skipped,31
+MDT,Medtronic,medtronic,net_income,skipped,31
+MDT,Medtronic,medtronic,pe_ratio,skipped,31
+MDT,Medtronic,medtronic,cash,skipped,31
+MDT,Medtronic,medtronic,total_assets,skipped,31
+MDT,Medtronic,medtronic,dividend_yield,skipped,31
+SBUX,Starbucks,starbucks,revenue,skipped,31
+SBUX,Starbucks,starbucks,net_income,skipped,31
+SBUX,Starbucks,starbucks,pe_ratio,skipped,31
+SBUX,Starbucks,starbucks,cash,skipped,31
+SBUX,Starbucks,starbucks,total_assets,skipped,31
+SBUX,Starbucks,starbucks,dividend_yield,skipped,31
+NKE,Nike,nike,revenue,skipped,31
+NKE,Nike,nike,net_income,skipped,31
+NKE,Nike,nike,pe_ratio,skipped,31
+NKE,Nike,nike,cash,skipped,31
+NKE,Nike,nike,total_assets,skipped,31
+NKE,Nike,nike,dividend_yield,skipped,31
+LOW,Lowe's,lowes-companies,revenue,skipped,31
+LOW,Lowe's,lowes-companies,net_income,skipped,31
+LOW,Lowe's,lowes-companies,pe_ratio,skipped,31
+LOW,Lowe's,lowes-companies,cash,skipped,31
+LOW,Lowe's,lowes-companies,total_assets,skipped,31
+LOW,Lowe's,lowes-companies,dividend_yield,skipped,31
+UNH,UnitedHealth Group,united-health,revenue,skipped,31
+UNH,UnitedHealth Group,united-health,net_income,skipped,31
+UNH,UnitedHealth Group,united-health,pe_ratio,skipped,31
+UNH,UnitedHealth Group,united-health,cash,skipped,31
+UNH,UnitedHealth Group,united-health,total_assets,skipped,31
+UNH,UnitedHealth Group,united-health,dividend_yield,skipped,31
+LIN,Linde,linde,revenue,skipped,31
+LIN,Linde,linde,net_income,skipped,31
+LIN,Linde,linde,pe_ratio,skipped,31
+LIN,Linde,linde,cash,skipped,31
+LIN,Linde,linde,total_assets,skipped,31
+LIN,Linde,linde,dividend_yield,skipped,31
+NVDA,NVIDIA,nvidia,revenue,skipped,28
+NVDA,NVIDIA,nvidia,net_income,skipped,28
+NVDA,NVIDIA,nvidia,pe_ratio,skipped,28
+NVDA,NVIDIA,nvidia,cash,skipped,28
+NVDA,NVIDIA,nvidia,total_assets,skipped,28
+NVDA,NVIDIA,nvidia,dividend_yield,skipped,28

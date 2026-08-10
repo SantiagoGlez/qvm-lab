@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+.venv/
+venv/
+.env
+.envrc
+*.sqlite3
+
+# project data and large files
+data/cache/
+data/qvm/results.csv
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Misc
+*.egg-info/
+.DS_Store

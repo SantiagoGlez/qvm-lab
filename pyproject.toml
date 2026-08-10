@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qvm-lab"
+version = "0.1.0"
+description = "Standalone QVM research and portfolio decision engine"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "ib-insync>=0.9.86",
+    "jupyterlab>=4.6.1",
+    "matplotlib>=3.11.0",
+    "mplfinance>=0.12.10b0",
+    "numpy>=2.5.0",
+    "pandas>=3.0.3",
+    "plotly>=6.8.0",
+    "psycopg>=3.3.4",
+    "pydantic>=2.13.4",
+    "pytest>=9.1.1",
+    "ruff>=0.15.20",
+    "scipy>=1.18.0",
+    "sqlalchemy>=2.0.51",
+    "typer>=0.27.0",
+    "yfinance>=1.5.1",
+    "simfin>=0.20.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.2",
+    "lxml>=4.9.4",
+    "html5lib>=1.1",
+]
+
+[project.scripts]
+qvm-company = "qvm_lab.cli:company_cli"
+qvm-universe = "qvm_lab.cli:universe_cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
