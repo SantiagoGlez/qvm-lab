@@ -178,7 +178,7 @@ def _merge_metric(base_df: pd.DataFrame | None, metric_df: pd.DataFrame) -> pd.D
 def build_financials_dataset(
     scraper: CompaniesMarketCapFinancialsScraper,
     company_slug: str,
-    max_years: int = 15,
+    max_years: int | None = None,
 ) -> tuple[pd.DataFrame | None, dict[str, str | None]]:
     discovered_slugs = scraper.discover_metric_slugs(company_slug)
     metric_sources: dict[str, str | None] = {column: None for column in METRIC_SLUG_CANDIDATES}
@@ -211,7 +211,9 @@ def build_financials_dataset(
     dataset["year"] = pd.to_numeric(dataset["year"], errors="coerce")
     dataset = dataset.dropna(subset=["year"])
     dataset["year"] = dataset["year"].astype(int)
-    dataset = dataset.sort_values("year", ascending=False).drop_duplicates(subset=["year"]).head(max_years)
+    dataset = dataset.sort_values("year", ascending=False).drop_duplicates(subset=["year"])
+    if max_years is not None:
+        dataset = dataset.head(max_years)
     dataset = dataset.sort_values("year", ascending=False).reset_index(drop=True)
 
     # Always expose required schema. Missing values stay blank in CSV.
@@ -242,7 +244,7 @@ def main() -> None:
         out_path = output_dir / f"{ticker.lower()}_{company_slug}_financials.csv"
 
         print(f"Building financial history for {ticker} / {name} -> slug={company_slug}...")
-        dataset, metric_sources = build_financials_dataset(scraper, company_slug, max_years=15)
+        dataset, metric_sources = build_financials_dataset(scraper, company_slug)
 
         downloaded_metrics = sorted([metric for metric, source in metric_sources.items() if source])
         missing_metrics = sorted([metric for metric, source in metric_sources.items() if not source])
