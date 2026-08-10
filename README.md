@@ -51,6 +51,20 @@ Run universe analysis (reads `data/qvm/companies.csv`, writes `data/qvm/results.
 uv run qvm-universe
 ```
 
+Audit a downloaded CompaniesMarketCap valuation file:
+
+```bash
+uv run python scripts/audit_marketcap.py RNO
+```
+
+Audit all valuation CSV files in the CompaniesMarketCap data directory and save the aggregated report to a file:
+
+```bash
+uv run python scripts/audit_marketcap.py --bulk --output data/qvm/companiesmarketcap_audit.txt
+```
+
+The single-ticker mode inspects the CSV file matching `data/qvm/companiesmarketcap/{ticker}_*_valuation.csv` and prints a concise report to the terminal. The bulk mode scans all valuation files in the directory, prints a summary to the terminal, and writes the same report content to the output file when `--output` is provided.
+
 Or run scripts directly:
 
 ```bash

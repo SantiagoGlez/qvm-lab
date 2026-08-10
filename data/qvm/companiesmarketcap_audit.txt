@@ -1,0 +1,137 @@
+=========================
+CompaniesMarketCap Audit
+=========================
+
+Files audited        33
+
+Ticker              ADBE
+Rows                31
+Confidence          HIGH
+
+Ticker              ALPHABET-GOOGLE
+Rows                25
+Confidence          HIGH
+
+Ticker              AMZN
+Rows                31
+Confidence          MEDIUM
+
+Ticker              APPLE
+Rows                31
+Confidence          HIGH
+
+Ticker              ASML
+Rows                31
+Confidence          HIGH
+
+Ticker              COST
+Rows                31
+Confidence          MEDIUM
+
+Ticker              CRM
+Rows                26
+Confidence          LOW
+
+Ticker              DPZ
+Rows                27
+Confidence          MEDIUM
+
+Ticker              GOOGL
+Rows                25
+Confidence          HIGH
+
+Ticker              INTU
+Rows                31
+Confidence          MEDIUM
+
+Ticker              JNJ
+Rows                31
+Confidence          HIGH
+
+Ticker              KLAC
+Rows                31
+Confidence          HIGH
+
+Ticker              KO
+Rows                31
+Confidence          HIGH
+
+Ticker              LIN
+Rows                31
+Confidence          HIGH
+
+Ticker              LOW
+Rows                31
+Confidence          HIGH
+
+Ticker              LRCX
+Rows                31
+Confidence          HIGH
+
+Ticker              MA
+Rows                26
+Confidence          HIGH
+
+Ticker              MCD
+Rows                31
+Confidence          HIGH
+
+Ticker              MDT
+Rows                31
+Confidence          HIGH
+
+Ticker              META
+Rows                17
+Confidence          HIGH
+
+Ticker              MO
+Rows                31
+Confidence          MEDIUM
+
+Ticker              MSFT
+Rows                31
+Confidence          HIGH
+
+Ticker              NKE
+Rows                31
+Confidence          HIGH
+
+Ticker              NOVO-NORDISK
+Rows                31
+Confidence          MEDIUM
+
+Ticker              NVDA
+Rows                28
+Confidence          HIGH
+
+Ticker              OXY
+Rows                31
+Confidence          MEDIUM
+
+Ticker              PFE
+Rows                31
+Confidence          HIGH
+
+Ticker              RHHBY
+Rows                28
+Confidence          HIGH
+
+Ticker              RNO
+Rows                24
+Confidence          MEDIUM
+
+Ticker              SBUX
+Rows                31
+Confidence          HIGH
+
+Ticker              TXN
+Rows                31
+Confidence          HIGH
+
+Ticker              UNH
+Rows                31
+Confidence          HIGH
+
+Ticker              V
+Rows                22
+Confidence          HIGH
