@@ -36,6 +36,12 @@ class AnalysisResult(BaseModel):
 
     reason: str = ""
 
+    coverage: float = 0.0
+
+    missing_metrics: list[str] = Field(default_factory=list)
+
+    eligible: bool = False
+
     valuation_band: str | None = None
 
 class ValuationFacts(BaseModel):

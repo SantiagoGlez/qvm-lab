@@ -176,6 +176,10 @@ def print_report(company: Company) -> None:
     print()
 
     print(f"Quality              {company.quality.score:5.1f}")
+    print(f"  Coverage            {company.quality.coverage:.0%}")
+    if company.quality.coverage < 1.0:
+        missing = ", ".join(company.quality.missing_metrics) if company.quality.missing_metrics else "None"
+        print(f"  Missing             {missing}")
     print()
     print("Evaluate the long-term quality and valuation of the business.")
     print()

@@ -75,7 +75,7 @@ src/
 - `YearlyScoringPipeline`
   - Scores all companies for one formation year using production services.
 - `EligibilityFilter`
-  - Applies minimum quality coverage (75%) and minimum PE observations (5).
+  - Applies minimum quality coverage (70%) and minimum PE observations (5).
 - `RankingEngine`
   - Reuses existing ranking logic for eligible companies.
 - `PortfolioConstructor`

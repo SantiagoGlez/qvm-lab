@@ -2,26 +2,27 @@
 
 ## Status Tracking
 - Status legend: Not Started | In Progress | Done | Blocked
-- Last updated: YYYY-MM-DD
+- Last updated: 2026-08-11
+- Current milestone: Initial slice is scoped to BT-01 to BT-05 only; momentum and later portfolio/reporting work remain deferred.
 
 | Task | Status | Owner | Notes |
 |---|---|---|---|
-| BT-01 | Not Started | | |
-| BT-02 | Not Started | | |
-| BT-03 | Not Started | | |
-| BT-04 | Not Started | | |
-| BT-05 | Not Started | | |
-| BT-06 | Not Started | | |
-| BT-07 | Not Started | | |
-| BT-08 | Not Started | | |
-| BT-09 | Not Started | | |
-| BT-10 | Not Started | | |
-| BT-11 | Not Started | | |
-| BT-12 | Not Started | | |
-| BT-13 | Not Started | | |
-| BT-14 | Not Started | | |
-| BT-15 | Not Started | | |
-| BT-16 | Not Started | | |
+| BT-01 | In Progress | | Skeleton package and CLI are being scoped around the historical adapter pattern; no production logic duplication yet. |
+| BT-02 | In Progress | | Repositories are being defined to match existing valuation and quality inputs without creating parallel formulas. |
+| BT-03 | Not Started | | Historical valuation repository is still pending; needs year-cutoff and no-future-data tests. |
+| BT-04 | Not Started | | Historical financial repository remains deferred until valuation adapter is validated. |
+| BT-05 | Not Started | | Temporal integrity guard is pending and will be shared across repository implementations. |
+| BT-06 | Not Started | | This will only start once BT-01 to BT-05 are validated. |
+| BT-07 | Not Started | | Deferred until historical inputs are stable and reusable. |
+| BT-08 | Not Started | | Deliberately outside the first milestone. |
+| BT-09 | Not Started | | Still outside the initial historical adapter slice. |
+| BT-10 | Not Started | | Defer until ranking logic is proven on a single-year snapshot. |
+| BT-11 | Not Started | | Portfolio engine intentionally delayed until scoring and ranking are validated. |
+| BT-12 | Not Started | | Returns engine is post-MVP work. |
+| BT-13 | Not Started | | Metrics engine is post-MVP work. |
+| BT-14 | Not Started | | Reporting and summary generation remain later. |
+| BT-15 | Not Started | | Test suite and invariants begin after the repository and cutoff logic are in place. |
+| BT-16 | Not Started | | Execution windows are kept for the later end-to-end validation phase. |
 
 ## Scope
 - Objective: validate QVM Quality + Valuation process with historical inputs.
@@ -149,10 +150,12 @@
   - Outputs are reproducible.
 
 ## Suggested Build Order
-1. BT-01 to BT-05
-2. BT-06 to BT-10
-3. BT-11 to BT-14
-4. BT-15 to BT-16
+1. BT-01 to BT-05  (current milestone; historical adapters + temporal guard)
+2. BT-06 to BT-10  (historical scoring and ranking)
+3. BT-11 to BT-14  (portfolio, returns, metrics, reporting)
+4. BT-15 to BT-16  (tests and execution windows)
+
+> Status note: the project is intentionally addressing the first milestone in stages. BT-01 to BT-05 are the controlled first slice; later tasks remain deferred until the temporal integrity and adapter pattern are verified.
 
 ## Definition of Done (MVP)
 - Historical backtest runs end-to-end for 2015-2025 and 2019-2025.

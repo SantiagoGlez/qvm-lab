@@ -1,6 +1,19 @@
 from ..models import AnalysisResult, Company
 
 
+_QUALITY_WEIGHTS = {
+    "roic": 0.25,
+    "roe": 0.05,
+    "operating_margin": 0.05,
+    "revenue_cagr": 0.10,
+    "eps_cagr": 0.15,
+    "fcf_margin": 0.10,
+    "fcf_conversion": 0.10,
+    "net_debt_ebitda": 0.10,
+    "leverage": 0.10,
+}
+
+
 def pct(value: float | None) -> str:
     """Format a float as a percentage."""
     if value is None:
@@ -248,8 +261,78 @@ def _score_debt_to_ebitda(ratio: float | None) -> float:
     return 25
 
 
-def analyse_quality(company: Company) -> AnalysisResult:
+_QUALITY_METRIC_LABELS = {
+    "roic": "ROIC",
+    "roe": "ROE",
+    "operating_margin": "Operating Margin",
+    "revenue_cagr": "Revenue CAGR",
+    "eps_cagr": "EPS CAGR",
+    "fcf_margin": "FCF Margin",
+    "fcf_conversion": "FCF Conversion",
+    "net_debt_ebitda": "Net Debt/EBITDA",
+    "leverage": "Leverage",
+}
 
+
+def quality_missing_metrics(company: Company) -> list[str]:
+    """Return human-readable names for quality metrics missing from the company snapshot."""
+    metric_values = {
+        "roic": company.metrics.roic,
+        "roe": company.metrics.roe,
+        "operating_margin": company.metrics.operating_margin,
+        "revenue_cagr": company.metrics.revenue_cagr,
+        "eps_cagr": company.metrics.eps_cagr,
+        "fcf_margin": company.metrics.fcf_margin,
+        "fcf_conversion": company.metrics.fcf_conversion,
+        "net_debt_ebitda": company.metrics.net_debt_ebitda,
+        "leverage": (
+            company.metrics.interest_coverage
+            if company.metrics.interest_coverage is not None
+            else company.metrics.debt_to_ebitda
+        ),
+    }
+
+    return [
+        _QUALITY_METRIC_LABELS[name]
+        for name, value in metric_values.items()
+        if value is None
+    ]
+
+
+def quality_metric_coverage(company: Company) -> float:
+    """Fraction of the quality dimensions that are populated."""
+    metric_values = [
+        company.metrics.roic,
+        company.metrics.roe,
+        company.metrics.operating_margin,
+        company.metrics.revenue_cagr,
+        company.metrics.eps_cagr,
+        company.metrics.fcf_margin,
+        company.metrics.fcf_conversion,
+        company.metrics.net_debt_ebitda,
+        company.metrics.interest_coverage if company.metrics.interest_coverage is not None else company.metrics.debt_to_ebitda,
+    ]
+    available = sum(1 for value in metric_values if value is not None)
+    return available / len(metric_values) if metric_values else 0.0
+
+
+def quality_eligible(company: Company, minimum_coverage: float = 0.7) -> bool:
+    """Return whether the company clears the minimum quality coverage gate."""
+    return quality_metric_coverage(company) >= minimum_coverage
+
+
+def quality_snapshot(company: Company) -> dict[str, float | bool | str | list[str]]:
+    """Return coverage metadata for external snapshot/export consumers without changing scoring."""
+    quality_result = analyse_quality(company)
+    return {
+        "quality_score": quality_result.score,
+        "quality_coverage": quality_result.coverage,
+        "quality_eligible": quality_result.eligible,
+        "missing_metrics": ", ".join(quality_result.missing_metrics) if quality_result.missing_metrics else "",
+    }
+
+
+def analyse_quality(company: Company) -> AnalysisResult:
     roic_score = _score_roic(company.metrics.roic)
     roe_score = _score_roe(company.metrics.roe)
     operating_margin_score = _score_operating_margin(company.metrics.operating_margin)
@@ -264,17 +347,32 @@ def analyse_quality(company: Company) -> AnalysisResult:
         else _score_debt_to_ebitda(company.metrics.debt_to_ebitda)
     )
 
-    score = (
-        0.25 * roic_score
-        + 0.05 * roe_score
-        + 0.05 * operating_margin_score
-        + 0.10 * revenue_cagr_score
-        + 0.15 * eps_cagr_score
-        + 0.10 * fcf_margin_score
-        + 0.10 * fcf_conversion_score
-        + 0.10 * net_debt_score
-        + 0.10 * leverage_score
-    )
+    metric_scores = {
+        "roic": (company.metrics.roic, roic_score),
+        "roe": (company.metrics.roe, roe_score),
+        "operating_margin": (company.metrics.operating_margin, operating_margin_score),
+        "revenue_cagr": (company.metrics.revenue_cagr, revenue_cagr_score),
+        "eps_cagr": (company.metrics.eps_cagr, eps_cagr_score),
+        "fcf_margin": (company.metrics.fcf_margin, fcf_margin_score),
+        "fcf_conversion": (company.metrics.fcf_conversion, fcf_conversion_score),
+        "net_debt_ebitda": (company.metrics.net_debt_ebitda, net_debt_score),
+        "leverage": (
+            company.metrics.interest_coverage if company.metrics.interest_coverage is not None else company.metrics.debt_to_ebitda,
+            leverage_score,
+        ),
+    }
+
+    coverage = quality_metric_coverage(company)
+    missing_metrics = quality_missing_metrics(company)
+    weighted_total = 0.0
+    available_weight = 0.0
+    for metric_name, (value, score_value) in metric_scores.items():
+        if value is None:
+            continue
+        available_weight += _QUALITY_WEIGHTS[metric_name]
+        weighted_total += _QUALITY_WEIGHTS[metric_name] * score_value
+
+    score = (weighted_total / available_weight) if available_weight > 0 else 0.0
 
     leverage_label = (
         f"IntCov={num(company.metrics.interest_coverage, 1)}x"
@@ -282,6 +380,7 @@ def analyse_quality(company: Company) -> AnalysisResult:
         else f"Debt/EBITDA={num(company.metrics.debt_to_ebitda, 1)}x"
     )
     summary = (
+        f"Coverage={coverage:.0%} | "
         f"ROIC={pct(company.metrics.roic)} | "
         f"ROE={pct(company.metrics.roe)} | "
         f"Op.Margin={pct(company.metrics.operating_margin)} | "
@@ -296,4 +395,7 @@ def analyse_quality(company: Company) -> AnalysisResult:
         score=round(score, 1),
         summary=summary,
         recommendation=recommendation(score),
+        coverage=coverage,
+        missing_metrics=missing_metrics,
+        eligible=quality_eligible(company),
     )
