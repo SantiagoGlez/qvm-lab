@@ -38,6 +38,8 @@ def test_historical_quality_adapter_maps_y_minus_1_financials_to_company_metrics
         "net_income": 39_920_000_000.0,
         "eps": 4.35,
         "operating_margin": 0.3553,
+        "operating_cash_flow": 52_185_000_000.0,
+        "capex": 13_925_000_000.0,
         "net_assets": 82_710_000_000.0,
         "total_debt": 81_800_000_000.0,
         "cash": 133_660_000_000.0,
@@ -50,4 +52,6 @@ def test_historical_quality_adapter_maps_y_minus_1_financials_to_company_metrics
     assert company.metrics.operating_margin == pytest.approx(0.3553)
     assert company.metrics.net_debt_ebitda is not None
     assert company.metrics.debt_to_ebitda is not None
+    assert company.metrics.fcf_margin == pytest.approx((52_185_000_000.0 - 13_925_000_000.0) / 118_450_000_000.0)
+    assert company.metrics.fcf_conversion == pytest.approx((52_185_000_000.0 - 13_925_000_000.0) / 39_920_000_000.0)
     assert analyse_quality(company).score > 0

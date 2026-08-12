@@ -1,0 +1,362 @@
+[RHHBY] valuation=60.5 | quality=67.7 | overall=64.1 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+.[RNO] valuation=63.6 | quality=35.5 | overall=49.5 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+.[MCD] valuation=39.5 | quality=52.9 | overall=46.2 | coverage=89% | missing=ROE
+.[KO] valuation=46.5 | quality=51.0 | overall=48.8 | coverage=100% | missing=none
+.[DPZ] valuation=51.8 | quality=56.4 | overall=54.1 | coverage=78% | missing=ROIC, ROE
+.[MO] valuation=79.5 | quality=78.8 | overall=79.2 | coverage=100% | missing=none
+.[OXY] valuation=47.6 | quality=74.6 | overall=61.1 | coverage=78% | missing=ROIC, EPS CAGR
+.[JNJ] valuation=39.5 | quality=59.7 | overall=49.6 | coverage=89% | missing=ROIC
+.[V] valuation=38.6 | quality=92.5 | overall=65.5 | coverage=100% | missing=none
+.[MA] valuation=46.7 | quality=91.8 | overall=69.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+.[MSFT] valuation=52.4 | quality=92.0 | overall=72.2 | coverage=100% | missing=none
+.[GOOGL] valuation=69.3 | quality=84.3 | overall=76.8 | coverage=100% | missing=none
+.[ASML] valuation=18.6 | quality=89.7 | overall=54.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[COST] valuation=51.6 | quality=85.0 | overall=68.3 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[META] valuation=77.6 | quality=94.0 | overall=85.8 | coverage=89% | missing=ROIC
+.[AMZN] valuation=58.6 | quality=85.5 | overall=72.0 | coverage=100% | missing=none
+.[ADBE] valuation=56.6 | quality=94.0 | overall=75.3 | coverage=89% | missing=ROIC
+.[CRM] valuation=58.5 | quality=64.8 | overall=61.6 | coverage=100% | missing=none
+.[INTU] valuation=46.7 | quality=94.8 | overall=70.8 | coverage=100% | missing=none
+.[LRCX] valuation=53.1 | quality=95.3 | overall=74.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[KLAC] valuation=22.6 | quality=90.0 | overall=56.3 | coverage=89% | missing=ROIC
+.[TXN] valuation=40.1 | quality=89.0 | overall=64.5 | coverage=100% | missing=none
+.[PFE] valuation=63.1 | quality=64.0 | overall=63.5 | coverage=89% | missing=ROIC
+.[MDT] valuation=53.7 | quality=40.5 | overall=47.1 | coverage=100% | missing=none
+.[SBUX] valuation=38.1 | quality=80.3 | overall=59.2 | coverage=100% | missing=none
+.[NKE] valuation=39.9 | quality=60.0 | overall=50.0 | coverage=89% | missing=ROIC
+.[LOW] valuation=28.7 | quality=65.0 | overall=46.9 | coverage=89% | missing=ROIC
+.[UNH] valuation=32.1 | quality=74.3 | overall=53.2 | coverage=100% | missing=none
+.[LIN] valuation=12.6 | quality=43.4 | overall=28.0 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[NVDA] valuation=14.3 | quality=96.3 | overall=55.3 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2015] RHHBY: valuation=38.4 | quality=38.6 | overall=38.5 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2015] RNO: valuation=29.3 | quality=13.6 | overall=21.4 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2015] MCD: valuation=29.2 | quality=39.0 | overall=34.1 | coverage=100% | missing=none
+[2015] KO: valuation=32.9 | quality=55.0 | overall=44.0 | coverage=100% | missing=none
+[2015] DPZ: valuation=35.5 | quality=46.0 | overall=40.8 | coverage=56% | missing=ROIC, ROE, FCF Margin, FCF Conversion
+[2015] MO: valuation=30.6 | quality=75.0 | overall=52.8 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2015] OXY: valuation=96.9 | quality=52.7 | overall=74.8 | coverage=89% | missing=ROIC
+[2015] JNJ: valuation=35.6 | quality=86.8 | overall=61.2 | coverage=100% | missing=none
+[2015] V: valuation=48.3 | quality=66.4 | overall=57.4 | coverage=67% | missing=ROIC, Net Debt/EBITDA, Leverage
+[2015] MA: valuation=51.5 | quality=90.3 | overall=70.9 | coverage=100% | missing=none
+[2015] MSFT: valuation=15.7 | quality=89.7 | overall=52.7 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2015] GOOGL: valuation=45.1 | quality=76.8 | overall=61.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2015] ASML: valuation=50.3 | quality=66.2 | overall=58.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2015] COST: valuation=31.6 | quality=67.0 | overall=49.3 | coverage=100% | missing=none
+[2015] META: valuation=66.9 | quality=88.3 | overall=77.6 | coverage=78% | missing=ROIC, EPS CAGR
+[2015] AMZN: valuation=31.9 | quality=65.9 | overall=48.9 | coverage=89% | missing=EPS CAGR
+[2015] ADBE: valuation=66.4 | quality=46.7 | overall=56.6 | coverage=89% | missing=ROIC
+[2015] CRM: GAP=No valuation data available for CRM as of 2015
+[2015] INTU: valuation=97.0 | quality=76.3 | overall=86.7 | coverage=89% | missing=ROIC
+[2015] LRCX: valuation=84.3 | quality=85.3 | overall=84.8 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2015] KLAC: valuation=43.9 | quality=58.3 | overall=51.1 | coverage=89% | missing=ROIC
+[2015] TXN: valuation=75.8 | quality=84.1 | overall=79.9 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2015] PFE: valuation=19.9 | quality=55.0 | overall=37.5 | coverage=89% | missing=ROIC
+[2015] MDT: valuation=24.1 | quality=42.7 | overall=33.4 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2015] SBUX: valuation=38.3 | quality=71.0 | overall=54.6 | coverage=100% | missing=none
+[2015] NKE: valuation=75.2 | quality=77.3 | overall=76.2 | coverage=89% | missing=ROIC
+[2015] LOW: valuation=66.5 | quality=65.9 | overall=66.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2015] UNH: valuation=29.4 | quality=55.8 | overall=42.6 | coverage=100% | missing=none
+[2015] LIN: valuation=75.8 | quality=35.9 | overall=55.8 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2015] NVDA: valuation=25.7 | quality=61.8 | overall=43.8 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+.[2016] RHHBY: valuation=55.8 | quality=38.6 | overall=47.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2016] RNO: valuation=46.5 | quality=43.2 | overall=44.9 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2016] MCD: valuation=47.6 | quality=44.8 | overall=46.2 | coverage=100% | missing=none
+[2016] KO: valuation=31.3 | quality=49.8 | overall=40.5 | coverage=100% | missing=none
+[2016] DPZ: valuation=33.1 | quality=54.5 | overall=43.8 | coverage=56% | missing=ROIC, ROE, FCF Margin, FCF Conversion
+[2016] MO: valuation=30.6 | quality=74.0 | overall=52.3 | coverage=100% | missing=none
+[2016] OXY: valuation=96.9 | quality=47.2 | overall=72.1 | coverage=56% | missing=ROIC, ROE, EPS CAGR, FCF Conversion
+[2016] JNJ: valuation=34.4 | quality=68.7 | overall=51.5 | coverage=89% | missing=ROIC
+[2016] V: valuation=31.7 | quality=81.4 | overall=56.6 | coverage=67% | missing=ROIC, Net Debt/EBITDA, Leverage
+[2016] MA: valuation=60.8 | quality=85.5 | overall=73.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2016] MSFT: valuation=46.8 | quality=63.8 | overall=55.3 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2016] GOOGL: valuation=69.0 | quality=93.3 | overall=81.2 | coverage=100% | missing=none
+[2016] ASML: valuation=27.6 | quality=62.2 | overall=44.9 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2016] COST: valuation=45.1 | quality=65.6 | overall=55.3 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2016] META: valuation=84.7 | quality=92.7 | overall=88.7 | coverage=89% | missing=ROIC
+[2016] AMZN: valuation=49.9 | quality=73.3 | overall=61.6 | coverage=100% | missing=none
+[2016] ADBE: valuation=64.2 | quality=81.3 | overall=72.8 | coverage=89% | missing=ROIC
+[2016] CRM: valuation=97.0 | quality=82.5 | overall=89.8 | coverage=78% | missing=ROIC, EPS CAGR
+[2016] INTU: valuation=93.8 | quality=67.3 | overall=80.5 | coverage=89% | missing=ROIC
+[2016] LRCX: valuation=72.8 | quality=83.6 | overall=78.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2016] KLAC: valuation=59.8 | quality=52.3 | overall=56.0 | coverage=89% | missing=ROIC
+[2016] TXN: valuation=35.1 | quality=85.0 | overall=60.0 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2016] PFE: valuation=23.9 | quality=46.0 | overall=35.0 | coverage=89% | missing=ROIC
+[2016] MDT: valuation=75.4 | quality=32.5 | overall=54.0 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2016] SBUX: valuation=47.9 | quality=85.8 | overall=66.8 | coverage=100% | missing=none
+[2016] NKE: valuation=80.4 | quality=82.0 | overall=81.2 | coverage=89% | missing=ROIC
+[2016] LOW: valuation=55.6 | quality=65.9 | overall=60.8 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2016] UNH: valuation=28.7 | quality=54.8 | overall=41.8 | coverage=100% | missing=none
+[2016] LIN: valuation=34.1 | quality=25.9 | overall=30.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2016] NVDA: valuation=15.9 | quality=74.1 | overall=45.0 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2017] RHHBY: valuation=43.1 | quality=43.2 | overall=43.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2017] RNO: valuation=64.0 | quality=47.7 | overall=55.9 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2017] MCD: valuation=28.1 | quality=40.5 | overall=34.3 | coverage=89% | missing=ROE
+[2017] KO: valuation=12.0 | quality=49.0 | overall=30.5 | coverage=100% | missing=none
+[2017] DPZ: valuation=51.8 | quality=59.0 | overall=55.4 | coverage=56% | missing=ROIC, ROE, FCF Margin, FCF Conversion
+[2017] MO: valuation=30.6 | quality=71.5 | overall=51.0 | coverage=100% | missing=none
+[2017] OXY: valuation=12.0 | quality=58.3 | overall=35.1 | coverage=56% | missing=ROIC, ROE, EPS CAGR, FCF Conversion
+[2017] JNJ: valuation=12.0 | quality=61.7 | overall=36.9 | coverage=89% | missing=ROIC
+[2017] V: valuation=27.2 | quality=70.3 | overall=48.8 | coverage=100% | missing=none
+[2017] MA: valuation=27.3 | quality=81.5 | overall=54.4 | coverage=100% | missing=none
+[2017] MSFT: valuation=12.0 | quality=38.1 | overall=25.1 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2017] GOOGL: valuation=26.3 | quality=94.8 | overall=60.5 | coverage=100% | missing=none
+[2017] ASML: valuation=28.6 | quality=64.4 | overall=46.5 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2017] COST: valuation=32.3 | quality=66.2 | overall=49.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2017] META: valuation=85.1 | quality=95.9 | overall=90.5 | coverage=67% | missing=ROIC, Net Debt/EBITDA, Leverage
+[2017] AMZN: valuation=50.0 | quality=80.0 | overall=65.0 | coverage=89% | missing=EPS CAGR
+[2017] ADBE: valuation=61.5 | quality=92.0 | overall=76.8 | coverage=89% | missing=ROIC
+[2017] CRM: valuation=97.0 | quality=88.8 | overall=92.9 | coverage=78% | missing=ROIC, EPS CAGR
+[2017] INTU: valuation=12.0 | quality=82.8 | overall=47.4 | coverage=100% | missing=none
+[2017] LRCX: valuation=53.6 | quality=75.6 | overall=64.6 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2017] KLAC: valuation=33.1 | quality=74.3 | overall=53.7 | coverage=89% | missing=ROIC
+[2017] TXN: valuation=27.8 | quality=79.4 | overall=53.6 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2017] PFE: valuation=77.4 | quality=49.3 | overall=63.4 | coverage=89% | missing=ROIC
+[2017] MDT: valuation=79.8 | quality=51.3 | overall=65.5 | coverage=100% | missing=none
+[2017] SBUX: valuation=76.7 | quality=77.5 | overall=77.1 | coverage=100% | missing=none
+[2017] NKE: valuation=45.8 | quality=71.7 | overall=58.8 | coverage=89% | missing=ROIC
+[2017] LOW: valuation=80.4 | quality=45.5 | overall=63.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2017] UNH: valuation=43.1 | quality=61.5 | overall=52.3 | coverage=100% | missing=none
+[2017] LIN: valuation=22.0 | quality=24.5 | overall=23.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2017] NVDA: valuation=36.2 | quality=83.8 | overall=60.0 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2018] RHHBY: valuation=62.4 | quality=47.7 | overall=55.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2018] RNO: valuation=63.6 | quality=62.7 | overall=63.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2018] MCD: valuation=42.7 | quality=44.7 | overall=43.7 | coverage=89% | missing=ROE
+[2018] KO: valuation=41.1 | quality=35.3 | overall=38.2 | coverage=100% | missing=none
+[2018] DPZ: valuation=51.8 | quality=59.0 | overall=55.4 | coverage=56% | missing=ROIC, ROE, FCF Margin, FCF Conversion
+[2018] MO: valuation=79.5 | quality=74.0 | overall=76.8 | coverage=100% | missing=none
+[2018] OXY: valuation=47.6 | quality=47.1 | overall=47.4 | coverage=78% | missing=ROIC, EPS CAGR
+[2018] JNJ: valuation=32.0 | quality=56.3 | overall=44.1 | coverage=89% | missing=ROIC
+[2018] V: valuation=61.6 | quality=77.8 | overall=69.7 | coverage=100% | missing=none
+[2018] MA: valuation=51.4 | quality=68.6 | overall=60.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2018] MSFT: valuation=64.9 | quality=73.4 | overall=69.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2018] GOOGL: valuation=70.3 | quality=76.0 | overall=73.2 | coverage=100% | missing=none
+[2018] ASML: valuation=76.1 | quality=89.7 | overall=82.9 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2018] COST: valuation=51.6 | quality=66.9 | overall=59.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2018] META: valuation=79.9 | quality=95.0 | overall=87.5 | coverage=89% | missing=ROIC
+[2018] AMZN: valuation=62.6 | quality=68.4 | overall=65.5 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2018] ADBE: valuation=72.0 | quality=94.0 | overall=83.0 | coverage=89% | missing=ROIC
+[2018] CRM: valuation=82.8 | quality=64.2 | overall=73.5 | coverage=78% | missing=ROIC, EPS CAGR
+[2018] INTU: valuation=41.7 | quality=93.3 | overall=67.5 | coverage=100% | missing=none
+[2018] LRCX: valuation=80.4 | quality=95.3 | overall=87.8 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2018] KLAC: valuation=71.2 | quality=81.3 | overall=76.2 | coverage=89% | missing=ROIC
+[2018] TXN: valuation=93.0 | quality=84.4 | overall=88.7 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2018] PFE: valuation=44.8 | quality=70.3 | overall=57.5 | coverage=89% | missing=ROIC
+[2018] MDT: valuation=14.6 | quality=59.5 | overall=37.0 | coverage=100% | missing=none
+[2018] SBUX: valuation=40.1 | quality=81.0 | overall=60.5 | coverage=100% | missing=none
+[2018] NKE: valuation=13.2 | quality=52.7 | overall=33.0 | coverage=89% | missing=ROIC
+[2018] LOW: valuation=94.4 | quality=58.3 | overall=76.3 | coverage=89% | missing=ROIC
+[2018] UNH: valuation=42.0 | quality=74.3 | overall=58.1 | coverage=100% | missing=none
+[2018] LIN: valuation=22.0 | quality=30.5 | overall=26.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2018] NVDA: valuation=77.8 | quality=95.3 | overall=86.5 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2019] RHHBY: valuation=60.5 | quality=67.7 | overall=64.1 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2019] RNO: valuation=63.6 | quality=35.5 | overall=49.5 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2019] MCD: valuation=39.5 | quality=52.9 | overall=46.2 | coverage=89% | missing=ROE
+[2019] KO: valuation=46.5 | quality=51.0 | overall=48.8 | coverage=100% | missing=none
+[2019] DPZ: valuation=51.8 | quality=56.4 | overall=54.1 | coverage=78% | missing=ROIC, ROE
+[2019] MO: valuation=79.5 | quality=78.8 | overall=79.2 | coverage=100% | missing=none
+[2019] OXY: valuation=47.6 | quality=74.6 | overall=61.1 | coverage=78% | missing=ROIC, EPS CAGR
+[2019] JNJ: valuation=39.5 | quality=59.7 | overall=49.6 | coverage=89% | missing=ROIC
+[2019] V: valuation=38.6 | quality=92.5 | overall=65.5 | coverage=100% | missing=none
+[2019] MA: valuation=46.7 | quality=91.8 | overall=69.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2019] MSFT: valuation=52.4 | quality=92.0 | overall=72.2 | coverage=100% | missing=none
+[2019] GOOGL: valuation=69.3 | quality=84.3 | overall=76.8 | coverage=100% | missing=none
+[2019] ASML: valuation=18.6 | quality=89.7 | overall=54.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2019] COST: valuation=51.6 | quality=85.0 | overall=68.3 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2019] META: valuation=77.6 | quality=94.0 | overall=85.8 | coverage=89% | missing=ROIC
+[2019] AMZN: valuation=58.6 | quality=85.5 | overall=72.0 | coverage=100% | missing=none
+[2019] ADBE: valuation=56.6 | quality=94.0 | overall=75.3 | coverage=89% | missing=ROIC
+[2019] CRM: valuation=58.5 | quality=64.8 | overall=61.6 | coverage=100% | missing=none
+[2019] INTU: valuation=46.7 | quality=94.8 | overall=70.8 | coverage=100% | missing=none
+[2019] LRCX: valuation=53.1 | quality=95.3 | overall=74.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2019] KLAC: valuation=22.6 | quality=90.0 | overall=56.3 | coverage=89% | missing=ROIC
+[2019] TXN: valuation=40.1 | quality=89.0 | overall=64.5 | coverage=100% | missing=none
+[2019] PFE: valuation=63.1 | quality=64.0 | overall=63.5 | coverage=89% | missing=ROIC
+[2019] MDT: valuation=53.7 | quality=40.5 | overall=47.1 | coverage=100% | missing=none
+[2019] SBUX: valuation=38.1 | quality=80.3 | overall=59.2 | coverage=100% | missing=none
+[2019] NKE: valuation=39.9 | quality=60.0 | overall=50.0 | coverage=89% | missing=ROIC
+[2019] LOW: valuation=28.7 | quality=65.0 | overall=46.9 | coverage=89% | missing=ROIC
+[2019] UNH: valuation=32.1 | quality=74.3 | overall=53.2 | coverage=100% | missing=none
+[2019] LIN: valuation=12.6 | quality=43.4 | overall=28.0 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2019] NVDA: valuation=14.3 | quality=96.3 | overall=55.3 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2020] RHHBY: valuation=65.5 | quality=81.4 | overall=73.5 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2020] RNO: valuation=63.6 | quality=18.8 | overall=41.2 | coverage=56% | missing=ROIC, EPS CAGR, FCF Margin, FCF Conversion
+[2020] MCD: valuation=21.9 | quality=46.1 | overall=34.0 | coverage=89% | missing=ROE
+[2020] KO: valuation=57.8 | quality=72.5 | overall=65.2 | coverage=100% | missing=none
+[2020] DPZ: valuation=51.8 | quality=59.3 | overall=55.5 | coverage=78% | missing=ROIC, ROE
+[2020] MO: valuation=30.2 | quality=46.2 | overall=38.2 | coverage=89% | missing=EPS CAGR
+[2020] OXY: valuation=47.6 | quality=45.0 | overall=46.3 | coverage=78% | missing=ROIC, EPS CAGR
+[2020] JNJ: valuation=34.4 | quality=79.3 | overall=56.8 | coverage=89% | missing=ROIC
+[2020] V: valuation=23.5 | quality=91.0 | overall=57.2 | coverage=100% | missing=none
+[2020] MA: valuation=19.9 | quality=91.0 | overall=55.5 | coverage=100% | missing=none
+[2020] MSFT: valuation=45.5 | quality=90.5 | overall=68.0 | coverage=100% | missing=none
+[2020] GOOGL: valuation=57.3 | quality=88.0 | overall=72.7 | coverage=100% | missing=none
+[2020] ASML: valuation=17.3 | quality=81.3 | overall=49.3 | coverage=100% | missing=none
+[2020] COST: valuation=24.1 | quality=74.5 | overall=49.3 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2020] META: valuation=77.4 | quality=83.0 | overall=80.2 | coverage=89% | missing=ROIC
+[2020] AMZN: valuation=61.4 | quality=76.3 | overall=68.8 | coverage=100% | missing=none
+[2020] ADBE: valuation=64.4 | quality=96.3 | overall=80.3 | coverage=100% | missing=none
+[2020] CRM: valuation=76.4 | quality=67.3 | overall=71.8 | coverage=100% | missing=none
+[2020] INTU: valuation=24.1 | quality=94.8 | overall=59.5 | coverage=100% | missing=none
+[2020] LRCX: valuation=50.2 | quality=82.0 | overall=66.1 | coverage=100% | missing=none
+[2020] KLAC: valuation=18.3 | quality=82.3 | overall=50.3 | coverage=89% | missing=ROIC
+[2020] TXN: valuation=28.2 | quality=84.0 | overall=56.1 | coverage=100% | missing=none
+[2020] PFE: valuation=40.2 | quality=42.3 | overall=41.2 | coverage=89% | missing=ROIC
+[2020] MDT: valuation=33.6 | quality=45.5 | overall=39.5 | coverage=100% | missing=none
+[2020] SBUX: valuation=19.5 | quality=64.5 | overall=42.0 | coverage=89% | missing=ROE
+[2020] NKE: valuation=12.0 | quality=74.0 | overall=43.0 | coverage=89% | missing=ROIC
+[2020] LOW: valuation=62.1 | quality=28.3 | overall=45.2 | coverage=89% | missing=ROIC
+[2020] UNH: valuation=30.5 | quality=70.0 | overall=50.2 | coverage=100% | missing=none
+[2020] LIN: valuation=13.9 | quality=31.3 | overall=22.6 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2020] NVDA: valuation=12.0 | quality=71.2 | overall=41.6 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2021] RHHBY: valuation=35.2 | quality=82.7 | overall=59.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2021] RNO: valuation=22.6 | quality=60.7 | overall=41.7 | coverage=44% | missing=ROIC, ROE, EPS CAGR, FCF Margin, FCF Conversion
+[2021] MCD: valuation=37.4 | quality=35.0 | overall=36.2 | coverage=89% | missing=ROE
+[2021] KO: valuation=44.9 | quality=66.3 | overall=55.6 | coverage=100% | missing=none
+[2021] DPZ: valuation=29.6 | quality=59.3 | overall=44.5 | coverage=78% | missing=ROIC, ROE
+[2021] MO: valuation=12.0 | quality=62.5 | overall=37.2 | coverage=100% | missing=none
+[2021] OXY: valuation=50.4 | quality=58.3 | overall=54.3 | coverage=56% | missing=ROIC, ROE, EPS CAGR, FCF Conversion
+[2021] JNJ: valuation=37.7 | quality=56.3 | overall=47.0 | coverage=89% | missing=ROIC
+[2021] V: valuation=43.9 | quality=71.8 | overall=57.8 | coverage=100% | missing=none
+[2021] MA: valuation=37.8 | quality=77.0 | overall=57.4 | coverage=100% | missing=none
+[2021] MSFT: valuation=35.5 | quality=91.0 | overall=63.2 | coverage=100% | missing=none
+[2021] GOOGL: valuation=72.5 | quality=86.5 | overall=79.5 | coverage=100% | missing=none
+[2021] ASML: valuation=27.8 | quality=87.3 | overall=57.5 | coverage=100% | missing=none
+[2021] COST: valuation=24.1 | quality=78.8 | overall=51.5 | coverage=100% | missing=none
+[2021] META: valuation=77.8 | quality=90.0 | overall=83.9 | coverage=89% | missing=ROIC
+[2021] AMZN: valuation=78.7 | quality=79.3 | overall=79.0 | coverage=100% | missing=none
+[2021] ADBE: valuation=53.6 | quality=95.5 | overall=74.5 | coverage=100% | missing=none
+[2021] CRM: valuation=70.2 | quality=64.8 | overall=67.5 | coverage=100% | missing=none
+[2021] INTU: valuation=26.7 | quality=87.0 | overall=56.9 | coverage=100% | missing=none
+[2021] LRCX: valuation=56.0 | quality=74.8 | overall=65.4 | coverage=100% | missing=none
+[2021] KLAC: valuation=53.9 | quality=66.3 | overall=60.1 | coverage=89% | missing=ROIC
+[2021] TXN: valuation=53.7 | quality=72.8 | overall=63.2 | coverage=100% | missing=none
+[2021] PFE: valuation=66.3 | quality=39.7 | overall=53.0 | coverage=89% | missing=ROIC
+[2021] MDT: valuation=66.9 | quality=56.3 | overall=61.6 | coverage=100% | missing=none
+[2021] SBUX: valuation=41.5 | quality=38.2 | overall=39.9 | coverage=89% | missing=ROE
+[2021] NKE: valuation=44.2 | quality=45.0 | overall=44.6 | coverage=89% | missing=ROIC
+[2021] LOW: valuation=59.0 | quality=67.0 | overall=63.0 | coverage=89% | missing=ROIC
+[2021] UNH: valuation=23.9 | quality=67.8 | overall=45.8 | coverage=100% | missing=none
+[2021] LIN: valuation=38.6 | quality=35.9 | overall=37.2 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2021] NVDA: valuation=12.0 | quality=74.7 | overall=43.4 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2022] RHHBY: valuation=39.6 | quality=50.0 | overall=44.8 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2022] RNO: valuation=22.6 | quality=18.8 | overall=20.7 | coverage=56% | missing=ROIC, EPS CAGR, FCF Margin, FCF Conversion
+[2022] MCD: valuation=31.9 | quality=60.5 | overall=46.2 | coverage=89% | missing=ROE
+[2022] KO: valuation=40.4 | quality=63.5 | overall=52.0 | coverage=100% | missing=none
+[2022] DPZ: valuation=29.6 | quality=62.0 | overall=45.8 | coverage=56% | missing=ROIC, ROE, FCF Margin, FCF Conversion
+[2022] MO: valuation=12.0 | quality=70.0 | overall=41.0 | coverage=78% | missing=ROE, EPS CAGR
+[2022] OXY: valuation=80.0 | quality=64.6 | overall=72.3 | coverage=78% | missing=ROIC, EPS CAGR
+[2022] JNJ: valuation=39.8 | quality=74.3 | overall=57.0 | coverage=89% | missing=ROIC
+[2022] V: valuation=64.0 | quality=79.0 | overall=71.5 | coverage=100% | missing=none
+[2022] MA: valuation=64.0 | quality=80.0 | overall=72.0 | coverage=100% | missing=none
+[2022] MSFT: valuation=60.9 | quality=92.5 | overall=76.7 | coverage=100% | missing=none
+[2022] GOOGL: valuation=88.0 | quality=95.5 | overall=91.8 | coverage=100% | missing=none
+[2022] ASML: valuation=48.7 | quality=97.0 | overall=72.8 | coverage=100% | missing=none
+[2022] COST: valuation=24.1 | quality=79.8 | overall=52.0 | coverage=100% | missing=none
+[2022] META: valuation=80.3 | quality=96.0 | overall=88.2 | coverage=89% | missing=ROIC
+[2022] AMZN: valuation=78.7 | quality=57.5 | overall=68.1 | coverage=100% | missing=none
+[2022] ADBE: valuation=75.6 | quality=95.5 | overall=85.5 | coverage=100% | missing=none
+[2022] CRM: valuation=12.0 | quality=68.5 | overall=40.2 | coverage=100% | missing=none
+[2022] INTU: valuation=59.8 | quality=87.3 | overall=73.5 | coverage=100% | missing=none
+[2022] LRCX: valuation=80.0 | quality=93.3 | overall=86.7 | coverage=100% | missing=none
+[2022] KLAC: valuation=67.7 | quality=90.0 | overall=78.8 | coverage=89% | missing=ROIC
+[2022] TXN: valuation=70.6 | quality=91.0 | overall=80.8 | coverage=100% | missing=none
+[2022] PFE: valuation=72.3 | quality=87.3 | overall=79.8 | coverage=89% | missing=ROIC
+[2022] MDT: valuation=66.6 | quality=50.8 | overall=58.7 | coverage=100% | missing=none
+[2022] SBUX: valuation=35.2 | quality=63.2 | overall=49.2 | coverage=89% | missing=ROE
+[2022] NKE: valuation=60.1 | quality=74.3 | overall=67.2 | coverage=89% | missing=ROIC
+[2022] LOW: valuation=87.3 | quality=74.3 | overall=80.8 | coverage=100% | missing=none
+[2022] UNH: valuation=34.4 | quality=67.8 | overall=51.1 | coverage=100% | missing=none
+[2022] LIN: valuation=50.3 | quality=57.5 | overall=53.9 | coverage=78% | missing=FCF Margin, FCF Conversion
+[2022] NVDA: valuation=39.1 | quality=90.6 | overall=64.8 | coverage=78% | missing=FCF Margin, FCF Conversion
+.[2023] RHHBY: valuation=66.7 | quality=43.2 | overall=55.0 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2023] RNO: valuation=58.7 | quality=18.8 | overall=38.8 | coverage=56% | missing=ROIC, EPS CAGR, FCF Margin, FCF Conversion
+[2023] MCD: valuation=43.4 | quality=53.7 | overall=48.5 | coverage=89% | missing=ROE
+[2023] KO: valuation=53.2 | quality=62.0 | overall=57.6 | coverage=100% | missing=none
+[2023] DPZ: valuation=85.2 | quality=61.4 | overall=73.3 | coverage=78% | missing=ROIC, ROE
+[2023] MO: valuation=12.0 | quality=66.9 | overall=39.5 | coverage=78% | missing=ROE, EPS CAGR
+[2023] OXY: valuation=56.5 | quality=85.0 | overall=70.8 | coverage=78% | missing=ROIC, EPS CAGR
+[2023] JNJ: valuation=79.3 | quality=70.7 | overall=75.0 | coverage=89% | missing=ROIC
+[2023] V: valuation=56.5 | quality=94.0 | overall=75.2 | coverage=100% | missing=none
+[2023] MA: valuation=60.2 | quality=92.5 | overall=76.3 | coverage=100% | missing=none
+[2023] MSFT: valuation=46.9 | quality=90.3 | overall=68.6 | coverage=100% | missing=none
+[2023] GOOGL: valuation=70.8 | quality=95.5 | overall=83.2 | coverage=100% | missing=none
+[2023] ASML: valuation=54.4 | quality=95.5 | overall=75.0 | coverage=100% | missing=none
+[2023] COST: valuation=15.3 | quality=79.3 | overall=47.3 | coverage=100% | missing=none
+[2023] META: valuation=74.5 | quality=70.8 | overall=72.7 | coverage=100% | missing=none
+[2023] AMZN: valuation=73.8 | quality=51.4 | overall=62.6 | coverage=67% | missing=ROE, EPS CAGR, FCF Conversion
+[2023] ADBE: valuation=64.1 | quality=80.5 | overall=72.3 | coverage=100% | missing=none
+[2023] CRM: valuation=69.0 | quality=44.8 | overall=56.9 | coverage=100% | missing=none
+[2023] INTU: valuation=46.6 | quality=64.5 | overall=55.5 | coverage=100% | missing=none
+[2023] LRCX: valuation=31.2 | quality=89.0 | overall=60.1 | coverage=100% | missing=none
+[2023] KLAC: valuation=20.2 | quality=85.3 | overall=52.8 | coverage=89% | missing=ROIC
+[2023] TXN: valuation=41.5 | quality=90.5 | overall=66.0 | coverage=100% | missing=none
+[2023] PFE: valuation=12.0 | quality=90.0 | overall=51.0 | coverage=89% | missing=ROIC
+[2023] MDT: valuation=66.5 | quality=61.0 | overall=63.8 | coverage=100% | missing=none
+[2023] SBUX: valuation=53.8 | quality=69.5 | overall=61.6 | coverage=89% | missing=ROE
+[2023] NKE: valuation=62.8 | quality=75.3 | overall=69.0 | coverage=89% | missing=ROIC
+[2023] LOW: valuation=92.2 | quality=70.5 | overall=81.3 | coverage=89% | missing=ROE
+[2023] UNH: valuation=43.3 | quality=72.8 | overall=58.0 | coverage=100% | missing=none
+[2023] LIN: valuation=59.7 | quality=65.0 | overall=62.4 | coverage=100% | missing=none
+[2023] NVDA: valuation=37.3 | quality=95.5 | overall=66.4 | coverage=100% | missing=none
+.[2024] RHHBY: valuation=28.1 | quality=43.2 | overall=35.7 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2024] RNO: valuation=12.0 | quality=53.6 | overall=32.8 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2024] MCD: valuation=42.4 | quality=61.3 | overall=51.8 | coverage=89% | missing=ROE
+[2024] KO: valuation=48.4 | quality=63.8 | overall=56.1 | coverage=100% | missing=none
+[2024] DPZ: valuation=84.5 | quality=52.1 | overall=68.3 | coverage=78% | missing=ROIC, ROE
+[2024] MO: valuation=80.3 | quality=71.2 | overall=75.8 | coverage=78% | missing=ROE, EPS CAGR
+[2024] OXY: valuation=38.7 | quality=65.0 | overall=51.9 | coverage=89% | missing=ROIC
+[2024] JNJ: valuation=42.4 | quality=75.0 | overall=58.7 | coverage=89% | missing=ROIC
+[2024] V: valuation=53.2 | quality=88.8 | overall=71.0 | coverage=100% | missing=none
+[2024] MA: valuation=47.8 | quality=90.3 | overall=69.0 | coverage=100% | missing=none
+[2024] MSFT: valuation=41.0 | quality=81.5 | overall=61.2 | coverage=100% | missing=none
+[2024] GOOGL: valuation=72.0 | quality=80.0 | overall=76.0 | coverage=100% | missing=none
+[2024] ASML: valuation=58.9 | quality=80.5 | overall=69.7 | coverage=100% | missing=none
+[2024] COST: valuation=16.0 | quality=77.8 | overall=46.9 | coverage=100% | missing=none
+[2024] META: valuation=71.0 | quality=79.3 | overall=75.2 | coverage=100% | missing=none
+[2024] AMZN: valuation=77.8 | quality=55.3 | overall=66.5 | coverage=100% | missing=none
+[2024] ADBE: valuation=74.3 | quality=86.5 | overall=80.4 | coverage=100% | missing=none
+[2024] CRM: valuation=75.7 | quality=54.5 | overall=65.1 | coverage=100% | missing=none
+[2024] INTU: valuation=12.0 | quality=74.0 | overall=43.0 | coverage=100% | missing=none
+[2024] LRCX: valuation=55.6 | quality=71.3 | overall=63.5 | coverage=100% | missing=none
+[2024] KLAC: valuation=34.7 | quality=67.7 | overall=51.2 | coverage=89% | missing=ROIC
+[2024] TXN: valuation=16.9 | quality=56.0 | overall=36.5 | coverage=100% | missing=none
+[2024] PFE: valuation=48.8 | quality=30.0 | overall=39.4 | coverage=89% | missing=ROIC
+[2024] MDT: valuation=68.1 | quality=42.5 | overall=55.3 | coverage=100% | missing=none
+[2024] SBUX: valuation=43.2 | quality=57.1 | overall=50.2 | coverage=89% | missing=ROE
+[2024] NKE: valuation=70.3 | quality=52.7 | overall=61.5 | coverage=89% | missing=ROIC
+[2024] LOW: valuation=64.0 | quality=51.3 | overall=57.6 | coverage=89% | missing=ROE
+[2024] UNH: valuation=19.9 | quality=69.8 | overall=44.8 | coverage=100% | missing=none
+[2024] LIN: valuation=59.7 | quality=69.0 | overall=64.3 | coverage=100% | missing=none
+[2024] NVDA: valuation=37.3 | quality=75.5 | overall=56.4 | coverage=100% | missing=none
+.[2025] RHHBY: valuation=59.2 | quality=29.1 | overall=44.2 | coverage=67% | missing=ROIC, FCF Margin, FCF Conversion
+[2025] RNO: valuation=12.0 | quality=31.2 | overall=21.6 | coverage=56% | missing=ROIC, EPS CAGR, FCF Margin, FCF Conversion
+[2025] MCD: valuation=41.4 | quality=65.5 | overall=53.5 | coverage=89% | missing=ROE
+[2025] KO: valuation=55.2 | quality=48.3 | overall=51.8 | coverage=89% | missing=ROIC
+[2025] DPZ: valuation=92.5 | quality=51.4 | overall=72.0 | coverage=78% | missing=ROIC, ROE
+[2025] MO: valuation=80.3 | quality=73.7 | overall=77.0 | coverage=89% | missing=ROE
+[2025] OXY: valuation=30.6 | quality=37.3 | overall=34.0 | coverage=89% | missing=ROIC
+[2025] JNJ: valuation=53.7 | quality=53.0 | overall=53.4 | coverage=89% | missing=ROIC
+[2025] V: valuation=46.8 | quality=88.8 | overall=67.8 | coverage=100% | missing=none
+[2025] MA: valuation=66.4 | quality=87.3 | overall=76.8 | coverage=100% | missing=none
+[2025] MSFT: valuation=62.1 | quality=88.8 | overall=75.5 | coverage=100% | missing=none
+[2025] GOOGL: valuation=55.4 | quality=92.5 | overall=74.0 | coverage=100% | missing=none
+[2025] ASML: valuation=44.9 | quality=91.8 | overall=68.3 | coverage=100% | missing=none
+[2025] COST: valuation=35.1 | quality=77.8 | overall=56.5 | coverage=100% | missing=none
+[2025] META: valuation=60.2 | quality=92.5 | overall=76.3 | coverage=100% | missing=none
+[2025] AMZN: valuation=77.0 | quality=68.8 | overall=72.9 | coverage=89% | missing=EPS CAGR
+[2025] ADBE: valuation=77.6 | quality=89.5 | overall=83.5 | coverage=100% | missing=none
+[2025] CRM: valuation=75.7 | quality=72.5 | overall=74.1 | coverage=100% | missing=none
+[2025] INTU: valuation=12.0 | quality=80.0 | overall=46.0 | coverage=100% | missing=none
+[2025] LRCX: valuation=26.2 | quality=69.8 | overall=48.0 | coverage=100% | missing=none
+[2025] KLAC: valuation=15.9 | quality=57.3 | overall=36.6 | coverage=89% | missing=ROIC
+[2025] TXN: valuation=27.5 | quality=50.8 | overall=39.1 | coverage=100% | missing=none
+[2025] PFE: valuation=38.5 | quality=36.0 | overall=37.2 | coverage=89% | missing=ROIC
+[2025] MDT: valuation=61.8 | quality=45.8 | overall=53.8 | coverage=100% | missing=none
+[2025] SBUX: valuation=44.4 | quality=53.4 | overall=48.9 | coverage=89% | missing=ROE
+[2025] NKE: valuation=46.6 | quality=50.7 | overall=48.7 | coverage=89% | missing=ROIC
+[2025] LOW: valuation=71.3 | quality=54.7 | overall=63.0 | coverage=89% | missing=ROE
+[2025] UNH: valuation=39.2 | quality=55.5 | overall=47.4 | coverage=100% | missing=none
+[2025] LIN: valuation=69.0 | quality=63.0 | overall=66.0 | coverage=100% | missing=none
+[2025] NVDA: valuation=66.9 | quality=91.0 | overall=79.0 | coverage=100% | missing=none
+.
+41 passed in 15.96s

@@ -4,6 +4,15 @@ import yfinance as yf
 from pathlib import Path
 
 from .base import Provider
+from ..metrics.core import (
+    compute_debt_to_ebitda,
+    compute_fcf_metrics,
+    compute_invested_capital,
+    compute_net_cash,
+    compute_net_debt_ebitda,
+    compute_roic,
+    compute_tax_rate,
+)
 from ..models import Company
 from ..ticker_aliases import YAHOO_TICKER_MAP
 
@@ -97,10 +106,17 @@ class YahooProvider(Provider):
                     ebitda = float(inc.loc[label, inc_col])
                     break
 
-            # --- Net Debt / EBITDA (negative = net cash = good) ---
-            net_debt_ebitda = None
-            if net_cash is not None and ebitda and ebitda != 0:
-                net_debt_ebitda = -net_cash / ebitda  # convert net_cash sign back to net_debt
+            total_debt = float(bal.loc["Total Debt", bal_col]) if "Total Debt" in bal.index and not pd.isna(bal.loc["Total Debt", bal_col]) else None
+            cash_total = (
+                float(bal.loc["Cash Cash Equivalents And Short Term Investments", bal_col])
+                if "Cash Cash Equivalents And Short Term Investments" in bal.index and not pd.isna(bal.loc["Cash Cash Equivalents And Short Term Investments", bal_col])
+                else None
+            )
+
+            if net_cash is None and total_debt is not None and cash_total is not None:
+                net_cash = compute_net_cash(total_debt=total_debt, cash=cash_total)
+
+            net_debt_ebitda = compute_net_debt_ebitda(total_debt=total_debt, cash=cash_total, ebitda=ebitda)
 
             # --- Interest Coverage (EBIT / |Interest Expense|) ---
             interest_coverage = None
@@ -119,10 +135,7 @@ class YahooProvider(Provider):
             if ebit is not None and interest_expense:
                 interest_coverage = ebit / interest_expense
 
-            # --- Debt / EBITDA (fallback) ---
-            debt_to_ebitda = None
-            if "Total Debt" in bal.index and ebitda and ebitda > 0:
-                debt_to_ebitda = float(bal.loc["Total Debt", bal_col]) / ebitda
+            debt_to_ebitda = compute_debt_to_ebitda(total_debt=total_debt, ebitda=ebitda)
 
             return net_cash, net_debt_ebitda, interest_coverage, debt_to_ebitda
         except Exception as exc:
@@ -139,17 +152,19 @@ class YahooProvider(Provider):
 
             col = cf.columns[0]
 
-            fcf = None
+            free_cash_flow = None
+            operating_cash_flow = None
+            capex = None
             for label in ("Free Cash Flow", "Operating Cash Flow"):
                 if label in cf.index and not pd.isna(cf.loc[label, col]):
                     if label == "Operating Cash Flow" and "Capital Expenditure" in cf.index:
-                        capex = cf.loc["Capital Expenditure", col]
-                        fcf = float(cf.loc[label, col]) + float(capex)  # capex is negative
+                        operating_cash_flow = float(cf.loc[label, col])
+                        capex = float(cf.loc["Capital Expenditure", col])
                     else:
-                        fcf = float(cf.loc[label, col])
+                        free_cash_flow = float(cf.loc[label, col])
                     break
 
-            if fcf is None:
+            if free_cash_flow is None and operating_cash_flow is None:
                 _log.debug("[FCF] %s: could not resolve FCF", ticker)
                 return None, None
 
@@ -164,8 +179,13 @@ class YahooProvider(Provider):
                     net_income = float(inc.loc[label, inc_col])
                     break
 
-            fcf_margin = fcf / revenue if revenue and revenue != 0 else None
-            fcf_conversion = fcf / net_income if net_income and net_income != 0 else None
+            _, fcf_margin, fcf_conversion = compute_fcf_metrics(
+                revenue=revenue,
+                net_income=net_income,
+                free_cash_flow=free_cash_flow,
+                operating_cash_flow=operating_cash_flow,
+                capex=capex,
+            )
 
             return fcf_margin, fcf_conversion
         except Exception as exc:
@@ -238,23 +258,27 @@ class YahooProvider(Provider):
                     break
 
             # --- Tax rate: explicit rate, else derive from provision / pretax ---
-            tax_rate = None
+            effective_tax_rate = None
             if "Tax Rate For Calcs" in inc.index and not pd.isna(inc.loc["Tax Rate For Calcs", col]):
-                tax_rate = float(inc.loc["Tax Rate For Calcs", col])
-            else:
-                provision_labels = ("Tax Provision", "Income Tax Expense", "Tax Expense")
-                pretax_labels = ("Pretax Income", "Income Before Tax", "Earnings Before Tax")
-                provision, pretax = None, None
-                for label in provision_labels:
-                    if label in inc.index and not pd.isna(inc.loc[label, col]):
-                        provision = float(inc.loc[label, col])
-                        break
-                for label in pretax_labels:
-                    if label in inc.index and not pd.isna(inc.loc[label, col]):
-                        pretax = float(inc.loc[label, col])
-                        break
-                if provision is not None and pretax and pretax != 0:
-                    tax_rate = provision / pretax
+                effective_tax_rate = float(inc.loc["Tax Rate For Calcs", col])
+
+            provision_labels = ("Tax Provision", "Income Tax Expense", "Tax Expense")
+            pretax_labels = ("Pretax Income", "Income Before Tax", "Earnings Before Tax")
+            provision, pretax = None, None
+            for label in provision_labels:
+                if label in inc.index and not pd.isna(inc.loc[label, col]):
+                    provision = float(inc.loc[label, col])
+                    break
+            for label in pretax_labels:
+                if label in inc.index and not pd.isna(inc.loc[label, col]):
+                    pretax = float(inc.loc[label, col])
+                    break
+
+            tax_rate = compute_tax_rate(
+                tax_provision=provision,
+                pretax_income=pretax,
+                effective_tax_rate=effective_tax_rate,
+            )
 
             # --- Invested Capital: primary label then fallbacks ---
             invested_capital = None
@@ -262,6 +286,23 @@ class YahooProvider(Provider):
                 if label in bal.index and not pd.isna(bal.loc[label, col]):
                     invested_capital = float(bal.loc[label, col])
                     break
+
+            if invested_capital is None:
+                total_debt = None
+                cash = None
+                equity = None
+                if "Total Debt" in bal.index and not pd.isna(bal.loc["Total Debt", col]):
+                    total_debt = float(bal.loc["Total Debt", col])
+                if "Cash Cash Equivalents And Short Term Investments" in bal.index and not pd.isna(bal.loc["Cash Cash Equivalents And Short Term Investments", col]):
+                    cash = float(bal.loc["Cash Cash Equivalents And Short Term Investments", col])
+                if "Total Equity Gross Minority Interest" in bal.index and not pd.isna(bal.loc["Total Equity Gross Minority Interest", col]):
+                    equity = float(bal.loc["Total Equity Gross Minority Interest", col])
+
+                invested_capital = compute_invested_capital(
+                    total_debt=total_debt,
+                    equity=equity,
+                    cash=cash,
+                )
 
             if ebit is None:
                 _log.debug("[ROIC] %s: could not resolve EBIT", ticker)
@@ -276,8 +317,7 @@ class YahooProvider(Provider):
                 _log.debug("[ROIC] %s: invested capital is zero", ticker)
                 return None
 
-            nopat = ebit * (1.0 - tax_rate)
-            return nopat / invested_capital
+            return compute_roic(ebit=ebit, tax_rate=tax_rate, invested_capital=invested_capital)
         except Exception as exc:
             _log.warning("[ROIC] %s: unexpected error — %s", ticker, exc)
             return None

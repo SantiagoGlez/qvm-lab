@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import pytest
+
 from quantlab.strategies.qvm.historical.repositories import (
     CompaniesMarketCapHistoricalFinancialRepository,
 )
@@ -38,3 +42,18 @@ def test_historical_financial_repository_rejects_future_rows() -> None:
 
     assert row["Year"].tolist() == [2018]
     assert row["revenue"].tolist() == [1.0]
+
+
+def test_historical_financial_repository_enriches_with_sec_probe_fields() -> None:
+    probe_path = Path("data/qvm/companiesmarketcap/msft_sec_companyfacts_probe.csv")
+    if not probe_path.exists():
+        pytest.skip("MSFT SEC probe dataset not available in this workspace")
+
+    repo = CompaniesMarketCapHistoricalFinancialRepository()
+
+    data = repo.load("MSFT", 2019)
+
+    assert data["roic"] is not None
+    assert data["operating_cash_flow"] is not None
+    assert data["capex"] is not None
+    assert data["free_cash_flow"] is not None

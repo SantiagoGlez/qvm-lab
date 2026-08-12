@@ -1,3 +1,6 @@
+import csv
+from pathlib import Path
+
 import pytest
 
 from quantlab.strategies.qvm.analysis.overall import overall_score
@@ -13,7 +16,19 @@ from quantlab.strategies.qvm.historical.repositories import (
 
 
 FORMATION_YEAR = 2019
-UNIVERSE = ["AMZN", "COST", "META", "MSFT", "NKE", "NVDA"]
+
+
+def _load_universe() -> list[str]:
+    repo_root = Path(__file__).resolve().parents[2]
+    companies_csv = repo_root / "data" / "qvm" / "companies.csv"
+    with companies_csv.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        tickers = [str(row.get("ticker", "")).strip().upper() for row in reader]
+
+    return [ticker for ticker in tickers if ticker]
+
+
+UNIVERSE = _load_universe()
 FORMATION_YEARS = list(range(2015, 2026))
 
 
@@ -27,8 +42,12 @@ def test_historical_universe_single_year_smoke(ticker: str) -> None:
     val_repo = CompaniesMarketCapHistoricalValuationRepository()
     fin_repo = CompaniesMarketCapHistoricalFinancialRepository()
 
-    valuation_data = val_repo.load(ticker, FORMATION_YEAR)
-    financial_data = fin_repo.load(ticker, FORMATION_YEAR)
+    try:
+        valuation_data = val_repo.load(ticker, FORMATION_YEAR)
+        financial_data = fin_repo.load(ticker, FORMATION_YEAR)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[{ticker}] GAP: {exc}")
+        pytest.skip(f"Missing historical slice for {ticker}: {exc}")
 
     company = HistoricalValuationAdapter().adapt(ticker, valuation_data)
     quality_company = HistoricalQualityAdapter().adapt(ticker, financial_data)
@@ -66,9 +85,14 @@ def test_historical_universe_multi_year_smoke(formation_year: int) -> None:
     val_repo = CompaniesMarketCapHistoricalValuationRepository()
     fin_repo = CompaniesMarketCapHistoricalFinancialRepository()
 
+    processed = 0
     for ticker in UNIVERSE:
-        valuation_data = val_repo.load(ticker, formation_year)
-        financial_data = fin_repo.load(ticker, formation_year)
+        try:
+            valuation_data = val_repo.load(ticker, formation_year)
+            financial_data = fin_repo.load(ticker, formation_year)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"[{formation_year}] {ticker}: GAP={exc}")
+            continue
 
         company = HistoricalValuationAdapter().adapt(ticker, valuation_data)
         quality_company = HistoricalQualityAdapter().adapt(ticker, financial_data)
@@ -93,3 +117,6 @@ def test_historical_universe_multi_year_smoke(formation_year: int) -> None:
         assert overall_score(company) >= 0
         assert company.valuation.summary
         assert company.quality.summary
+        processed += 1
+
+    assert processed > 0, f"No companies could be scored for formation year {formation_year}"

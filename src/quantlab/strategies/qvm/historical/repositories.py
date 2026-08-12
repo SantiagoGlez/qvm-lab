@@ -113,6 +113,7 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
         revenue_cagr, revenue_cagr_years = self._compute_cagr(reference_history, "revenue", window_years=3)
         eps_cagr, eps_cagr_years = self._compute_cagr(reference_history, "eps", window_years=3)
         share_count_cagr, share_count_cagr_years = self._compute_cagr(reference_history, "shares_outstanding", window_years=3)
+        sec_snapshot = self._load_sec_probe_snapshot(ticker, year)
 
         return {
             "ticker": ticker,
@@ -134,7 +135,53 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
             "eps_cagr_years": eps_cagr_years,
             "share_count_cagr": share_count_cagr,
             "share_count_cagr_years": share_count_cagr_years,
+            "roic": sec_snapshot.get("roic_computed"),
+            "operating_cash_flow": sec_snapshot.get("operating_cash_flow"),
+            "capex": sec_snapshot.get("capex"),
+            "free_cash_flow": sec_snapshot.get("fcf_computed"),
+            "ebit": sec_snapshot.get("ebit"),
+            "tax_provision": sec_snapshot.get("tax_provision"),
+            "pretax_income": sec_snapshot.get("pretax_income"),
+            "effective_tax_rate": sec_snapshot.get("effective_tax_rate"),
+            "equity": sec_snapshot.get("equity"),
+            "short_term_investments": sec_snapshot.get("short_term_investments"),
         }
+
+    def _load_sec_probe_snapshot(self, ticker: str, year: int) -> dict[str, float | None]:
+        sec_probe_path = self.DATA_DIR / f"{ticker.lower()}_sec_companyfacts_probe.csv"
+        if not sec_probe_path.exists():
+            return {}
+
+        df = pd.read_csv(sec_probe_path)
+        if df.empty or "year" not in df.columns:
+            return {}
+
+        df["year"] = pd.to_numeric(df["year"], errors="coerce")
+        row = df[df["year"] == int(year)]
+        if row.empty:
+            return {}
+
+        snapshot = row.iloc[-1].to_dict()
+
+        keys = [
+            "roic_computed",
+            "operating_cash_flow",
+            "capex",
+            "fcf_computed",
+            "ebit",
+            "tax_provision",
+            "pretax_income",
+            "effective_tax_rate",
+            "equity",
+            "short_term_investments",
+        ]
+
+        normalized: dict[str, float | None] = {}
+        for key in keys:
+            value = snapshot.get(key)
+            normalized[key] = float(value) if pd.notna(value) else None
+
+        return normalized
 
     def _resolve_path(self, ticker: str) -> Path:
         matches = list(self.DATA_DIR.glob(f"{ticker.lower()}_*_financials.csv"))

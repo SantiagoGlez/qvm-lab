@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from ..metrics.core import compute_debt_to_ebitda, compute_fcf_metrics, compute_net_debt_ebitda
 from ..models import Company
 
 
@@ -77,12 +78,18 @@ class HistoricalQualityAdapter:
         revenue = _as_float(payload.get("revenue"))
         net_income = _as_float(payload.get("net_income"))
         net_assets = _as_float(payload.get("net_assets"))
+        roic = _as_float(payload.get("roic"))
         operating_margin = _as_float(payload.get("operating_margin"))
         total_debt = _as_float(payload.get("total_debt"))
         cash = _as_float(payload.get("cash"))
+        operating_cash_flow = _as_float(payload.get("operating_cash_flow"))
+        capex = _as_float(payload.get("capex"))
+        free_cash_flow = _as_float(payload.get("free_cash_flow"))
 
         if net_income is not None and net_assets not in (None, 0):
             metrics.roe = net_income / net_assets
+        if roic is not None:
+            metrics.roic = roic
         if operating_margin is not None:
             metrics.operating_margin = operating_margin
 
@@ -95,16 +102,25 @@ class HistoricalQualityAdapter:
             metrics.eps_cagr = eps_cagr
             metrics.eps_cagr_years = int(payload.get("eps_cagr_years") or 0) or None
 
+        _, fcf_margin, fcf_conversion = compute_fcf_metrics(
+            revenue=revenue,
+            net_income=net_income,
+            free_cash_flow=free_cash_flow,
+            operating_cash_flow=operating_cash_flow,
+            capex=capex,
+        )
+        metrics.fcf_margin = fcf_margin
+        metrics.fcf_conversion = fcf_conversion
+
         ebitda = None
         if revenue is not None and operating_margin is not None and operating_margin != 0:
             ebitda = revenue * operating_margin
-        if total_debt is not None and ebitda not in (None, 0):
-            metrics.debt_to_ebitda = total_debt / ebitda
-        if total_debt is not None and cash is not None:
+
+        metrics.debt_to_ebitda = compute_debt_to_ebitda(total_debt=total_debt, ebitda=ebitda)
+        metrics.net_debt_ebitda = compute_net_debt_ebitda(total_debt=total_debt, cash=cash, ebitda=ebitda)
+        if metrics.net_debt_ebitda is None and total_debt is not None and cash is not None and ebitda in (None, 0):
             net_debt = total_debt - cash
-            if ebitda not in (None, 0):
-                metrics.net_debt_ebitda = net_debt / ebitda
-            elif net_debt != 0:
+            if net_debt != 0:
                 metrics.net_debt_ebitda = float("inf") if net_debt > 0 else float("-inf")
 
         return company
