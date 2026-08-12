@@ -57,3 +57,17 @@ def test_historical_financial_repository_enriches_with_sec_probe_fields() -> Non
     assert data["operating_cash_flow"] is not None
     assert data["capex"] is not None
     assert data["free_cash_flow"] is not None
+
+
+def test_historical_financial_repository_prefers_primary_values_over_sec_fallback() -> None:
+    repo = CompaniesMarketCapHistoricalFinancialRepository()
+
+    assert repo._prefer_primary_then_fallback(10.0, 20.0) == 10.0
+    assert repo._prefer_primary_then_fallback(0.0, 20.0) == 0.0
+
+
+def test_historical_financial_repository_uses_sec_fallback_when_primary_missing() -> None:
+    repo = CompaniesMarketCapHistoricalFinancialRepository()
+
+    assert repo._prefer_primary_then_fallback(None, 20.0) == 20.0
+    assert repo._prefer_primary_then_fallback(float("nan"), 20.0) == 20.0

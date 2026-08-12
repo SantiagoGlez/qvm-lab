@@ -88,6 +88,8 @@ class HistoricalQualityAdapter:
 
         if net_income is not None and net_assets not in (None, 0):
             metrics.roe = net_income / net_assets
+        elif net_income is not None and payload.get("equity") not in (None, 0):
+            metrics.roe = net_income / _as_float(payload.get("equity"))
         if roic is not None:
             metrics.roic = roic
         if operating_margin is not None:

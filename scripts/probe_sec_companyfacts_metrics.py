@@ -47,6 +47,11 @@ TAG_CANDIDATES = {
     "ebit": [
         "OperatingIncomeLoss",
     ],
+    "interest_and_debt_expense": [
+        "InterestAndDebtExpense",
+        "InterestExpense",
+        "InterestExpenseDebt",
+    ],
     "tax_provision": [
         "IncomeTaxExpenseBenefit",
     ],
@@ -71,13 +76,19 @@ TAG_CANDIDATES = {
     "debt_total": [
         "DebtAndFinanceLeaseLiabilities",
         "LongTermDebtAndFinanceLeaseObligations",
+        "DebtAndCapitalLeaseObligations",
         "LongTermDebt",
     ],
     "debt_current": [
         "DebtCurrent",
+        "LongTermDebtAndCapitalLeaseObligationsCurrent",
+        "FinanceLeaseLiabilityCurrent",
         "LongTermDebtCurrent",
     ],
     "debt_noncurrent": [
+        "LongTermDebtAndFinanceLeaseObligationsNoncurrent",
+        "LongTermDebtAndCapitalLeaseObligationsNoncurrent",
+        "FinanceLeaseLiabilityNoncurrent",
         "LongTermDebtNoncurrent",
     ],
     "equity": [
@@ -89,6 +100,16 @@ TAG_CANDIDATES = {
 
 ANNUAL_FORMS = {"10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A"}
 PREFERRED_UNITS = ("USD", "pure")
+
+# Optional manual mapping for issuers that do not appear in SEC ticker datasets.
+# Keep this intentionally small and only populate with verified CIK values.
+SEC_CIK_OVERRIDES: dict[str, str] = {}
+
+# Optional alternate SEC ticker symbols to try when local universe tickers differ.
+SEC_TICKER_ALIASES: dict[str, list[str]] = {
+    "RNO": ["RNLSY", "RNSDF", "RNSDY"],
+    "RHHBY": ["RHHBF"],
+}
 
 
 def _sec_headers() -> dict[str, str]:
@@ -125,6 +146,36 @@ def _ticker_to_cik() -> dict[str, str]:
             continue
         mapping[ticker] = f"{int(cik_num):010d}"
     return mapping
+
+
+def _normalize_cik(value: str) -> str | None:
+    digits = "".join(ch for ch in str(value) if ch.isdigit())
+    if not digits:
+        return None
+    return f"{int(digits):010d}"
+
+
+def _resolve_cik_for_ticker(ticker: str, ticker_cik: dict[str, str]) -> tuple[str | None, str]:
+    ticker_upper = ticker.upper().strip()
+
+    override = SEC_CIK_OVERRIDES.get(ticker_upper)
+    if override:
+        normalized = _normalize_cik(override)
+        if normalized:
+            return normalized, f"override:{ticker_upper}"
+
+    direct = ticker_cik.get(ticker_upper)
+    if direct:
+        return direct, f"ticker:{ticker_upper}"
+
+    aliases = SEC_TICKER_ALIASES.get(ticker_upper, [])
+    for alias in aliases:
+        alias_upper = alias.upper().strip()
+        cik = ticker_cik.get(alias_upper)
+        if cik:
+            return cik, f"alias:{ticker_upper}->{alias_upper}"
+
+    return None, f"missing:{ticker_upper}"
 
 
 def _load_filing_accessions(filing_links_csv: Path, ticker: str) -> set[str]:
@@ -292,6 +343,7 @@ def _compute_derived(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         tax = row.get("tax_provision")
         effective_tax_rate = row.get("effective_tax_rate")
         pretax = row.get("pretax_income")
+        interest_and_debt_expense = row.get("interest_and_debt_expense")
         cash = row.get("cash")
         short_inv = row.get("short_term_investments")
         debt_total = row.get("debt_total")
@@ -321,6 +373,12 @@ def _compute_derived(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             effective_tax_rate=effective_tax_rate,
         )
 
+        ebit_for_roic = ebit
+        ebit_proxy_from_pretax_interest = False
+        if ebit_for_roic is None and pretax is not None and interest_and_debt_expense is not None:
+            ebit_for_roic = float(pretax) + float(interest_and_debt_expense)
+            ebit_proxy_from_pretax_interest = True
+
         invested_capital = compute_invested_capital(
             total_debt=debt,
             equity=equity,
@@ -329,7 +387,7 @@ def _compute_derived(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
 
         roic = compute_roic(
-            ebit=ebit,
+            ebit=ebit_for_roic,
             invested_capital=invested_capital,
             tax_rate=tax_rate,
         )
@@ -345,10 +403,12 @@ def _compute_derived(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         enriched["invested_capital_computed"] = invested_capital
         enriched["nopat_computed"] = nopat
         enriched["roic_computed"] = roic
+        enriched["ebit_effective_for_roic"] = ebit_for_roic
+        enriched["ebit_proxy_from_pretax_interest"] = ebit_proxy_from_pretax_interest
         enriched["fcf_margin_computed"] = fcf_margin
         enriched["fcf_conversion_computed"] = fcf_conversion
 
-        enriched["has_roic_inputs"] = bool(ebit is not None and tax_rate is not None and invested_capital not in (None, 0))
+        enriched["has_roic_inputs"] = bool(ebit_for_roic is not None and tax_rate is not None and invested_capital not in (None, 0))
         enriched["has_fcf_inputs"] = bool(ocf is not None and capex is not None and revenue not in (None, 0) and net_income not in (None, 0))
 
         output.append(enriched)
@@ -365,9 +425,11 @@ def run_probe(
 ) -> pd.DataFrame:
     ticker = ticker.upper().strip()
     ticker_cik = _ticker_to_cik()
-    cik = ticker_cik.get(ticker)
+    cik, cik_source = _resolve_cik_for_ticker(ticker, ticker_cik)
     if not cik:
-        raise ValueError(f"No CIK found for ticker: {ticker}")
+        aliases = SEC_TICKER_ALIASES.get(ticker, [])
+        alias_note = f" aliases_tried={aliases}" if aliases else ""
+        raise ValueError(f"No CIK found for ticker: {ticker}.{alias_note}")
 
     accessions = _load_filing_accessions(filing_links_csv, ticker)
 
@@ -383,6 +445,7 @@ def run_probe(
     for row in rows:
         row["ticker"] = ticker
         row["cik"] = cik
+        row["cik_source"] = cik_source
         row["accession_count_from_links"] = len(accessions)
 
     df = pd.DataFrame(rows)

@@ -55,3 +55,26 @@ def test_historical_quality_adapter_maps_y_minus_1_financials_to_company_metrics
     assert company.metrics.fcf_margin == pytest.approx((52_185_000_000.0 - 13_925_000_000.0) / 118_450_000_000.0)
     assert company.metrics.fcf_conversion == pytest.approx((52_185_000_000.0 - 13_925_000_000.0) / 39_920_000_000.0)
     assert analyse_quality(company).score > 0
+
+
+def test_historical_quality_adapter_falls_back_to_equity_for_roe() -> None:
+    repo_data = {
+        "ticker": "DPZ",
+        "formation_year": 2024,
+        "year": 2023,
+        "revenue": 4_000_000_000.0,
+        "net_income": 500_000_000.0,
+        "eps": 12.0,
+        "operating_margin": 0.15,
+        "operating_cash_flow": 600_000_000.0,
+        "capex": 50_000_000.0,
+        "net_assets": None,
+        "equity": -4_000_000_000.0,
+        "total_debt": 1_000_000_000.0,
+        "cash": 200_000_000.0,
+        "roic": 0.1,
+    }
+
+    company = HistoricalQualityAdapter().adapt("DPZ", repo_data)
+
+    assert company.metrics.roe == pytest.approx(-0.125)

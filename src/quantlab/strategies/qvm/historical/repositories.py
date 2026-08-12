@@ -93,6 +93,19 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
     REPO_ROOT = Path(__file__).resolve().parents[5]
     DATA_DIR = REPO_ROOT / "data" / "qvm" / "companiesmarketcap"
 
+    @staticmethod
+    def _as_float(value: object) -> float | None:
+        if value is None or pd.isna(value):
+            return None
+        return float(value)
+
+    @classmethod
+    def _prefer_primary_then_fallback(cls, primary_value: object, fallback_value: object) -> float | None:
+        primary = cls._as_float(primary_value)
+        if primary is not None:
+            return primary
+        return cls._as_float(fallback_value)
+
     def load(self, ticker: str, formation_year: int) -> dict[str, Any]:
         ticker = ticker.upper()
         path = self._resolve_path(ticker)
@@ -115,16 +128,29 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
         share_count_cagr, share_count_cagr_years = self._compute_cagr(reference_history, "shares_outstanding", window_years=3)
         sec_snapshot = self._load_sec_probe_snapshot(ticker, year)
 
+        revenue = self._prefer_primary_then_fallback(row.get("revenue"), sec_snapshot.get("revenue"))
+        net_income = self._prefer_primary_then_fallback(row.get("net_income"), sec_snapshot.get("net_income"))
+        cash = self._prefer_primary_then_fallback(row.get("cash"), sec_snapshot.get("cash_total"))
+        total_debt = self._prefer_primary_then_fallback(row.get("total_debt"), sec_snapshot.get("debt_computed"))
+        operating_cash_flow = self._prefer_primary_then_fallback(
+            row.get("operating_cash_flow"), sec_snapshot.get("operating_cash_flow")
+        )
+        capex = self._prefer_primary_then_fallback(row.get("capex"), sec_snapshot.get("capex"))
+        ebit = self._prefer_primary_then_fallback(row.get("ebit"), sec_snapshot.get("ebit"))
+        tax_provision = self._prefer_primary_then_fallback(row.get("tax_provision"), sec_snapshot.get("tax_provision"))
+        pretax_income = self._prefer_primary_then_fallback(row.get("pretax_income"), sec_snapshot.get("pretax_income"))
+        free_cash_flow = self._prefer_primary_then_fallback(row.get("free_cash_flow"), sec_snapshot.get("fcf_computed"))
+
         return {
             "ticker": ticker,
             "formation_year": formation_year,
             "year": year,
-            "revenue": float(row["revenue"]) if pd.notna(row.get("revenue")) else None,
-            "net_income": float(row["net_income"]) if pd.notna(row.get("net_income")) else None,
+            "revenue": revenue,
+            "net_income": net_income,
             "eps": float(row["eps"]) if pd.notna(row.get("eps")) else None,
             "operating_margin": self._to_decimal(row.get("operating_margin")),
-            "cash": float(row["cash"]) if pd.notna(row.get("cash")) else None,
-            "total_debt": float(row["total_debt"]) if pd.notna(row.get("total_debt")) else None,
+            "cash": cash,
+            "total_debt": total_debt,
             "total_assets": float(row["total_assets"]) if pd.notna(row.get("total_assets")) else None,
             "net_assets": float(row["net_assets"]) if pd.notna(row.get("net_assets")) else None,
             "shares_outstanding": float(row["shares_outstanding"]) if pd.notna(row.get("shares_outstanding")) else None,
@@ -136,12 +162,12 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
             "share_count_cagr": share_count_cagr,
             "share_count_cagr_years": share_count_cagr_years,
             "roic": sec_snapshot.get("roic_computed"),
-            "operating_cash_flow": sec_snapshot.get("operating_cash_flow"),
-            "capex": sec_snapshot.get("capex"),
-            "free_cash_flow": sec_snapshot.get("fcf_computed"),
-            "ebit": sec_snapshot.get("ebit"),
-            "tax_provision": sec_snapshot.get("tax_provision"),
-            "pretax_income": sec_snapshot.get("pretax_income"),
+            "operating_cash_flow": operating_cash_flow,
+            "capex": capex,
+            "free_cash_flow": free_cash_flow,
+            "ebit": ebit,
+            "tax_provision": tax_provision,
+            "pretax_income": pretax_income,
             "effective_tax_rate": sec_snapshot.get("effective_tax_rate"),
             "equity": sec_snapshot.get("equity"),
             "short_term_investments": sec_snapshot.get("short_term_investments"),
@@ -164,6 +190,8 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
         snapshot = row.iloc[-1].to_dict()
 
         keys = [
+            "revenue",
+            "net_income",
             "roic_computed",
             "operating_cash_flow",
             "capex",
@@ -172,6 +200,10 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
             "tax_provision",
             "pretax_income",
             "effective_tax_rate",
+            "cash",
+            "cash_total",
+            "debt_total",
+            "debt_computed",
             "equity",
             "short_term_investments",
         ]
