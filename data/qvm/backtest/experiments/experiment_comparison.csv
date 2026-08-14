@@ -1,0 +1,5 @@
+experiment,scoring_mode,formation_month,formation_day,top_n,years,cagr,sharpe,max_drawdown,turnover,win_rate_vs_spy,spy_cagr,excess_cagr
+Valuation Only Apr-01,valuation,4,1,10,11,0.1277,0.6273,-0.1215,0.4,0.5455,0.1298,-0.0021
+Quality Only Apr-01,quality,4,1,10,11,0.2387,0.9862,-0.047,0.31,0.8182,0.1298,0.1089
+QV Baseline Apr-01,qv,4,1,10,11,0.1533,0.8115,-0.0596,0.4,0.5455,0.1298,0.0235
+QV Jan Rebalance,qv,1,2,10,11,0.1717,0.8284,-0.301,0.4,0.6364,0.1344,0.0373
