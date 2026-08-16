@@ -10,7 +10,7 @@ import pandas as pd
 import yfinance as yf
 
 from ..analysis.overall import overall_score
-from ..analysis.quality import analyse_quality
+from ..analysis.quality import analyse_quality, quality_eligible
 from ..analysis.scoring import calculate_score
 from ..historical.adapters import HistoricalQualityAdapter, HistoricalValuationAdapter
 from ..historical.repositories import (
@@ -435,7 +435,8 @@ def run_annual_backtest(
         companies = score_universe_for_year(formation_year, universe)
         for company in companies:
             company.quality = analyse_quality(company, excluded_metrics=config.quality_metric_exclusions)
-        ranked = rank_companies_with_mode(companies, config.top_n, config.scoring_mode)
+        eligible_companies = [c for c in companies if quality_eligible(c)]
+        ranked = rank_companies_with_mode(eligible_companies, config.top_n, config.scoring_mode)
         holdings_by_year.append({company.ticker for company in ranked})
 
         try:

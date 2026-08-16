@@ -107,6 +107,7 @@ SEC_CIK_OVERRIDES: dict[str, str] = {}
 
 # Optional alternate SEC ticker symbols to try when local universe tickers differ.
 SEC_TICKER_ALIASES: dict[str, list[str]] = {
+    "MMC": ["MRSH"],
     "RNO": ["RNLSY", "RNSDF", "RNSDY"],
     "RHHBY": ["RHHBF"],
 }

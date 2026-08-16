@@ -43,6 +43,7 @@ def backtest_cli() -> None:
     parser.add_argument("--formation-day", type=int, default=1)
     parser.add_argument("--top-n", type=int, default=10)
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--scoring-mode", type=str, default="qv", choices=["qv", "quality", "valuation"])
     args = parser.parse_args(sys.argv[1:])
 
     config = AnnualBacktestConfig(
@@ -52,6 +53,7 @@ def backtest_cli() -> None:
         formation_day=args.formation_day,
         top_n=args.top_n,
         output_dir=args.output_dir,
+        scoring_mode=args.scoring_mode,
     )
     result = run_annual_backtest(config)
 
@@ -111,6 +113,15 @@ def experiments_cli() -> None:
             formation_day=2,
             scoring_mode="qv",
             experiment_name="QV Jan Rebalance",
+        ),
+        AnnualBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            formation_month=1,
+            formation_day=2,
+            scoring_mode="quality",
+            experiment_name="Quality Only Jan Rebalance",
         ),
     ]
 

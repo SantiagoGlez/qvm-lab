@@ -88,6 +88,24 @@ uv run python scripts/strategies/qvm/audit_historical_financials.py --bulk
 
 The single-ticker mode inspects the CSV file matching `data/qvm/companiesmarketcap/{ticker}_*_valuation.csv` and prints a concise report to the terminal. The bulk mode scans all valuation files in the directory, prints a summary to the terminal, and writes the same report content to the output file when `--output` is provided.
 
+## Data quality — historical coverage
+
+After downloading data for a new or updated universe, run the historical universe smoke test to validate and measure per-ticker quality metric coverage across the full backtest window (2015–2025):
+
+```bash
+uv run pytest tests/backtest/test_historical_universe_smoke.py -v
+```
+
+This test exercises the repository + adapter + scoring chain for every ticker in `data/qvm/companies.csv` and writes three coverage report files:
+
+| File | Contents |
+|---|---|
+| `data/qvm/backtest/historical_coverage_by_company_summary.csv` | Per-ticker mean/min/max quality coverage across all formation years |
+| `data/qvm/backtest/historical_coverage_by_year_summary.csv` | Per-year mean/min/max quality coverage across all tickers |
+| `data/qvm/backtest/historical_coverage_by_year_company.csv` | Full detail: every ticker × year with scores and missing metrics |
+
+Coverage is the fraction of the 9 quality dimensions populated for a given company/year snapshot. The production eligibility gate is `coverage >= 0.70` (7 of 9 metrics present). Tickers that consistently fall below this threshold across most years are unlikely to rank competitively and should be reviewed for removal from the universe.
+
 Or run scripts directly:
 
 ```bash

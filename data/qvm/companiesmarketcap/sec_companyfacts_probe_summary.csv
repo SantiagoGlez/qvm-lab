@@ -73,7 +73,7 @@ MCHP,ok,15,9,7,7,
 MCO,ok,16,16,16,16,
 MDT,ok,11,11,10,10,
 META,ok,14,9,14,14,
-MMC,error,0,0,0,0,No CIK found for ticker: MMC.
+MMC,ok,16,16,8,16,
 MO,ok,16,16,14,14,
 MPWR,ok,15,0,11,11,
 MSCI,ok,16,16,16,16,
