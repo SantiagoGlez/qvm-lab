@@ -38,6 +38,7 @@ qvm-universe = "qvm_lab.cli:universe_cli"
 qvm-backtest = "qvm_lab.cli:backtest_cli"
 qvm-experiments = "qvm_lab.cli:experiments_cli"
 qvm-quality-battletest = "qvm_lab.cli:quality_battletest_cli"
+qvm-quality-diagnostics = "qvm_lab.cli:quality_diagnostics_cli"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

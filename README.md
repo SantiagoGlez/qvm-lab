@@ -36,6 +36,12 @@ These scripts populate the QVM data files under the `data/qvm` folder.
 
 The scoring rules and decision framework are documented in [docs/specifications/qvm_scoring.md](docs/specifications/qvm_scoring.md).
 
+## Backtesting
+
+The backtest workflow, commands, and experiment outputs are documented in [docs/backtest/README.md](docs/backtest/README.md).
+
+For the business-facing explanation of how the backtest is designed and interpreted, see [docs/backtest/business_overview.md](docs/backtest/business_overview.md).
+
 ## Quick start
 
 Install dependencies:

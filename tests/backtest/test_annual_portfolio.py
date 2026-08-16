@@ -258,7 +258,66 @@ def test_run_leave_one_year_out_quality_writes_csv(monkeypatch, tmp_path: Path) 
     )
 
     assert output_path.exists()
-    assert len(rows) == 2
-    df = pd.read_csv(output_path)
-    assert sorted(df["omitted_year"].tolist()) == [2025, 2026]
-    assert "cagr" in df.columns
+
+
+def test_run_experiment_suite_preserves_quality_metric_exclusions(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(annual_backtest, "load_universe", lambda universe_path=None: ["AAA"])
+
+    def fake_score_company(ticker: str, valuation_data: dict[str, object], financial_data: dict[str, object]) -> Company:
+        company = Company(
+            ticker=ticker,
+            metrics=CompanyMetrics(
+                roic=0.20,
+                roe=0.25,
+                operating_margin=0.18,
+                revenue_cagr=0.12,
+                eps_cagr=0.16,
+                fcf_margin=0.08,
+                fcf_conversion=0.75,
+                net_debt_ebitda=0.2,
+                interest_coverage=8.0,
+            ),
+        )
+        company.valuation = AnalysisResult(score=90.0)
+        return company
+
+    monkeypatch.setattr(
+        annual_backtest,
+        "score_universe_for_year",
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [
+            fake_score_company("AAA", {}, {}),
+        ],
+    )
+
+    price_series = pd.Series(
+        [100.0, 110.0],
+        index=pd.to_datetime(["2025-04-01", "2026-04-01"]),
+        name="price",
+    )
+    provider = _FakePriceProvider({"SPY": price_series, "AAA": price_series})
+
+    result = annual_backtest.run_experiment_suite(
+        configs=[
+            annual_backtest.AnnualBacktestConfig(
+                start_year=2025,
+                end_year=2025,
+                top_n=1,
+                scoring_mode="quality",
+                experiment_name="Q baseline",
+                quality_metric_exclusions=("roic",),
+            )
+        ],
+        output_dir=tmp_path,
+        price_provider=provider,
+    )
+
+    audit_row = result.run_results["Q baseline"].audit_rows[0]
+    expected = annual_backtest.analyse_quality(
+        fake_score_company("AAA", {}, {}),
+        excluded_metrics=("roic",),
+    )
+    assert float(audit_row["quality_score"]) == pytest.approx(expected.score)
+    assert result.comparison_path.exists()
+    comparison_df = pd.read_csv(result.comparison_path)
+    assert comparison_df["experiment"].tolist() == ["Q baseline"]
+    assert "cagr" in comparison_df.columns

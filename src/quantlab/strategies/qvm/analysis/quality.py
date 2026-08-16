@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Sequence
+
 from ..models import AnalysisResult, Company
 
 
@@ -332,7 +336,94 @@ def quality_snapshot(company: Company) -> dict[str, float | bool | str | list[st
     }
 
 
-def analyse_quality(company: Company) -> AnalysisResult:
+def quality_metric_values(company: Company) -> dict[str, float | None]:
+    """Return the raw metric values used by the quality model."""
+    leverage_value = (
+        company.metrics.interest_coverage
+        if company.metrics.interest_coverage is not None
+        else company.metrics.debt_to_ebitda
+    )
+    return {
+        "roic": company.metrics.roic,
+        "roe": company.metrics.roe,
+        "operating_margin": company.metrics.operating_margin,
+        "revenue_cagr": company.metrics.revenue_cagr,
+        "eps_cagr": company.metrics.eps_cagr,
+        "fcf_margin": company.metrics.fcf_margin,
+        "fcf_conversion": company.metrics.fcf_conversion,
+        "net_debt_ebitda": company.metrics.net_debt_ebitda,
+        "leverage": leverage_value,
+    }
+
+
+def quality_effective_weights(companies: Sequence[Company]) -> dict[str, float]:
+    """Return normalized effective weights after excluding missing metrics across a portfolio of companies."""
+    if not companies:
+        return {metric: 0.0 for metric in _QUALITY_WEIGHTS}
+
+    metric_availability = {}
+    for metric_name in _QUALITY_WEIGHTS:
+        present = 0
+        for company in companies:
+            if quality_metric_values(company).get(metric_name) is not None:
+                present += 1
+        metric_availability[metric_name] = present / len(companies)
+
+    total_weight = sum(
+        _QUALITY_WEIGHTS[metric_name] * metric_availability[metric_name]
+        for metric_name in _QUALITY_WEIGHTS
+    )
+    if total_weight == 0:
+        return {metric_name: 0.0 for metric_name in _QUALITY_WEIGHTS}
+
+    return {
+        metric_name: (
+            _QUALITY_WEIGHTS[metric_name] * metric_availability[metric_name] / total_weight
+        )
+        for metric_name in _QUALITY_WEIGHTS
+    }
+
+
+def quality_effective_weight_report(companies_by_year: dict[int, Sequence[Company]]) -> list[dict[str, float | int | str]]:
+    rows: list[dict[str, float | int | str]] = []
+    for formation_year, companies in sorted(companies_by_year.items()):
+        weights = quality_effective_weights(companies)
+        for metric_name, configured_weight in _QUALITY_WEIGHTS.items():
+            availability = 0.0
+            if companies:
+                availability = sum(
+                    1 for company in companies if quality_metric_values(company).get(metric_name) is not None
+                ) / len(companies)
+            rows.append(
+                {
+                    "formation_year": int(formation_year),
+                    "metric": metric_name,
+                    "availability_pct": availability,
+                    "configured_weight": float(configured_weight),
+                    "effective_weight": float(weights.get(metric_name, 0.0)),
+                }
+            )
+    return rows
+
+
+def quality_weight_summary(excluded_metrics: tuple[str, ...] = ()) -> dict[str, float]:
+    """Return the normalized weight assigned to each metric after explicit exclusions."""
+    excluded = set(excluded_metrics)
+    remaining = {metric_name: weight for metric_name, weight in _QUALITY_WEIGHTS.items() if metric_name not in excluded}
+    total_weight = sum(remaining.values())
+    if total_weight == 0:
+        return {metric_name: 0.0 for metric_name in _QUALITY_WEIGHTS}
+
+    summary = {metric_name: 0.0 for metric_name in _QUALITY_WEIGHTS}
+    for metric_name in _QUALITY_WEIGHTS:
+        if metric_name in excluded:
+            continue
+        summary[metric_name] = remaining[metric_name] / total_weight
+    return summary
+
+
+def analyse_quality(company: Company, excluded_metrics: tuple[str, ...] = ()) -> AnalysisResult:
+    excluded = set(excluded_metrics)
     roic_score = _score_roic(company.metrics.roic)
     roe_score = _score_roe(company.metrics.roe)
     operating_margin_score = _score_operating_margin(company.metrics.operating_margin)
@@ -367,6 +458,8 @@ def analyse_quality(company: Company) -> AnalysisResult:
     weighted_total = 0.0
     available_weight = 0.0
     for metric_name, (value, score_value) in metric_scores.items():
+        if metric_name in excluded:
+            continue
         if value is None:
             continue
         available_weight += _QUALITY_WEIGHTS[metric_name]

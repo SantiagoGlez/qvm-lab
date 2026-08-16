@@ -1,0 +1,10 @@
+Variant,Companies changed,Average rank change,Weight removed,Effective weight normalization
+Without roic,20,1.3166666666666667,0.25,1.0
+Without roe,4,0.35714285714285715,0.05,1.0
+Without operating_margin,2,0.32432432432432434,0.05,1.0
+Without revenue_cagr,20,1.55,0.1,1.0
+Without eps_cagr,36,1.5,0.15,1.0
+Without fcf_margin,12,0.5689655172413793,0.1,1.0
+Without fcf_conversion,4,0.8392857142857143,0.1,1.0
+Without net_debt_ebitda,4,0.625,0.1,1.0
+Without leverage,8,0.8771929824561403,0.1,1.0

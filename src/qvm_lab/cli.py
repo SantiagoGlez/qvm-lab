@@ -156,5 +156,16 @@ def quality_battletest_cli() -> None:
         )
 
 
+def quality_diagnostics_cli() -> None:
+    """Run effective-weight analysis and one-metric quality ablations."""
+    repo_root = Path(__file__).resolve().parents[2]
+    script_path = repo_root / "scripts" / "strategies" / "qvm" / "quality_diagnostics.py"
+    if not script_path.exists():
+        raise FileNotFoundError(f"Quality diagnostics script not found: {script_path}")
+
+    sys.path.insert(0, str(repo_root))
+    runpy.run_path(str(script_path), run_name="__main__")
+
+
 if __name__ == "__main__":
     company_cli()

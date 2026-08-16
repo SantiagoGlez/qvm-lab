@@ -10,6 +10,7 @@ import pandas as pd
 import yfinance as yf
 
 from ..analysis.overall import overall_score
+from ..analysis.quality import analyse_quality
 from ..analysis.scoring import calculate_score
 from ..historical.adapters import HistoricalQualityAdapter, HistoricalValuationAdapter
 from ..historical.repositories import (
@@ -42,6 +43,7 @@ class AnnualBacktestConfig:
     benchmark_ticker: str = "SPY"
     scoring_mode: str = "qv"
     experiment_name: str = "QV (baseline)"
+    quality_metric_exclusions: tuple[str, ...] = ()
 
 
 @dataclass(slots=True)
@@ -431,6 +433,8 @@ def run_annual_backtest(
         sell_target = formation_date(formation_year + 1, config.formation_month, config.formation_day)
 
         companies = score_universe_for_year(formation_year, universe)
+        for company in companies:
+            company.quality = analyse_quality(company, excluded_metrics=config.quality_metric_exclusions)
         ranked = rank_companies_with_mode(companies, config.top_n, config.scoring_mode)
         holdings_by_year.append({company.ticker for company in ranked})
 
@@ -596,6 +600,7 @@ def run_experiment_suite(
                 benchmark_ticker=config.benchmark_ticker,
                 scoring_mode=config.scoring_mode,
                 experiment_name=config.experiment_name,
+                quality_metric_exclusions=config.quality_metric_exclusions,
             ),
             price_provider=price_provider,
         )
