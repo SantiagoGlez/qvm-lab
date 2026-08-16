@@ -173,3 +173,92 @@ def test_run_experiment_suite_writes_comparison_csv(monkeypatch, tmp_path: Path)
     assert "sharpe" in table.columns
     assert "max_drawdown" in table.columns
     assert "turnover" in table.columns
+
+
+def test_quality_battle_test_configs_include_requested_dimensions() -> None:
+    configs = annual_backtest._quality_battle_test_configs(start_year=2015, end_year=2025, top_n=10)
+    names = [config.experiment_name for config in configs]
+
+    assert "Q baseline" in names
+    assert "Q window 2015-2018" in names
+    assert "Q window 2019-2022" in names
+    assert "Q window 2023-2025" in names
+    assert "Q rebalance month 01" in names
+    assert "Q rebalance month 04" in names
+    assert "Q rebalance month 07" in names
+    assert "Q rebalance month 10" in names
+    assert "Q top 5" in names
+    assert "Q top 10" in names
+    assert "Q top 15" in names
+    assert "Q top 20" in names
+
+
+def test_run_annual_backtest_handles_missing_benchmark_history(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(annual_backtest, "load_universe", lambda universe_path=None: ["AAA"])
+    monkeypatch.setattr(
+        annual_backtest,
+        "score_universe_for_year",
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [_make_company("AAA", 100.0, 90.0)],
+    )
+
+    empty_series = pd.Series(dtype=float, name="SPY")
+    price_series = pd.Series(
+        [100.0, 110.0],
+        index=pd.to_datetime(["2025-04-01", "2026-04-01"]),
+        name="AAA",
+    )
+    def fake_provider(ticker: str, start: date, end: date) -> pd.Series:
+        if ticker == "SPY":
+            return empty_series
+        return price_series
+
+    result = annual_backtest.run_annual_backtest(
+        annual_backtest.AnnualBacktestConfig(
+            start_year=2025,
+            end_year=2025,
+            top_n=1,
+            formation_month=4,
+            formation_day=1,
+            output_dir=tmp_path,
+            benchmark_ticker="SPY",
+            scoring_mode="quality",
+        ),
+        price_provider=fake_provider,
+    )
+
+    assert result.summary.years == 1
+    assert result.year_results[0].benchmark_return == 0.0
+    assert result.year_results[0].portfolio_return > 0.0
+
+
+def test_run_leave_one_year_out_quality_writes_csv(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(annual_backtest, "load_universe", lambda universe_path=None: ["AAA", "BBB"])
+    monkeypatch.setattr(
+        annual_backtest,
+        "score_universe_for_year",
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [
+            _make_company("AAA", 80.0, 90.0),
+            _make_company("BBB", 70.0, 85.0),
+        ],
+    )
+
+    price_series = pd.Series(
+        [100.0, 110.0, 121.0],
+        index=pd.to_datetime(["2025-04-01", "2026-04-01", "2027-04-03"]),
+        name="price",
+    )
+    provider = _FakePriceProvider({"SPY": price_series, "AAA": price_series, "BBB": price_series})
+
+    rows, output_path = annual_backtest.run_leave_one_year_out_quality(
+        start_year=2025,
+        end_year=2026,
+        top_n=2,
+        output_dir=tmp_path,
+        price_provider=provider,
+    )
+
+    assert output_path.exists()
+    assert len(rows) == 2
+    df = pd.read_csv(output_path)
+    assert sorted(df["omitted_year"].tolist()) == [2025, 2026]
+    assert "cagr" in df.columns

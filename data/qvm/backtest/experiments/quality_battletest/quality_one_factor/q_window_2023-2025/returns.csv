@@ -1,0 +1,4 @@
+formation_year,buy_date,sell_date,selected_count,portfolio_return,benchmark_return,excess_return
+2023,2023-04-03,2024-04-01,10,0.4847,0.289,0.1957
+2024,2024-04-01,2025-04-01,10,0.0519,0.088,-0.0361
+2025,2025-04-01,2026-04-01,10,0.1665,0.1814,-0.015

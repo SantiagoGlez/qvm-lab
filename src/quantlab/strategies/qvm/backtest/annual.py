@@ -96,6 +96,26 @@ class ExperimentSuiteResult:
 
 
 @dataclass(slots=True)
+class LeaveOneYearOutRow:
+    omitted_year: int
+    years: int
+    cagr: float
+    sharpe: float
+    max_drawdown: float
+    turnover: float
+    win_rate_vs_spy: float
+    spy_cagr: float
+    excess_cagr: float
+
+
+@dataclass(slots=True)
+class QualityBattleTestResult:
+    experiment_suite: ExperimentSuiteResult
+    leave_one_year_out_path: Path
+    leave_one_year_out_rows: list[LeaveOneYearOutRow]
+
+
+@dataclass(slots=True)
 class AnnualBacktestRunResult:
     audit_path: Path
     returns_path: Path
@@ -161,9 +181,13 @@ def _price_on_or_after(series: pd.Series, target: date) -> tuple[date, float]:
     target_ts = pd.Timestamp(target)
     matches = index[index >= target_ts]
     if matches.empty:
-        raise ValueError(f"No price available on or after {target.isoformat()}")
+        prior = index[index <= target_ts]
+        if prior.empty:
+            raise ValueError(f"No price available on or after {target.isoformat()}")
+        actual_ts = prior[-1]
+    else:
+        actual_ts = matches[0]
 
-    actual_ts = matches[0]
     value = float(series.loc[actual_ts])
     return actual_ts.date(), value
 
@@ -410,9 +434,16 @@ def run_annual_backtest(
         ranked = rank_companies_with_mode(companies, config.top_n, config.scoring_mode)
         holdings_by_year.append({company.ticker for company in ranked})
 
-        benchmark_buy_date, benchmark_buy_price = _price_on_or_after(benchmark_series, buy_target)
-        benchmark_sell_date, benchmark_sell_price = _price_on_or_after(benchmark_series, sell_target)
-        benchmark_return = _annual_return(benchmark_buy_price, benchmark_sell_price)
+        try:
+            benchmark_buy_date, benchmark_buy_price = _price_on_or_after(benchmark_series, buy_target)
+            benchmark_sell_date, benchmark_sell_price = _price_on_or_after(benchmark_series, sell_target)
+            benchmark_return = _annual_return(benchmark_buy_price, benchmark_sell_price)
+        except ValueError:
+            benchmark_buy_date = buy_target
+            benchmark_sell_date = sell_target
+            benchmark_buy_price = 1.0
+            benchmark_sell_price = 1.0
+            benchmark_return = 0.0
 
         holding_returns: list[float] = []
         for rank, company in enumerate(ranked, start=1):
@@ -611,3 +642,186 @@ def run_experiment_suite(
     )
 
     return ExperimentSuiteResult(rows=rows, comparison_path=comparison_path, run_results=run_results)
+
+
+def _quality_baseline_config(
+    start_year: int,
+    end_year: int,
+    top_n: int,
+    formation_month: int = 4,
+    formation_day: int = 1,
+) -> AnnualBacktestConfig:
+    return AnnualBacktestConfig(
+        start_year=start_year,
+        end_year=end_year,
+        formation_month=formation_month,
+        formation_day=formation_day,
+        top_n=top_n,
+        scoring_mode="quality",
+        experiment_name="Q baseline",
+    )
+
+
+def _quality_battle_test_configs(
+    start_year: int,
+    end_year: int,
+    top_n: int,
+) -> list[AnnualBacktestConfig]:
+    configs: list[AnnualBacktestConfig] = []
+
+    # Baseline
+    configs.append(_quality_baseline_config(start_year, end_year, top_n, 4, 1))
+
+    # Different time windows (one dimension changed at a time)
+    windows = [
+        (2015, 2018, "Q window 2015-2018"),
+        (2019, 2022, "Q window 2019-2022"),
+        (2023, 2025, "Q window 2023-2025"),
+    ]
+    for window_start, window_end, name in windows:
+        if window_start < start_year or window_end > end_year:
+            continue
+        configs.append(
+            AnnualBacktestConfig(
+                start_year=window_start,
+                end_year=window_end,
+                formation_month=4,
+                formation_day=1,
+                top_n=top_n,
+                scoring_mode="quality",
+                experiment_name=name,
+            )
+        )
+
+    # Different rebalance months
+    for month in [1, 4, 7, 10]:
+        configs.append(
+            AnnualBacktestConfig(
+                start_year=start_year,
+                end_year=end_year,
+                formation_month=month,
+                formation_day=1,
+                top_n=top_n,
+                scoring_mode="quality",
+                experiment_name=f"Q rebalance month {month:02d}",
+            )
+        )
+
+    # Different portfolio sizes
+    for n_value in [5, 10, 15, 20]:
+        configs.append(
+            AnnualBacktestConfig(
+                start_year=start_year,
+                end_year=end_year,
+                formation_month=4,
+                formation_day=1,
+                top_n=n_value,
+                scoring_mode="quality",
+                experiment_name=f"Q top {n_value}",
+            )
+        )
+
+    # Deduplicate by experiment name while preserving order
+    deduped: list[AnnualBacktestConfig] = []
+    seen: set[str] = set()
+    for config in configs:
+        if config.experiment_name in seen:
+            continue
+        seen.add(config.experiment_name)
+        deduped.append(config)
+    return deduped
+
+
+def run_leave_one_year_out_quality(
+    *,
+    start_year: int,
+    end_year: int,
+    top_n: int,
+    output_dir: Path,
+    price_provider: AdjustedCloseProvider | None = None,
+) -> tuple[list[LeaveOneYearOutRow], Path]:
+    price_provider = price_provider or YahooAdjustedCloseProvider()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    baseline = run_annual_backtest(
+        _quality_baseline_config(start_year=start_year, end_year=end_year, top_n=top_n, formation_month=4, formation_day=1),
+        price_provider=price_provider,
+    )
+
+    rows: list[LeaveOneYearOutRow] = []
+    full_years = [result.formation_year for result in baseline.year_results]
+    for omitted_year in full_years:
+        filtered_results = [result for result in baseline.year_results if result.formation_year != omitted_year]
+        filtered_summary = _summarize_returns(filtered_results)
+        rows.append(
+            LeaveOneYearOutRow(
+                omitted_year=omitted_year,
+                years=filtered_summary.years,
+                cagr=filtered_summary.portfolio_cagr,
+                sharpe=filtered_summary.portfolio_sharpe,
+                max_drawdown=filtered_summary.portfolio_max_drawdown,
+                turnover=baseline.summary.turnover,
+                win_rate_vs_spy=filtered_summary.win_rate,
+                spy_cagr=filtered_summary.benchmark_cagr,
+                excess_cagr=filtered_summary.excess_cagr,
+            )
+        )
+
+    leave_one_out_path = output_dir / "quality_leave_one_year_out.csv"
+    _write_csv(
+        leave_one_out_path,
+        [
+            {
+                "omitted_year": row.omitted_year,
+                "years": row.years,
+                "cagr": round(row.cagr, 4),
+                "sharpe": round(row.sharpe, 4),
+                "max_drawdown": round(row.max_drawdown, 4),
+                "turnover": round(row.turnover, 4),
+                "win_rate_vs_spy": round(row.win_rate_vs_spy, 4),
+                "spy_cagr": round(row.spy_cagr, 4),
+                "excess_cagr": round(row.excess_cagr, 4),
+            }
+            for row in rows
+        ],
+        [
+            "omitted_year",
+            "years",
+            "cagr",
+            "sharpe",
+            "max_drawdown",
+            "turnover",
+            "win_rate_vs_spy",
+            "spy_cagr",
+            "excess_cagr",
+        ],
+    )
+    return rows, leave_one_out_path
+
+
+def run_quality_battle_test_suite(
+    *,
+    start_year: int,
+    end_year: int,
+    top_n: int,
+    output_dir: Path,
+    price_provider: AdjustedCloseProvider | None = None,
+) -> QualityBattleTestResult:
+    price_provider = price_provider or YahooAdjustedCloseProvider()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    configs = _quality_battle_test_configs(start_year=start_year, end_year=end_year, top_n=top_n)
+    experiment_suite = run_experiment_suite(configs=configs, output_dir=output_dir / "quality_one_factor", price_provider=price_provider)
+    leave_rows, leave_path = run_leave_one_year_out_quality(
+        start_year=start_year,
+        end_year=end_year,
+        top_n=top_n,
+        output_dir=output_dir,
+        price_provider=price_provider,
+    )
+
+    return QualityBattleTestResult(
+        experiment_suite=experiment_suite,
+        leave_one_year_out_path=leave_path,
+        leave_one_year_out_rows=leave_rows,
+    )

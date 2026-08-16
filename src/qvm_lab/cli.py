@@ -7,6 +7,7 @@ from quantlab.strategies.qvm.backtest.annual import (
     AnnualBacktestConfig,
     run_annual_backtest,
     run_experiment_suite,
+    run_quality_battle_test_suite,
 )
 from quantlab.strategies.qvm.reports.console import print_report
 from quantlab.strategies.qvm.service import analyse_company
@@ -116,6 +117,35 @@ def experiments_cli() -> None:
     suite = run_experiment_suite(configs=configs, output_dir=args.output_dir)
     print(f"Comparison CSV: {suite.comparison_path}")
     for row in suite.rows:
+        print(
+            f"{row.experiment} | "
+            f"CAGR={row.cagr:.2%} | "
+            f"Sharpe={row.sharpe:.2f} | "
+            f"MaxDD={row.max_drawdown:.2%} | "
+            f"Turnover={row.turnover:.2%} | "
+            f"WinRate={row.win_rate_vs_spy:.2%}"
+        )
+
+
+def quality_battletest_cli() -> None:
+    """Run quality-only one-factor-at-a-time battle tests plus leave-one-year-out."""
+    parser = argparse.ArgumentParser(description="Run quality-only battle test suite")
+    parser.add_argument("--start-year", type=int, default=2015)
+    parser.add_argument("--end-year", type=int, default=2025)
+    parser.add_argument("--top-n", type=int, default=10)
+    parser.add_argument("--output-dir", type=Path, default=Path("data/qvm/backtest/experiments/quality_battletest"))
+    args = parser.parse_args(sys.argv[1:])
+
+    result = run_quality_battle_test_suite(
+        start_year=args.start_year,
+        end_year=args.end_year,
+        top_n=args.top_n,
+        output_dir=args.output_dir,
+    )
+
+    print(f"One-factor comparison CSV: {result.experiment_suite.comparison_path}")
+    print(f"Leave-one-year-out CSV: {result.leave_one_year_out_path}")
+    for row in result.experiment_suite.rows:
         print(
             f"{row.experiment} | "
             f"CAGR={row.cagr:.2%} | "
