@@ -1,31 +1,131 @@
 ticker,name
-RHHBY,Roche
-RNO, Renault SA
-MCD,McDonald's
-KO,Coca-Cola
-DPZ,Domino's Pizza
-MO,Altria Group
-OXY,Occidental Petroleum
-JNJ,Johnson & Johnson
-V,Visa
-MA,Mastercard
-MSFT,Microsoft
-GOOGL,Alphabet
-ASML,ASML
-COST,Costco
-META,Meta Platforms
-AMZN,Amazon.com
+AAPL,Apple
+ABBNY,ABB
+ABBV,AbbVie
+ABT,Abbott Laboratories
 ADBE,Adobe
+ADI,Analog Devices
+ADP,Automatic Data Processing
+AMAT,Applied Materials
+AME,Ametek
+AMZN,Amazon.com
+ANET,Arista Networks
+AON,Aon
+ASML,ASML
+AVGO,Broadcom
+AZO,AutoZone
+BAESY,BAE Systems
+BKNG,Booking Holdings
+BR,Broadridge Financial Solutions
+BSX,Boston Scientific
+CAT,Caterpillar
+CDNS,Cadence Design Systems
+CHD,Church & Dwight
+CL,Colgate-Palmolive
+CME,CME Group
+CMG,Chipotle Mexican Grill
+COST,Costco
+CPRT,Copart
 CRM,Salesforce
+CSCO,Cisco Systems
+CSL,CSL Limited
+CTAS,Cintas
+DE,Deere & Company
+DHR,Danaher
+DPZ,Domino's Pizza
+DSY,Dassault Systèmes
+EADSY,Airbus
+EL,Estee Lauder
+EMR,Emerson Electric
+EQIX,Equinix
+ETN,Eaton
+EW,Edwards Lifesciences
+FAST,Fastenal
+FER,Ferrovial
+FICO,Fair Isaac
+FTNT,Fortinet
+GOOGL,Alphabet
+GWW,W.W. Grainger
+HCA,HCA Healthcare
+HLT,Hilton Worldwide
+HON,Honeywell
+HWM,Howmet Aerospace
+ICE,Intercontinental Exchange
+IDXX,IDEXX Laboratories
+IFX,Infineon Technologies
+INTC,Intel
 INTU,Intuit
-LRCX,Lam Research
+IQV,IQVIA
+IR,Ingersoll Rand
+ISRG,Intuitive Surgical
+ITW,Illinois Tool Works
+JNJ,Johnson & Johnson
 KLAC,KLA
-TXN,Texas Instruments
-PFE,Pfizer
-MDT,Medtronic
-SBUX,Starbucks
-NKE,Nike
-LOW,Lowe's
-UNH,UnitedHealth Group
+KMB,Kimberly-Clark
+KO,Coca-Cola
 LIN,Linde
+LOW,Lowe's
+LRCX,Lam Research
+MA,Mastercard
+MAR,Marriott International
+MCD,McDonald's
+MCHP,Microchip Technology
+MCO,Moody's
+MDT,Medtronic
+META,Meta Platforms
+MMC,Marsh & McLennan
+MO,Altria Group
+MPWR,Monolithic Power Systems
+MSCI,MSCI
+MSFT,Microsoft
+MSI,Motorola Solutions
+NKE,Nike
+NOC,Northrop Grumman
 NVDA,NVIDIA
+NVO,Novo Nordisk
+NXPI,NXP Semiconductors
+ODFL,Old Dominion Freight Line
+ORCL,Oracle
+ORLY,O'Reilly Automotive
+OTIS,Otis Worldwide
+OXY,Occidental Petroleum
+PANW,Palo Alto Networks
+PAYX,Paychex
+PEP,PepsiCo
+PFE,Pfizer
+PG,Procter & Gamble
+PH,Parker-Hannifin
+PRYMY,Prysmian
+QCOM,Qualcomm
+RACE,Ferrari
+REGN,Regeneron Pharmaceuticals
+RELX,RELX
+RHHBY,Roche
+RNO,Renault SA
+ROK,Rockwell Automation
+ROL,Rollins
+ROP,Roper Technologies
+RSG,Republic Services
+RTX,RTX
+SAP,SAP
+SBGSY,Schneider Electric
+SBUX,Starbucks
+SCHW,Charles Schwab
+SHW,Sherwin-Williams
+SIEGY,Siemens
+SNPS,Synopsys
+SPGI,S&P Global
+SYK,Stryker
+TMO,Thermo Fisher Scientific
+TSM,Taiwan Semiconductor Manufacturing
+TT,Trane Technologies
+TXN,Texas Instruments
+UNH,UnitedHealth Group
+UNP,Union Pacific
+V,Visa
+VRSK,Verisk Analytics
+WKL,Wolters Kluwer
+WM,Waste Management
+XYL,Xylem
+YUM,Yum! Brands
+ZTS,Zoetis

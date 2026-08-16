@@ -19,6 +19,23 @@ COMPANY_SLUG_OVERRIDES = {
     "UNH": "united-health",
     "MCD": "mcdonald",
     "RNO": "renault",
+    "CSCO": "cisco",
+    "CSL": "csl",
+    "DE": "deere-company",
+    "EMR": "emerson",
+    "FICO": "fico",
+    "GWW": "ww-grainger",
+    "HLT": "hilton-hotels",
+    "IFX": "infineon",
+    "MMC": "marsh-and-mclennan-companies",
+    "ORLY": "o-reilly-automotive",
+    "PRYMY": "prysmian-group",
+    "RTX": "raytheon-technologies",
+    "SPGI": "sp-global",
+    "SYK": "stryker-corporation",
+    "TSM": "tsmc",
+    "UNP": "union-pacific-corporation",
+    "YUM": "yum",
 }
 
 
@@ -159,6 +176,10 @@ def build_valuation_dataset(scraper: CompaniesMarketCapScraper, company_slug: st
         if df_metric is None:
             continue
 
+        # Keep merge keys stable across metrics even when upstream parsing
+        # yields mixed scalar types (e.g. int years and string labels).
+        df_metric["Year"] = pd.to_numeric(df_metric["Year"], errors="coerce").astype("Int64")
+
         if main_df is None:
             main_df = df_metric
         else:
@@ -167,6 +188,7 @@ def build_valuation_dataset(scraper: CompaniesMarketCapScraper, company_slug: st
     if main_df is None:
         return None
 
+    main_df = main_df.dropna(subset=["Year"])
     return main_df.sort_values(by="Year", ascending=False).reset_index(drop=True)
 
 

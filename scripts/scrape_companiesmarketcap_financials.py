@@ -1,4 +1,5 @@
 import re
+import argparse
 from io import StringIO
 from pathlib import Path
 
@@ -229,6 +230,14 @@ def build_financials_dataset(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Scrape CompaniesMarketCap annual financial datasets")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Re-download and overwrite existing *_financials.csv files.",
+    )
+    args = parser.parse_args()
+
     base_dir = Path.cwd()
     input_csv = base_dir / "data" / "qvm" / "companies.csv"
     output_dir = base_dir / "data" / "qvm" / "companiesmarketcap"
@@ -242,6 +251,26 @@ def main() -> None:
     for ticker, name in companies:
         company_slug = resolve_company_slug(ticker, name)
         out_path = output_dir / f"{ticker.lower()}_{company_slug}_financials.csv"
+
+        if out_path.exists() and not args.overwrite:
+            try:
+                existing_rows = len(pd.read_csv(out_path))
+            except Exception:
+                existing_rows = 0
+            print(f"Skipping {ticker} - existing file {out_path.name} ({existing_rows or '?'} rows)")
+            for metric in METRIC_SLUG_CANDIDATES:
+                summary_rows.append(
+                    {
+                        "ticker": ticker,
+                        "name": name,
+                        "slug": company_slug,
+                        "metric": metric,
+                        "metric_slug": "",
+                        "status": "skipped",
+                        "rows": existing_rows,
+                    }
+                )
+            continue
 
         print(f"Building financial history for {ticker} / {name} -> slug={company_slug}...")
         dataset, metric_sources = build_financials_dataset(scraper, company_slug)

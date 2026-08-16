@@ -11,6 +11,7 @@ from quantlab.strategies.qvm.analysis.quality import (
     _QUALITY_WEIGHTS,
     analyse_quality,
     quality_effective_weight_report,
+    quality_metric_contributions,
     quality_weight_summary,
 )
 from quantlab.strategies.qvm.backtest.annual import (
@@ -154,11 +155,64 @@ def _ablation_verification_rows(start_year: int, end_year: int, top_n: int) -> l
     return output_rows
 
 
+def _quality_metric_contribution_rows(start_year: int, end_year: int, top_n: int) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    metric_order = [
+        "roic",
+        "eps_cagr",
+        "revenue_cagr",
+        "fcf_margin",
+        "fcf_conversion",
+        "net_debt_ebitda",
+        "leverage",
+        "roe",
+        "operating_margin",
+    ]
+
+    year_rows: list[dict[str, object]] = []
+    for formation_year in range(start_year, end_year + 1):
+        companies = score_universe_for_year(formation_year, load_universe())
+        for company in companies:
+            company.quality = analyse_quality(company)
+        selected = rank_companies_with_mode(companies, top_n, "quality")
+
+        contribution_totals = {metric_name: 0.0 for metric_name in metric_order}
+        for company in selected:
+            contributions = quality_metric_contributions(company)
+            for metric_name in metric_order:
+                contribution_totals[metric_name] += contributions[metric_name]
+
+        denominator = len(selected)
+        row: dict[str, object] = {"formation_year": formation_year}
+        for metric_name in metric_order:
+            row[metric_name] = (contribution_totals[metric_name] / denominator) if denominator else 0.0
+        year_rows.append(row)
+
+    summary_rows: list[dict[str, object]] = []
+    for metric_name in metric_order:
+        average_contribution = (
+            sum(float(row[metric_name]) for row in year_rows) / len(year_rows)
+            if year_rows
+            else 0.0
+        )
+        summary_rows.append(
+            {
+                "metric": metric_name,
+                "average_contribution": average_contribution,
+            }
+        )
+
+    summary_rows.sort(key=lambda row: float(row["average_contribution"]), reverse=True)
+    for index, row in enumerate(summary_rows, start=1):
+        row["rank"] = index
+
+    return year_rows, summary_rows
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run quality diagnostics")
     parser.add_argument("--start-year", type=int, default=2015)
     parser.add_argument("--end-year", type=int, default=2025)
-    parser.add_argument("--top-n", type=int, default=15)
+    parser.add_argument("--top-n", type=int, default=10)
     parser.add_argument("--output-dir", type=Path, default=Path("data/qvm/backtest/experiments/quality_diagnostics"))
     args = parser.parse_args()
 
@@ -168,6 +222,8 @@ def main() -> None:
     ablation_path = output_dir / "quality_ablation_comparison.csv"
     ablation_verification_path = output_dir / "quality_ablation_verification.csv"
     ablation_company_changes_path = output_dir / "quality_ablation_company_changes.csv"
+    contribution_path = output_dir / "quality_metric_contributions.csv"
+    contribution_summary_path = output_dir / "quality_metric_average_contributions.csv"
 
     report_rows = _quality_weight_report(args.start_year, args.end_year, args.top_n)
     _write_csv(
@@ -192,6 +248,33 @@ def main() -> None:
         ["Variant", "formation_year", "ticker", "baseline_rank", "variant_rank", "rank_change"],
     )
 
+    contribution_rows, contribution_summary_rows = _quality_metric_contribution_rows(
+        args.start_year,
+        args.end_year,
+        args.top_n,
+    )
+    _write_csv(
+        contribution_path,
+        contribution_rows,
+        [
+            "formation_year",
+            "roic",
+            "eps_cagr",
+            "revenue_cagr",
+            "fcf_margin",
+            "fcf_conversion",
+            "net_debt_ebitda",
+            "leverage",
+            "roe",
+            "operating_margin",
+        ],
+    )
+    _write_csv(
+        contribution_summary_path,
+        contribution_summary_rows,
+        ["metric", "average_contribution", "rank"],
+    )
+
     baseline_result = run_annual_backtest(
         AnnualBacktestConfig(
             start_year=args.start_year,
@@ -207,6 +290,8 @@ def main() -> None:
     print(f"Effective weights CSV: {effective_path}")
     print(f"Ablation verification CSV: {ablation_verification_path}")
     print(f"Company-level changes CSV: {ablation_company_changes_path}")
+    print(f"Metric contribution CSV: {contribution_path}")
+    print(f"Metric contribution summary CSV: {contribution_summary_path}")
 
     for row in verification_rows:
         print(

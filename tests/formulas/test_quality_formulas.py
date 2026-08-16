@@ -3,6 +3,7 @@ import pytest
 from quantlab.strategies.qvm.analysis.quality import (
     analyse_quality,
     quality_eligible,
+    quality_metric_contributions,
     quality_metric_coverage,
     quality_missing_metrics,
 )
@@ -92,3 +93,43 @@ def test_quality_exposes_coverage_and_missing_metrics() -> None:
         "Leverage",
     ]
     assert quality_missing_metrics(company) == result.missing_metrics
+
+
+def test_quality_metric_contributions_match_quality_score() -> None:
+    company = Company(
+        ticker="TEST",
+        metrics=CompanyMetrics(
+            roic=0.20,
+            roe=0.25,
+            operating_margin=0.18,
+            revenue_cagr=0.12,
+            eps_cagr=0.16,
+            fcf_margin=0.08,
+            fcf_conversion=0.75,
+            net_debt_ebitda=0.2,
+            interest_coverage=8.0,
+        ),
+    )
+
+    result = analyse_quality(company)
+    contributions = quality_metric_contributions(company)
+
+    assert sum(contributions.values()) == pytest.approx(result.score, abs=0.05)
+
+
+def test_quality_metric_contributions_use_normalized_available_weight() -> None:
+    company = Company(
+        ticker="TEST",
+        metrics=CompanyMetrics(
+            roic=0.20,
+        ),
+    )
+
+    contributions = quality_metric_contributions(company)
+
+    assert contributions["roic"] == 85.0
+    assert all(
+        contributions[metric_name] == 0.0
+        for metric_name in contributions
+        if metric_name != "roic"
+    )

@@ -422,8 +422,7 @@ def quality_weight_summary(excluded_metrics: tuple[str, ...] = ()) -> dict[str, 
     return summary
 
 
-def analyse_quality(company: Company, excluded_metrics: tuple[str, ...] = ()) -> AnalysisResult:
-    excluded = set(excluded_metrics)
+def _quality_metric_scores(company: Company) -> dict[str, tuple[float | None, float]]:
     roic_score = _score_roic(company.metrics.roic)
     roe_score = _score_roe(company.metrics.roe)
     operating_margin_score = _score_operating_margin(company.metrics.operating_margin)
@@ -438,7 +437,7 @@ def analyse_quality(company: Company, excluded_metrics: tuple[str, ...] = ()) ->
         else _score_debt_to_ebitda(company.metrics.debt_to_ebitda)
     )
 
-    metric_scores = {
+    return {
         "roic": (company.metrics.roic, roic_score),
         "roe": (company.metrics.roe, roe_score),
         "operating_margin": (company.metrics.operating_margin, operating_margin_score),
@@ -453,19 +452,38 @@ def analyse_quality(company: Company, excluded_metrics: tuple[str, ...] = ()) ->
         ),
     }
 
-    coverage = quality_metric_coverage(company)
-    missing_metrics = quality_missing_metrics(company)
-    weighted_total = 0.0
+
+def quality_metric_contributions(company: Company, excluded_metrics: tuple[str, ...] = ()) -> dict[str, float]:
+    """Return per-metric normalized contributions used by the quality score."""
+    excluded = set(excluded_metrics)
+    metric_scores = _quality_metric_scores(company)
+
     available_weight = 0.0
-    for metric_name, (value, score_value) in metric_scores.items():
-        if metric_name in excluded:
-            continue
-        if value is None:
+    for metric_name, (value, _score_value) in metric_scores.items():
+        if metric_name in excluded or value is None:
             continue
         available_weight += _QUALITY_WEIGHTS[metric_name]
-        weighted_total += _QUALITY_WEIGHTS[metric_name] * score_value
 
-    score = (weighted_total / available_weight) if available_weight > 0 else 0.0
+    contributions = {metric_name: 0.0 for metric_name in _QUALITY_WEIGHTS}
+    if available_weight == 0:
+        return contributions
+
+    for metric_name, (value, score_value) in metric_scores.items():
+        if metric_name in excluded or value is None:
+            continue
+        normalized_weight = _QUALITY_WEIGHTS[metric_name] / available_weight
+        contributions[metric_name] = normalized_weight * score_value
+
+    return contributions
+
+
+def analyse_quality(company: Company, excluded_metrics: tuple[str, ...] = ()) -> AnalysisResult:
+    metric_scores = _quality_metric_scores(company)
+
+    coverage = quality_metric_coverage(company)
+    missing_metrics = quality_missing_metrics(company)
+    contributions = quality_metric_contributions(company, excluded_metrics=excluded_metrics)
+    score = sum(contributions.values())
 
     leverage_label = (
         f"IntCov={num(company.metrics.interest_coverage, 1)}x"
