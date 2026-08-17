@@ -213,7 +213,7 @@ Combines all three signals into a single label:
 | Condition | Assessment |
 |---|---|
 | Strong trend + strong RS + healthy pullback | **Attractive** |
-| Strong trend + strong RS + no/little pullback | **Extended** |
+| Strong trend + strong RS + no/little pullback | **Near-highs** |
 | Strong trend, RS still catching up | **Improving** |
 | Neutral trend + meaningful pullback | **Recovering** |
 | Weak trend (regardless of other signals) | **Weak** |
@@ -254,7 +254,7 @@ Use a small set of explicit actions:
 | Signal condition | Action | Rationale |
 |---|---|---|
 | `overall_score ≥ 80` and `market_assessment` in {Attractive, Improving} and `valuation_band` in {Deep Value, Cheap, Fair Value} | `ADD` | Strong fundamentals with supportive setup and acceptable valuation |
-| `overall_score ≥ 70` and `market_assessment` in {Attractive, Improving, Recovering, Extended} | `HOLD` | Quality remains intact; no forced trading |
+| `overall_score ≥ 70` and `market_assessment` in {Attractive, Improving, Recovering, Near-highs} | `HOLD` | Quality remains intact; no forced trading |
 | `overall_score 55-69` or `market_assessment = Weak` | `TRIM` | Deterioration detected; reduce risk gradually |
 | `overall_score < 55` and (`market_assessment = Weak` or `valuation_band` in {Expensive, Very Expensive}) | `EXIT` | Thesis breakdown and/or poor risk-reward |
 
@@ -263,7 +263,7 @@ Use a small set of explicit actions:
 | Signal condition | Action | Rationale |
 |---|---|---|
 | `overall_score ≥ 80` and `market_assessment` in {Attractive, Improving} and `valuation_band` in {Deep Value, Cheap, Fair Value} | `BUY` | High-conviction entry candidate |
-| `overall_score ≥ 70` and `market_assessment` in {Recovering, Extended} | `WATCH` | Good business, but timing not ideal yet |
+| `overall_score ≥ 70` and `market_assessment` in {Recovering, Near-highs} | `WATCH` | Good business, but timing not ideal yet |
 | `overall_score 55-69` | `WATCH` | Keep on radar; wait for quality/valuation improvement |
 | `overall_score < 55` or (`valuation_band = Very Expensive` and `market_assessment = Weak`) | `DROP` | Low expected edge relative to universe |
 

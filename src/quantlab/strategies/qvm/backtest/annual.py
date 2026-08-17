@@ -42,8 +42,11 @@ class AnnualBacktestConfig:
     output_dir: Path | None = None
     benchmark_ticker: str = "SPY"
     scoring_mode: str = "qv"
+    selection_policy: str = "score"
     experiment_name: str = "QV (baseline)"
     quality_metric_exclusions: tuple[str, ...] = ()
+    quality_pool_size: int = 20
+    valuation_guard_min_score: float = 20.0
 
 
 @dataclass(slots=True)
@@ -77,6 +80,7 @@ class AnnualBacktestSummary:
 class ExperimentComparisonRow:
     experiment: str
     scoring_mode: str
+    selection_policy: str
     formation_month: int
     formation_day: int
     top_n: int
@@ -278,6 +282,57 @@ def rank_companies_with_mode(companies: list[Company], top_n: int, scoring_mode:
     return ranked[:top_n]
 
 
+def _passes_valuation_guard(company: Company, min_valuation_score: float) -> bool:
+    return company.valuation.score >= min_valuation_score
+
+
+def select_companies(
+    companies: list[Company],
+    *,
+    top_n: int,
+    scoring_mode: str,
+    selection_policy: str,
+    quality_pool_size: int,
+    valuation_guard_min_score: float,
+) -> list[Company]:
+    policy = selection_policy.lower().strip()
+    if policy == "score":
+        return rank_companies_with_mode(companies, top_n, scoring_mode)
+
+    if policy == "quality_soft_valuation_guard":
+        ranked_by_quality = rank_companies_with_mode(companies, len(companies), "quality")
+        top_quality_pool = ranked_by_quality[:quality_pool_size]
+        selected: list[Company] = [
+            company
+            for company in top_quality_pool
+            if _passes_valuation_guard(company, valuation_guard_min_score)
+        ]
+        if len(selected) >= top_n:
+            return selected[:top_n]
+
+        remaining = [
+            company
+            for company in ranked_by_quality[quality_pool_size:]
+            if _passes_valuation_guard(company, valuation_guard_min_score)
+        ]
+        return (selected + remaining)[:top_n]
+
+    if policy == "quality_cheapest_half":
+        ranked_by_quality = rank_companies_with_mode(companies, len(companies), "quality")
+        top_quality_pool = ranked_by_quality[:quality_pool_size]
+        ranked_by_valuation = sorted(
+            top_quality_pool,
+            key=lambda company: (
+                -company.valuation.score,
+                -company.quality.score,
+                company.ticker,
+            ),
+        )
+        return ranked_by_valuation[:top_n]
+
+    raise ValueError(f"Unsupported selection_policy: {selection_policy}")
+
+
 def build_audit_row(
     *,
     formation_year: int,
@@ -436,7 +491,14 @@ def run_annual_backtest(
         for company in companies:
             company.quality = analyse_quality(company, excluded_metrics=config.quality_metric_exclusions)
         eligible_companies = [c for c in companies if quality_eligible(c)]
-        ranked = rank_companies_with_mode(eligible_companies, config.top_n, config.scoring_mode)
+        ranked = select_companies(
+            eligible_companies,
+            top_n=config.top_n,
+            scoring_mode=config.scoring_mode,
+            selection_policy=config.selection_policy,
+            quality_pool_size=config.quality_pool_size,
+            valuation_guard_min_score=config.valuation_guard_min_score,
+        )
         holdings_by_year.append({company.ticker for company in ranked})
 
         try:
@@ -561,6 +623,7 @@ def build_experiment_comparison_row(config: AnnualBacktestConfig, result: Annual
     return ExperimentComparisonRow(
         experiment=config.experiment_name,
         scoring_mode=config.scoring_mode,
+        selection_policy=config.selection_policy,
         formation_month=config.formation_month,
         formation_day=config.formation_day,
         top_n=config.top_n,
@@ -600,8 +663,11 @@ def run_experiment_suite(
                 output_dir=experiment_output_dir,
                 benchmark_ticker=config.benchmark_ticker,
                 scoring_mode=config.scoring_mode,
+                selection_policy=config.selection_policy,
                 experiment_name=config.experiment_name,
                 quality_metric_exclusions=config.quality_metric_exclusions,
+                quality_pool_size=config.quality_pool_size,
+                valuation_guard_min_score=config.valuation_guard_min_score,
             ),
             price_provider=price_provider,
         )
@@ -613,6 +679,7 @@ def run_experiment_suite(
         {
             "experiment": row.experiment,
             "scoring_mode": row.scoring_mode,
+            "selection_policy": row.selection_policy,
             "formation_month": row.formation_month,
             "formation_day": row.formation_day,
             "top_n": row.top_n,
@@ -633,6 +700,7 @@ def run_experiment_suite(
         [
             "experiment",
             "scoring_mode",
+            "selection_policy",
             "formation_month",
             "formation_day",
             "top_n",

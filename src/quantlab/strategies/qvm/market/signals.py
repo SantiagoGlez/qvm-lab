@@ -153,7 +153,7 @@ def _compute_assessment(trend: str, rs: str, pullback: str) -> str:
     Attractive
         Strong trend + strong relative strength + healthy pullback.
 
-    Extended
+    Near-highs
         Strong trend + strong relative strength but little/no pullback.
 
     Improving
@@ -173,7 +173,7 @@ def _compute_assessment(trend: str, rs: str, pullback: str) -> str:
     if trend_t >= _STRONG and rs_t >= _STRONG:
         if pull_t >= _STRONG:
             return "Attractive"
-        return "Extended"
+        return "Near-highs"
 
     if trend_t >= _STRONG:
         return "Improving"
@@ -210,7 +210,7 @@ _PULLBACK_SENTENCE = {
 
 _ASSESSMENT_CLOSE = {
     "Attractive": "Trend and entry conditions are well aligned.",
-    "Extended": "Momentum remains strong, but waiting for a pullback may improve the entry.",
+    "Near-highs": "Momentum remains strong, but waiting for a pullback may improve the entry.",
     "Improving": "The trend is healthy, although broader momentum is still developing.",
     "Recovering": "Early stabilization is visible after the recent correction.",
     "Weak": "Market conditions remain unfavorable and require patience.",

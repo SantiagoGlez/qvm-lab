@@ -90,3 +90,46 @@ AMZN, COST, MO, NKE, OXY, PFE, RHHBY
 4. **The cost of expansion is in 2020.** The biggest single-year loss from expansion is 2020 (-32.9pp), where KLAC and ASML — both extremely strong performers that year — were displaced. This is the dominant drag on the expanded universe's CAGR.
 
 5. **2024 is an outlier for instability (3/10 overlap).** The expanded candidate pool contained a cluster of mid-quality names that scored similarly, making ranking sensitive to small score differences. This warrants monitoring.
+
+---
+
+## Secondary valuation filter experiments (Universe 130)
+
+All variants below use Quality-first ranking and April 1 formation dates (2015-2025, Top 10).
+
+| Experiment | CAGR | Sharpe | Max DD | Turnover | Win Rate vs SPY |
+|---|---|---|---|---|---|
+| Quality Only Apr-01 | 23.38% | 1.18 | -3.52% | 50.00% | 72.73% |
+| Quality + Soft Valuation Guard (>=20) | 22.83% | 1.06 | -3.52% | 52.00% | 81.82% |
+| Quality + Soft Valuation Guard (>=30) | 22.27% | 1.00 | -3.52% | 50.00% | 81.82% |
+| Quality + Soft Valuation Guard (>=40) | 16.99% | 0.84 | -6.68% | 51.00% | 72.73% |
+| Quality -> Cheapest Half | 13.10% | 0.66 | -8.97% | 61.00% | 45.45% |
+
+### Read-through
+
+1. A mild valuation guard (>=20 or >=30 valuation score) preserves most of the quality-only CAGR while improving win rate vs SPY.
+2. A strict guard (>=40) is too restrictive for this sample and materially reduces performance.
+3. Re-ranking the top-quality pool by cheapest-half underperforms, suggesting that valuation should act as a constraint, not as the primary selector inside the quality pool.
+
+---
+
+## How to use valuation in reports
+
+Two reporting modes are reasonable; both should be shown side-by-side.
+
+### Option A: Valuation as informative only
+
+- Portfolio construction remains pure quality.
+- Report valuation score distribution for selected names (mean, median, quartiles, % below 20 and below 30).
+- Use this mode when you want maximum continuity with historical quality-only behavior.
+
+### Option B: Valuation as a soft eligibility guard
+
+- Apply a minimum valuation score during selection.
+- Recommended primary threshold: >=30.
+- Recommended sensitivity threshold: >=20.
+- Avoid >=40 as default given the observed CAGR and Sharpe drop.
+
+### Suggested default for ongoing comparisons
+
+Keep **Quality Only Apr-01** as the baseline strategy and add **Quality + Soft Valuation Guard (>=30)** as the primary valuation-aware variant, with **(>=20)** as sensitivity. This keeps valuation in the process without letting it dominate stock selection.

@@ -1,4 +1,4 @@
-from ..analysis.overall import overall_score
+from ..analysis.overall import report_overall_score
 from ..models import Company
 
 
@@ -217,7 +217,7 @@ def print_report(company: Company) -> None:
 
     print("-" * 30)
 
-    print(f"Overall              {overall_score(company):5.1f}")
+    print(f"Overall              {report_overall_score(company):5.1f}")
 
     print()
 

@@ -18,7 +18,17 @@ def _make_company(ticker: str, valuation_score: float, quality_score: float, cov
         used_pe_count=8,
         historical_percentile=0.25,
     )
-    company.metrics = CompanyMetrics()
+    company.metrics = CompanyMetrics(
+        roic=0.20,
+        roe=0.25,
+        operating_margin=0.18,
+        revenue_cagr=0.12,
+        eps_cagr=0.16,
+        fcf_margin=0.08,
+        fcf_conversion=0.75,
+        net_debt_ebitda=0.2,
+        interest_coverage=8.0,
+    )
     return company
 
 
@@ -113,6 +123,49 @@ def test_rank_companies_with_mode_supports_quality_and_valuation() -> None:
 
     assert [company.ticker for company in by_quality] == ["BBB", "CCC", "AAA"]
     assert [company.ticker for company in by_valuation] == ["AAA", "CCC", "BBB"]
+
+
+def test_select_companies_soft_valuation_guard_uses_valuation_score() -> None:
+    companies = [
+        _make_company("Q1", valuation_score=90.0, quality_score=99.0),
+        _make_company("Q2", valuation_score=10.0, quality_score=98.0),
+        _make_company("Q3", valuation_score=85.0, quality_score=97.0),
+        _make_company("Q4", valuation_score=15.0, quality_score=96.0),
+        _make_company("Q5", valuation_score=80.0, quality_score=95.0),
+    ]
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="quality_soft_valuation_guard",
+        quality_pool_size=4,
+        valuation_guard_min_score=20.0,
+    )
+
+    assert [company.ticker for company in selected] == ["Q1", "Q3", "Q5"]
+
+
+def test_select_companies_quality_cheapest_half_uses_valuation_score() -> None:
+    companies = [
+        _make_company("A", valuation_score=10.0, quality_score=100.0),
+        _make_company("B", valuation_score=40.0, quality_score=99.0),
+        _make_company("C", valuation_score=90.0, quality_score=98.0),
+        _make_company("D", valuation_score=70.0, quality_score=97.0),
+        _make_company("E", valuation_score=80.0, quality_score=96.0),
+        _make_company("F", valuation_score=95.0, quality_score=95.0),
+    ]
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="quality_cheapest_half",
+        quality_pool_size=5,
+        valuation_guard_min_score=20.0,
+    )
+
+    assert [company.ticker for company in selected] == ["C", "E", "D"]
 
 
 def test_compute_average_turnover() -> None:

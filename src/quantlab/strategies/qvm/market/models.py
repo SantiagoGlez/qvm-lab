@@ -55,6 +55,6 @@ class MarketSignals(BaseModel):
 
     # --- Composite output -----------------------------------------------------
     score: float = 0.0
-    assessment: str = ""   # Attractive / Extended / Improving / Recovering / Weak
+    assessment: str = ""   # Attractive / Near-highs / Improving / Recovering / Weak
     summary: str = ""
     reason: str = ""
