@@ -42,6 +42,8 @@ The backtest workflow, commands, and experiment outputs are documented in [docs/
 
 For the business-facing explanation of how the backtest is designed and interpreted, see [docs/backtest/business_overview.md](docs/backtest/business_overview.md).
 
+For selection-level diagnostics (selected vs universe, valuation regime by year, and current-year diagnostics command), see [docs/backtest/qvm_selection_diagnostics.md](docs/backtest/qvm_selection_diagnostics.md).
+
 ## Quick start
 
 Install dependencies:

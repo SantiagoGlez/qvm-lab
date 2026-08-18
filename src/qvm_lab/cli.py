@@ -1,15 +1,22 @@
 import argparse
 import runpy
 import sys
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
 
 from quantlab.strategies.qvm.backtest.annual import (
     AnnualBacktestConfig,
+    build_selection_diagnostics_row,
+    load_universe,
+    quality_eligible,
+    score_universe_for_year,
+    select_companies,
     run_annual_backtest,
     run_experiment_suite,
     run_quality_battle_test_suite,
+    analyse_quality,
 )
 from quantlab.strategies.qvm.reports.console import print_report
 from quantlab.strategies.qvm.service import analyse_company
@@ -34,6 +41,41 @@ def universe_cli() -> None:
 
     sys.path.insert(0, str(repo_root))
     runpy.run_path(str(script_path), run_name="__main__")
+
+
+def _read_selection_diagnostics_summary(path: Path) -> dict[str, float] | None:
+    if not path.exists():
+        return None
+
+    frame = pd.read_csv(path)
+    if frame.empty:
+        return None
+
+    return {
+        "years": float(len(frame)),
+        "avg_selected_n": float(frame["selected_n"].mean()),
+        "avg_universe_n": float(frame["universe_n"].mean()),
+        "avg_val_spread": float(frame["val_median_spread"].mean()),
+        "avg_quality_spread": float(frame["quality_median_spread"].mean()),
+        "avg_coverage_spread": float(frame["coverage_median_spread"].mean()),
+    }
+
+
+def _print_selection_diagnostics_summary(path: Path, prefix: str = "Selection diagnostics") -> None:
+    summary = _read_selection_diagnostics_summary(path)
+    if summary is None:
+        print(f"{prefix} | no rows")
+        return
+
+    print(
+        f"{prefix} | "
+        f"years={int(summary['years'])} | "
+        f"avg_selected_n={summary['avg_selected_n']:.2f} | "
+        f"avg_universe_n={summary['avg_universe_n']:.2f} | "
+        f"avg_val_spread={summary['avg_val_spread']:+.2f} | "
+        f"avg_quality_spread={summary['avg_quality_spread']:+.2f} | "
+        f"avg_coverage_spread={summary['avg_coverage_spread']:+.3f}"
+    )
 
 
 def backtest_cli() -> None:
@@ -61,6 +103,7 @@ def backtest_cli() -> None:
 
     print(f"Audit CSV: {result.audit_path}")
     print(f"Returns CSV: {result.returns_path}")
+    print(f"Selection diagnostics CSV: {result.selection_diagnostics_path}")
     print(
         "Summary | "
         f"years={result.summary.years} | "
@@ -68,6 +111,7 @@ def backtest_cli() -> None:
         f"benchmark_cagr={result.summary.benchmark_cagr:.2%} | "
         f"win_rate={result.summary.win_rate:.2%}"
     )
+    _print_selection_diagnostics_summary(result.selection_diagnostics_path)
 
 
 def experiments_cli() -> None:
@@ -205,6 +249,36 @@ def experiments_cli() -> None:
             selection_policy="portfolio_signal",
             experiment_name="Quality + Buy/Hold Signals",
         ),
+        AnnualBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            formation_month=4,
+            formation_day=1,
+            scoring_mode="quality",
+            selection_policy="action_simplified_strict_band",
+            experiment_name="Action Simplified: Overall>=80 + Fair/Cheap/Deep",
+        ),
+        AnnualBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            formation_month=4,
+            formation_day=1,
+            scoring_mode="quality",
+            selection_policy="action_simplified_relaxed_band",
+            experiment_name="Action Simplified: Overall>=80 + Not Very Expensive",
+        ),
+        AnnualBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            formation_month=4,
+            formation_day=1,
+            scoring_mode="quality",
+            selection_policy="action_simplified_relaxed_score_band",
+            experiment_name="Action Simplified: Overall>=75 + Not Very Expensive",
+        ),
     ]
 
     if args.experiment is not None:
@@ -239,6 +313,12 @@ def experiments_cli() -> None:
             f"Turnover={row.turnover:.2%} | "
             f"WinRate={row.win_rate_vs_spy:.2%}"
         )
+        run_result = suite.run_results.get(row.experiment)
+        if run_result is not None:
+            _print_selection_diagnostics_summary(
+                run_result.selection_diagnostics_path,
+                prefix=f"{row.experiment} diagnostics",
+            )
 
 
 def quality_battletest_cli() -> None:
@@ -279,6 +359,111 @@ def quality_diagnostics_cli() -> None:
 
     sys.path.insert(0, str(repo_root))
     runpy.run_path(str(script_path), run_name="__main__")
+
+
+def selection_diagnostics_cli() -> None:
+    """Compute selection diagnostics for a target year and universe regime comparison by year."""
+    parser = argparse.ArgumentParser(description="Run QVM selection diagnostics")
+    parser.add_argument("--year", type=int, default=date.today().year, help="Formation year to diagnose")
+    parser.add_argument("--start-year", type=int, default=2015, help="Start year for universe regime comparison")
+    parser.add_argument("--end-year", type=int, default=date.today().year, help="End year for universe regime comparison")
+    parser.add_argument("--top-n", type=int, default=10)
+    parser.add_argument("--scoring-mode", type=str, default="quality", choices=["qv", "quality", "valuation"])
+    parser.add_argument("--selection-policy", type=str, default="score")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("data/qvm/backtest/selection_diagnostics"),
+        help="Directory for diagnostics CSV outputs",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.start_year > args.end_year:
+        raise ValueError("start-year cannot be greater than end-year")
+
+    output_dir = args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    universe = load_universe()
+
+    # 1) Target-year diagnostics for selected portfolio vs eligible universe.
+    companies = score_universe_for_year(args.year, universe)
+    for company in companies:
+        company.quality = analyse_quality(company)
+    eligible = [company for company in companies if quality_eligible(company)]
+    selected = select_companies(
+        eligible,
+        top_n=args.top_n,
+        scoring_mode=args.scoring_mode,
+        selection_policy=args.selection_policy,
+        quality_pool_size=20,
+        valuation_guard_min_score=20.0,
+    )
+
+    target_row = build_selection_diagnostics_row(
+        formation_year=args.year,
+        eligible_companies=eligible,
+        selected_companies=selected,
+    )
+    target_path = output_dir / f"selection_diagnostics_{args.year}.csv"
+    pd.DataFrame([target_row]).to_csv(target_path, index=False)
+
+    # 2) Universe-only regime comparison by year (selection = universe to isolate market context).
+    regime_rows: list[dict[str, object]] = []
+    for year in range(args.start_year, args.end_year + 1):
+        year_companies = score_universe_for_year(year, universe)
+        for company in year_companies:
+            company.quality = analyse_quality(company)
+        year_eligible = [company for company in year_companies if quality_eligible(company)]
+        row = build_selection_diagnostics_row(
+            formation_year=year,
+            eligible_companies=year_eligible,
+            selected_companies=year_eligible,
+        )
+        regime_rows.append(
+            {
+                "formation_year": row["formation_year"],
+                "universe_n": row["universe_n"],
+                "universe_val_median": row["universe_val_median"],
+                "universe_expensive_share": row["universe_expensive_share"],
+                "universe_cheap_share": row["universe_cheap_share"],
+                "universe_quality_median": row["universe_quality_median"],
+                "universe_coverage_median": row["universe_coverage_median"],
+            }
+        )
+
+    regime_df = pd.DataFrame(regime_rows)
+    regime_path = output_dir / "universe_valuation_regime_by_year.csv"
+    regime_df.to_csv(regime_path, index=False)
+
+    richest = regime_df.sort_values("universe_expensive_share", ascending=False).head(3)
+    cheapest = regime_df.sort_values("universe_cheap_share", ascending=False).head(3)
+
+    print(f"Target-year diagnostics CSV: {target_path}")
+    print(f"Universe regime CSV: {regime_path}")
+    print(
+        "Target year summary | "
+        f"year={args.year} | "
+        f"eligible_n={target_row['universe_n']} | "
+        f"selected_n={target_row['selected_n']} | "
+        f"universe_val_median={target_row['universe_val_median']:.2f} | "
+        f"selected_val_median={target_row['selected_val_median']:.2f} | "
+        f"val_median_spread={target_row['val_median_spread']:+.2f}"
+    )
+    print("Top 3 rich years by universe_expensive_share:")
+    for _, row in richest.iterrows():
+        print(
+            f"  {int(row['formation_year'])} | "
+            f"expensive_share={row['universe_expensive_share']:.4f} | "
+            f"val_median={row['universe_val_median']:.2f}"
+        )
+    print("Top 3 cheap years by universe_cheap_share:")
+    for _, row in cheapest.iterrows():
+        print(
+            f"  {int(row['formation_year'])} | "
+            f"cheap_share={row['universe_cheap_share']:.4f} | "
+            f"val_median={row['universe_val_median']:.2f}"
+        )
 
 
 if __name__ == "__main__":

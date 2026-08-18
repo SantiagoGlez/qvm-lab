@@ -83,6 +83,7 @@ def test_run_annual_backtest_writes_audit_and_return_csvs(monkeypatch, tmp_path:
 
     assert result.audit_path.exists()
     assert result.returns_path.exists()
+    assert result.selection_diagnostics_path.exists()
     assert result.summary.years == 1
     assert result.year_results[0].selected_count == 2
     assert result.year_results[0].benchmark_return == pytest.approx(0.1)
@@ -96,6 +97,14 @@ def test_run_annual_backtest_writes_audit_and_return_csvs(monkeypatch, tmp_path:
     returns_df = pd.read_csv(result.returns_path)
     assert returns_df.loc[0, "portfolio_return"] == pytest.approx(0.1)
     assert returns_df.loc[0, "benchmark_return"] == pytest.approx(0.1)
+
+    diagnostics_df = pd.read_csv(result.selection_diagnostics_path)
+    assert diagnostics_df.loc[0, "formation_year"] == 2025
+    assert diagnostics_df.loc[0, "selected_n"] == 2
+    assert diagnostics_df.loc[0, "universe_n"] == 3
+    assert "val_median_spread" in diagnostics_df.columns
+    assert "quality_median_spread" in diagnostics_df.columns
+    assert "coverage_median_spread" in diagnostics_df.columns
 
 
 def test_rank_companies_prefers_higher_overall_score() -> None:
@@ -232,6 +241,52 @@ def test_select_companies_portfolio_signal_filters_on_buy_and_hold_actions() -> 
     )
 
     assert [company.ticker for company in selected] == ["A", "B", "C"]
+
+
+def test_select_companies_action_simplified_strict_band_uses_overall_and_band() -> None:
+    companies = [
+        _make_company("A", valuation_score=90.0, quality_score=90.0),
+        _make_company("B", valuation_score=80.0, quality_score=80.0),
+        _make_company("C", valuation_score=88.0, quality_score=88.0),
+        _make_company("D", valuation_score=70.0, quality_score=70.0),
+    ]
+    companies[0].valuation.valuation_band = "Fair Value"
+    companies[1].valuation.valuation_band = "Very Expensive"
+    companies[2].valuation.valuation_band = "Cheap"
+    companies[3].valuation.valuation_band = "Deep Value"
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="action_simplified_strict_band",
+        quality_pool_size=20,
+        valuation_guard_min_score=20.0,
+    )
+
+    assert [company.ticker for company in selected] == ["A", "C"]
+
+
+def test_select_companies_action_simplified_relaxed_score_band_excludes_very_expensive() -> None:
+    companies = [
+        _make_company("A", valuation_score=82.0, quality_score=82.0),
+        _make_company("B", valuation_score=78.0, quality_score=78.0),
+        _make_company("C", valuation_score=95.0, quality_score=95.0),
+    ]
+    companies[0].valuation.valuation_band = "Expensive"
+    companies[1].valuation.valuation_band = "Fair Value"
+    companies[2].valuation.valuation_band = "Very Expensive"
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="action_simplified_relaxed_score_band",
+        quality_pool_size=20,
+        valuation_guard_min_score=20.0,
+    )
+
+    assert [company.ticker for company in selected] == ["A", "B"]
 
 
 def test_compute_average_turnover() -> None:

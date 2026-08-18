@@ -127,6 +127,7 @@ class QualityBattleTestResult:
 class AnnualBacktestRunResult:
     audit_path: Path
     returns_path: Path
+    selection_diagnostics_path: Path
     audit_rows: list[dict[str, object]]
     year_results: list[AnnualBacktestYearResult]
     summary: AnnualBacktestSummary
@@ -359,6 +360,33 @@ def select_companies(
             allowed_actions=("Buy", "Hold", "Accumulate"),
         )
 
+    if policy == "action_simplified_strict_band":
+        return select_companies_action_simplified(
+            companies,
+            top_n=top_n,
+            scoring_mode=scoring_mode,
+            min_overall_score=80.0,
+            allowed_valuation_bands=("Deep Value", "Cheap", "Fair Value"),
+        )
+
+    if policy == "action_simplified_relaxed_band":
+        return select_companies_action_simplified(
+            companies,
+            top_n=top_n,
+            scoring_mode=scoring_mode,
+            min_overall_score=80.0,
+            excluded_valuation_bands=("Very Expensive",),
+        )
+
+    if policy == "action_simplified_relaxed_score_band":
+        return select_companies_action_simplified(
+            companies,
+            top_n=top_n,
+            scoring_mode=scoring_mode,
+            min_overall_score=75.0,
+            excluded_valuation_bands=("Very Expensive",),
+        )
+
     raise ValueError(f"Unsupported selection_policy: {selection_policy}")
 
 
@@ -388,6 +416,45 @@ def select_companies_portfolio_signal(
         return []
 
     return rank_companies_with_mode(eligible, min(top_n, len(eligible)), scoring_mode)[:top_n]
+
+
+def select_companies_action_simplified(
+    companies: list[Company],
+    *,
+    top_n: int,
+    scoring_mode: str,
+    min_overall_score: float,
+    allowed_valuation_bands: tuple[str, ...] | None = None,
+    excluded_valuation_bands: tuple[str, ...] = (),
+) -> list[Company]:
+    """Simplified action gate for backtests: score threshold + valuation band filter.
+
+    This intentionally avoids market-assessment gates to increase candidate coverage
+    while keeping valuation discipline in place.
+    """
+    if top_n <= 0:
+        return []
+
+    allowed_set = set(allowed_valuation_bands or ())
+    excluded_set = set(excluded_valuation_bands)
+
+    def _passes_band(company: Company) -> bool:
+        band = company.valuation.valuation_band or ""
+        if allowed_set and band not in allowed_set:
+            return False
+        if excluded_set and band in excluded_set:
+            return False
+        return True
+
+    filtered = [
+        company
+        for company in companies
+        if overall_score(company) >= min_overall_score and _passes_band(company)
+    ]
+    if not filtered:
+        return []
+
+    return rank_companies_with_mode(filtered, min(top_n, len(filtered)), scoring_mode)[:top_n]
 
 
 def select_companies_quality_hysteresis(
@@ -479,6 +546,74 @@ def build_audit_row(
         "sell_date": sell_date.isoformat(),
         "sell_price": round(sell_price, 4),
         "annual_return": round(annual_return, 4),
+    }
+
+
+def _safe_quantile(values: list[float], quantile: float) -> float:
+    if not values:
+        return 0.0
+    return float(pd.Series(values, dtype=float).quantile(quantile))
+
+
+def _band_share(companies: list[Company], allowed_bands: set[str]) -> float:
+    if not companies:
+        return 0.0
+    count = sum(1 for company in companies if (company.valuation.valuation_band or "") in allowed_bands)
+    return count / len(companies)
+
+
+def build_selection_diagnostics_row(
+    *,
+    formation_year: int,
+    eligible_companies: list[Company],
+    selected_companies: list[Company],
+) -> dict[str, object]:
+    universe_val = [company.valuation.score for company in eligible_companies]
+    selected_val = [company.valuation.score for company in selected_companies]
+    universe_quality = [company.quality.score for company in eligible_companies]
+    selected_quality = [company.quality.score for company in selected_companies]
+    universe_coverage = [company.quality.coverage for company in eligible_companies]
+    selected_coverage = [company.quality.coverage for company in selected_companies]
+
+    universe_val_median = _safe_quantile(universe_val, 0.5)
+    selected_val_median = _safe_quantile(selected_val, 0.5)
+    selected_val_median_pct_in_universe = (
+        float((pd.Series(universe_val, dtype=float) <= selected_val_median).mean()) if universe_val and selected_val else 0.0
+    )
+
+    expensive_bands = {"Expensive", "Very Expensive"}
+    cheap_bands = {"Deep Value", "Cheap"}
+
+    universe_expensive_share = _band_share(eligible_companies, expensive_bands)
+    selected_expensive_share = _band_share(selected_companies, expensive_bands)
+    universe_cheap_share = _band_share(eligible_companies, cheap_bands)
+    selected_cheap_share = _band_share(selected_companies, cheap_bands)
+
+    universe_quality_median = _safe_quantile(universe_quality, 0.5)
+    selected_quality_median = _safe_quantile(selected_quality, 0.5)
+    universe_coverage_median = _safe_quantile(universe_coverage, 0.5)
+    selected_coverage_median = _safe_quantile(selected_coverage, 0.5)
+
+    return {
+        "formation_year": formation_year,
+        "universe_n": len(eligible_companies),
+        "selected_n": len(selected_companies),
+        "universe_val_median": round(universe_val_median, 4),
+        "selected_val_median": round(selected_val_median, 4),
+        "val_median_spread": round(selected_val_median - universe_val_median, 4),
+        "selected_val_median_pct_in_universe": round(selected_val_median_pct_in_universe, 4),
+        "universe_expensive_share": round(universe_expensive_share, 4),
+        "selected_expensive_share": round(selected_expensive_share, 4),
+        "expensive_share_spread": round(selected_expensive_share - universe_expensive_share, 4),
+        "universe_cheap_share": round(universe_cheap_share, 4),
+        "selected_cheap_share": round(selected_cheap_share, 4),
+        "cheap_share_spread": round(selected_cheap_share - universe_cheap_share, 4),
+        "universe_quality_median": round(universe_quality_median, 4),
+        "selected_quality_median": round(selected_quality_median, 4),
+        "quality_median_spread": round(selected_quality_median - universe_quality_median, 4),
+        "universe_coverage_median": round(universe_coverage_median, 4),
+        "selected_coverage_median": round(selected_coverage_median, 4),
+        "coverage_median_spread": round(selected_coverage_median - universe_coverage_median, 4),
     }
 
 
@@ -594,6 +729,7 @@ def run_annual_backtest(
     }
 
     audit_rows: list[dict[str, object]] = []
+    selection_diagnostics_rows: list[dict[str, object]] = []
     year_rows: list[dict[str, object]] = []
     year_results: list[AnnualBacktestYearResult] = []
     holdings_by_year: list[set[str]] = []
@@ -627,6 +763,13 @@ def run_annual_backtest(
                 valuation_guard_min_score=config.valuation_guard_min_score,
             )
         holdings_by_year.append({company.ticker for company in ranked})
+        selection_diagnostics_rows.append(
+            build_selection_diagnostics_row(
+                formation_year=formation_year,
+                eligible_companies=eligible_companies,
+                selected_companies=ranked,
+            )
+        )
 
         try:
             benchmark_buy_date, benchmark_buy_price = _price_on_or_after(benchmark_series, buy_target)
@@ -690,6 +833,7 @@ def run_annual_backtest(
 
     audit_path = output_dir / "audit.csv"
     returns_path = output_dir / "returns.csv"
+    selection_diagnostics_path = output_dir / "selection_diagnostics.csv"
 
     _write_csv(
         audit_path,
@@ -725,10 +869,36 @@ def run_annual_backtest(
             "excess_return",
         ],
     )
+    _write_csv(
+        selection_diagnostics_path,
+        selection_diagnostics_rows,
+        [
+            "formation_year",
+            "universe_n",
+            "selected_n",
+            "universe_val_median",
+            "selected_val_median",
+            "val_median_spread",
+            "selected_val_median_pct_in_universe",
+            "universe_expensive_share",
+            "selected_expensive_share",
+            "expensive_share_spread",
+            "universe_cheap_share",
+            "selected_cheap_share",
+            "cheap_share_spread",
+            "universe_quality_median",
+            "selected_quality_median",
+            "quality_median_spread",
+            "universe_coverage_median",
+            "selected_coverage_median",
+            "coverage_median_spread",
+        ],
+    )
 
     return AnnualBacktestRunResult(
         audit_path=audit_path,
         returns_path=returns_path,
+        selection_diagnostics_path=selection_diagnostics_path,
         audit_rows=audit_rows,
         year_results=year_results,
         summary=summary,
