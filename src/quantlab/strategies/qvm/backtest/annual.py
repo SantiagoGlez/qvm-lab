@@ -47,6 +47,8 @@ class AnnualBacktestConfig:
     quality_metric_exclusions: tuple[str, ...] = ()
     quality_pool_size: int = 20
     valuation_guard_min_score: float = 20.0
+    quality_hysteresis_keep_top_n: int = 15
+    quality_hysteresis_min_gap: float = 2.0
 
 
 @dataclass(slots=True)
@@ -286,6 +288,15 @@ def _passes_valuation_guard(company: Company, min_valuation_score: float) -> boo
     return company.valuation.score >= min_valuation_score
 
 
+def _score_for_mode(company: Company, scoring_mode: str) -> float:
+    mode = scoring_mode.lower().strip()
+    if mode == "quality":
+        return company.quality.score
+    if mode == "valuation":
+        return company.valuation.score
+    return overall_score(company)
+
+
 def select_companies(
     companies: list[Company],
     *,
@@ -330,7 +341,111 @@ def select_companies(
         )
         return ranked_by_valuation[:top_n]
 
+    if policy == "quality_hysteresis":
+        return select_companies_quality_hysteresis(
+            companies,
+            previous_holdings=set(),
+            top_n=top_n,
+            scoring_mode=scoring_mode,
+            keep_top_n=15,
+            min_gap=2.0,
+        )
+
+    if policy in {"portfolio_signal", "signal_buy_hold", "buy_hold_signal"}:
+        return select_companies_portfolio_signal(
+            companies,
+            top_n=top_n,
+            scoring_mode=scoring_mode,
+            allowed_actions=("Buy", "Hold", "Accumulate"),
+        )
+
     raise ValueError(f"Unsupported selection_policy: {selection_policy}")
+
+
+def select_companies_portfolio_signal(
+    companies: list[Company],
+    *,
+    top_n: int,
+    scoring_mode: str,
+    allowed_actions: tuple[str, ...] = ("Buy", "Hold", "Accumulate"),
+) -> list[Company]:
+    """Filter companies to the actionable portfolio decisions and rank the survivors.
+
+    This is a separate logic branch from annual rebalance ranking. It intentionally
+    uses the portfolio action layer output rather than recomputing an annual score-only
+    ranking from the full eligible universe.
+    """
+    if top_n <= 0:
+        return []
+
+    action_set = {action.strip().lower() for action in allowed_actions}
+    eligible = [
+        company
+        for company in companies
+        if (company.portfolio.action or "").strip().lower() in action_set
+    ]
+    if not eligible:
+        return []
+
+    return rank_companies_with_mode(eligible, min(top_n, len(eligible)), scoring_mode)[:top_n]
+
+
+def select_companies_quality_hysteresis(
+    companies: list[Company],
+    previous_holdings: set[str] | None,
+    *,
+    top_n: int,
+    scoring_mode: str,
+    keep_top_n: int = 15,
+    min_gap: float = 2.0,
+) -> list[Company]:
+    """Hold a protected band and replace only when a new name is materially better.
+
+    This function intentionally separates the turnover-aware policy from the original
+    rank-only strategy so both can be backtested side-by-side.
+    """
+    if top_n <= 0:
+        return []
+
+    ranked = rank_companies_with_mode(companies, len(companies), scoring_mode)
+    previous = previous_holdings or set()
+
+    if not previous:
+        return ranked[:top_n]
+
+    protected_rank_cutoff = max(top_n, keep_top_n)
+    protected = {company.ticker for company in ranked[:protected_rank_cutoff]}
+    selected_by_ticker: dict[str, Company] = {}
+
+    # 1. Keep previous holdings as long as they remain in the protected band.
+    for company in ranked:
+        if company.ticker in previous and company.ticker in protected:
+            selected_by_ticker[company.ticker] = company
+        if len(selected_by_ticker) >= top_n:
+            break
+
+    # 2. Fill remaining slots from the highest-ranked candidates, but only if they are
+    # meaningfully stronger than the worst currently-held name.
+    for company in ranked:
+        if company.ticker in selected_by_ticker:
+            continue
+        if len(selected_by_ticker) < top_n:
+            selected_by_ticker[company.ticker] = company
+            continue
+
+        weakest_ticker = min(
+            selected_by_ticker,
+            key=lambda ticker: _score_for_mode(selected_by_ticker[ticker], scoring_mode),
+        )
+        candidate_score = _score_for_mode(company, scoring_mode)
+        weakest_score = _score_for_mode(selected_by_ticker[weakest_ticker], scoring_mode)
+
+        if candidate_score >= weakest_score + min_gap:
+            del selected_by_ticker[weakest_ticker]
+            selected_by_ticker[company.ticker] = company
+
+    # Keep deterministic selection order aligned with the ranking list.
+    return [company for company in ranked if company.ticker in selected_by_ticker][:top_n]
 
 
 def build_audit_row(
@@ -491,14 +606,26 @@ def run_annual_backtest(
         for company in companies:
             company.quality = analyse_quality(company, excluded_metrics=config.quality_metric_exclusions)
         eligible_companies = [c for c in companies if quality_eligible(c)]
-        ranked = select_companies(
-            eligible_companies,
-            top_n=config.top_n,
-            scoring_mode=config.scoring_mode,
-            selection_policy=config.selection_policy,
-            quality_pool_size=config.quality_pool_size,
-            valuation_guard_min_score=config.valuation_guard_min_score,
-        )
+
+        previous_holdings = holdings_by_year[-1] if holdings_by_year else set()
+        if config.selection_policy.lower().strip() == "quality_hysteresis":
+            ranked = select_companies_quality_hysteresis(
+                eligible_companies,
+                previous_holdings,
+                top_n=config.top_n,
+                scoring_mode=config.scoring_mode,
+                keep_top_n=config.quality_hysteresis_keep_top_n,
+                min_gap=config.quality_hysteresis_min_gap,
+            )
+        else:
+            ranked = select_companies(
+                eligible_companies,
+                top_n=config.top_n,
+                scoring_mode=config.scoring_mode,
+                selection_policy=config.selection_policy,
+                quality_pool_size=config.quality_pool_size,
+                valuation_guard_min_score=config.valuation_guard_min_score,
+            )
         holdings_by_year.append({company.ticker for company in ranked})
 
         try:

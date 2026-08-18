@@ -1,0 +1,2 @@
+experiment,scoring_mode,selection_policy,formation_month,formation_day,top_n,years,cagr,sharpe,max_drawdown,turnover,win_rate_vs_spy,spy_cagr,excess_cagr
+Quality + Buy/Hold Signals,quality,portfolio_signal,4,1,10,11,0.0,0.0,0.0,0.0,0.1818,0.1298,-0.1298

@@ -3,6 +3,8 @@ import runpy
 import sys
 from pathlib import Path
 
+import pandas as pd
+
 from quantlab.strategies.qvm.backtest.annual import (
     AnnualBacktestConfig,
     run_annual_backtest,
@@ -75,6 +77,17 @@ def experiments_cli() -> None:
     parser.add_argument("--end-year", type=int, default=2025)
     parser.add_argument("--top-n", type=int, default=10)
     parser.add_argument("--output-dir", type=Path, default=Path("data/qvm/backtest/experiments"))
+    parser.add_argument(
+        "--experiment",
+        type=str,
+        default=None,
+        help="Run a single experiment by exact name; defaults to all experiments.",
+    )
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append the selected experiment rows to an existing comparison CSV instead of overwriting it.",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     configs = [
@@ -170,10 +183,53 @@ def experiments_cli() -> None:
             quality_pool_size=20,
             experiment_name="Quality -> Cheapest Half",
         ),
+        AnnualBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            formation_month=4,
+            formation_day=1,
+            scoring_mode="quality",
+            selection_policy="quality_hysteresis",
+            quality_hysteresis_keep_top_n=15,
+            quality_hysteresis_min_gap=2.0,
+            experiment_name="Quality + Hold Buffer (Top15, 2pt)",
+        ),
+        AnnualBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            formation_month=4,
+            formation_day=1,
+            scoring_mode="quality",
+            selection_policy="portfolio_signal",
+            experiment_name="Quality + Buy/Hold Signals",
+        ),
     ]
 
-    suite = run_experiment_suite(configs=configs, output_dir=args.output_dir)
-    print(f"Comparison CSV: {suite.comparison_path}")
+    if args.experiment is not None:
+        selected_name = args.experiment.strip()
+        configs = [config for config in configs if config.experiment_name == selected_name]
+        if not configs:
+            raise ValueError(f"Experiment not found: {selected_name}")
+
+    comparison_path = args.output_dir / "experiment_comparison.csv"
+    if args.append and comparison_path.exists():
+        temp_dir = args.output_dir / ".tmp_append_single_experiment"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        suite = run_experiment_suite(configs=configs, output_dir=temp_dir)
+        temp_csv = temp_dir / "experiment_comparison.csv"
+        existing = pd.read_csv(comparison_path)
+        new_rows = pd.read_csv(temp_csv).to_dict(orient="records")
+        for new_row in new_rows:
+            existing = existing[existing["experiment"] != new_row["experiment"]]
+        combined = pd.concat([existing, pd.DataFrame(new_rows)], ignore_index=True)
+        combined.to_csv(comparison_path, index=False)
+        print(f"Appended {len(new_rows)} row(s) to {comparison_path}")
+    else:
+        suite = run_experiment_suite(configs=configs, output_dir=args.output_dir)
+        print(f"Comparison CSV: {suite.comparison_path}")
+
     for row in suite.rows:
         print(
             f"{row.experiment} | "

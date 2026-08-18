@@ -168,6 +168,72 @@ def test_select_companies_quality_cheapest_half_uses_valuation_score() -> None:
     assert [company.ticker for company in selected] == ["C", "E", "D"]
 
 
+def test_select_companies_quality_hysteresis_preserves_protected_holdings() -> None:
+    companies = [
+        _make_company("A", valuation_score=90.0, quality_score=100.0),
+        _make_company("B", valuation_score=85.0, quality_score=99.0),
+        _make_company("C", valuation_score=80.0, quality_score=98.0),
+        _make_company("D", valuation_score=75.0, quality_score=97.0),
+        _make_company("E", valuation_score=70.0, quality_score=96.0),
+        _make_company("F", valuation_score=65.0, quality_score=95.0),
+        _make_company("G", valuation_score=60.0, quality_score=94.0),
+    ]
+
+    selected = annual_backtest.select_companies_quality_hysteresis(
+        companies,
+        {"A", "B", "C"},
+        top_n=3,
+        scoring_mode="quality",
+        keep_top_n=5,
+        min_gap=2.0,
+    )
+
+    assert [company.ticker for company in selected] == ["A", "B", "C"]
+
+    selected_2 = annual_backtest.select_companies_quality_hysteresis(
+        companies,
+        {"A", "B"},
+        top_n=3,
+        scoring_mode="quality",
+        keep_top_n=5,
+        min_gap=2.0,
+    )
+    assert selected_2[0].ticker == "A"
+    assert selected_2[1].ticker == "B"
+    assert selected_2[2].ticker == "C"
+
+
+def test_select_companies_portfolio_signal_filters_on_buy_and_hold_actions() -> None:
+    companies = [
+        _make_company("A", valuation_score=90.0, quality_score=100.0),
+        _make_company("B", valuation_score=85.0, quality_score=99.0),
+        _make_company("C", valuation_score=80.0, quality_score=98.0),
+        _make_company("D", valuation_score=75.0, quality_score=97.0),
+        _make_company("E", valuation_score=70.0, quality_score=96.0),
+        _make_company("F", valuation_score=65.0, quality_score=95.0),
+    ]
+
+    for company in companies:
+        company.portfolio.action = "Watch"
+    companies[0].portfolio.action = "Buy"
+    companies[1].portfolio.action = "Hold"
+    companies[2].portfolio.action = "Buy"
+    companies[3].portfolio.action = "Watch"
+    companies[4].portfolio.action = "Watch"
+    companies[5].portfolio.action = "Sell"
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="portfolio_signal",
+        quality_pool_size=10,
+        valuation_guard_min_score=0.0,
+    )
+
+    assert [company.ticker for company in selected] == ["A", "B", "C"]
+
+
 def test_compute_average_turnover() -> None:
     turnover = annual_backtest._compute_average_turnover(
         [
