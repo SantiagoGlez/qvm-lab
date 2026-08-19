@@ -4,6 +4,7 @@ import yfinance as yf
 from pathlib import Path
 
 from .base import Provider
+from ..intrinsic import ReverseDCFInputs, ReverseDCFService
 from ..metrics.core import (
     compute_debt_to_ebitda,
     compute_fcf_metrics,
@@ -17,9 +18,12 @@ from ..models import Company
 from ..ticker_aliases import YAHOO_TICKER_MAP
 
 _log = logging.getLogger(__name__)
+_reverse_dcf_service = ReverseDCFService()
 
 
 class YahooProvider(Provider):
+    REPO_ROOT = Path(__file__).resolve().parents[5]
+    CMC_DATA_DIR = REPO_ROOT / "data" / "qvm" / "companiesmarketcap"
 
     def load(self, ticker: str) -> Company:
 
@@ -71,7 +75,189 @@ class YahooProvider(Provider):
             company.valuation_facts.historical_median_pe = float(pd.Series(historical_pe).median())
             company.valuation_facts.historical_percentile = self._percentile(historical_pe, historical_pe[-1])
 
+        current_share_price = self._current_share_price(info)
+        shares_outstanding = self._as_positive_float(info.get("sharesOutstanding"))
+        ttm_fcf = self._calculate_ttm_fcf(stock)
+
+        marketcap_revenue, marketcap_eps, marketcap_fcf, marketcap_sources = self._marketcap_historical_series(ticker)
+        yahoo_revenue = self._annual_income_series(stock, labels=("Total Revenue", "Operating Revenue"))
+        yahoo_eps = self._annual_income_series(stock, labels=("Diluted EPS", "Basic EPS"))
+        yahoo_fcf = self._annual_fcf_series(stock)
+
+        revenue_series, revenue_source = self._select_series_with_source(
+            primary=marketcap_revenue,
+            primary_source=marketcap_sources["revenue"],
+            fallback=yahoo_revenue,
+            fallback_source="Yahoo",
+        )
+        eps_series, eps_source = self._select_series_with_source(
+            primary=marketcap_eps,
+            primary_source=marketcap_sources["eps"],
+            fallback=yahoo_eps,
+            fallback_source="Yahoo",
+        )
+        fcf_series, fcf_source = self._select_series_with_source(
+            primary=marketcap_fcf,
+            primary_source=marketcap_sources["fcf"],
+            fallback=yahoo_fcf,
+            fallback_source="Yahoo",
+        )
+
+        company.reverse_dcf = _reverse_dcf_service.analyse(
+            ReverseDCFInputs(
+                current_share_price=current_share_price,
+                shares_outstanding=shares_outstanding,
+                market_cap=company.metrics.market_cap,
+                ttm_free_cash_flow=ttm_fcf,
+                revenue_by_year=revenue_series,
+                eps_by_year=eps_series,
+                fcf_by_year=fcf_series,
+                revenue_source=revenue_source,
+                eps_source=eps_source,
+                fcf_source=fcf_source,
+            )
+        )
+
         return company
+
+    def _current_share_price(self, info: dict) -> float | None:
+        return self._as_positive_float(info.get("currentPrice") or info.get("regularMarketPrice"))
+
+    def _prefer_primary_series(
+        self,
+        primary: dict[int, float],
+        fallback: dict[int, float],
+    ) -> dict[int, float]:
+        if not primary and not fallback:
+            return {}
+        merged = dict(fallback)
+        merged.update(primary)
+        return merged
+
+    def _select_series_with_source(
+        self,
+        primary: dict[int, float],
+        primary_source: str,
+        fallback: dict[int, float],
+        fallback_source: str,
+    ) -> tuple[dict[int, float], str]:
+        if primary and fallback:
+            return self._prefer_primary_series(primary, fallback), f"{primary_source} + {fallback_source} fallback"
+        if primary:
+            return primary, primary_source
+        if fallback:
+            return fallback, fallback_source
+        return {}, "Unavailable"
+
+    def _marketcap_historical_series(
+        self,
+        ticker: str,
+    ) -> tuple[dict[int, float], dict[int, float], dict[int, float], dict[str, str]]:
+        financials_path = self._find_marketcap_file(ticker=ticker, suffix="financials")
+        if financials_path is None:
+            fcf = self._marketcap_sec_series(ticker=ticker, column="fcf_computed")
+            return {}, {}, fcf, {
+                "revenue": "Unavailable",
+                "eps": "Unavailable",
+                "fcf": "SEC CompanyFacts" if fcf else "Unavailable",
+            }
+
+        try:
+            frame = pd.read_csv(financials_path)
+        except Exception:
+            fcf = self._marketcap_sec_series(ticker=ticker, column="fcf_computed")
+            return {}, {}, fcf, {
+                "revenue": "Unavailable",
+                "eps": "Unavailable",
+                "fcf": "SEC CompanyFacts" if fcf else "Unavailable",
+            }
+
+        year_column = "year" if "year" in frame.columns else "Year" if "Year" in frame.columns else None
+        if year_column is None:
+            fcf = self._marketcap_sec_series(ticker=ticker, column="fcf_computed")
+            return {}, {}, fcf, {
+                "revenue": "Unavailable",
+                "eps": "Unavailable",
+                "fcf": "SEC CompanyFacts" if fcf else "Unavailable",
+            }
+
+        prepared = frame.copy()
+        prepared[year_column] = pd.to_numeric(prepared[year_column], errors="coerce")
+        prepared = prepared.dropna(subset=[year_column])
+        prepared[year_column] = prepared[year_column].astype(int)
+
+        revenue = self._series_from_marketcap_frame(prepared, year_column, "revenue")
+        eps = self._series_from_marketcap_frame(prepared, year_column, "eps")
+        fcf = self._series_from_marketcap_frame(prepared, year_column, "free_cash_flow")
+        fcf_source = "CompaniesMarketCap Financials"
+
+        if not fcf:
+            fcf = self._marketcap_sec_series(ticker=ticker, column="fcf_computed")
+            if fcf:
+                fcf_source = "SEC CompanyFacts"
+            else:
+                fcf_source = "Unavailable"
+
+        return revenue, eps, fcf, {
+            "revenue": "CompaniesMarketCap Financials" if revenue else "Unavailable",
+            "eps": "CompaniesMarketCap Financials" if eps else "Unavailable",
+            "fcf": fcf_source,
+        }
+
+    def _series_from_marketcap_frame(self, frame: pd.DataFrame, year_column: str, value_column: str) -> dict[int, float]:
+        if value_column not in frame.columns:
+            return {}
+
+        values = pd.to_numeric(frame[value_column], errors="coerce")
+        pairs = zip(frame[year_column].tolist(), values.tolist(), strict=False)
+        out: dict[int, float] = {}
+        for year, value in pairs:
+            if pd.isna(value):
+                continue
+            out[int(year)] = float(value)
+        return out
+
+    def _marketcap_sec_series(self, ticker: str, column: str) -> dict[int, float]:
+        path = self.CMC_DATA_DIR / f"{ticker.lower()}_sec_companyfacts_probe.csv"
+        if not path.exists():
+            return {}
+
+        try:
+            frame = pd.read_csv(path)
+        except Exception:
+            return {}
+
+        if "year" not in frame.columns or column not in frame.columns:
+            return {}
+
+        years = pd.to_numeric(frame["year"], errors="coerce")
+        values = pd.to_numeric(frame[column], errors="coerce")
+        out: dict[int, float] = {}
+        for year, value in zip(years.tolist(), values.tolist(), strict=False):
+            if pd.isna(year) or pd.isna(value):
+                continue
+            out[int(year)] = float(value)
+        return out
+
+    def _find_marketcap_file(self, ticker: str, suffix: str) -> Path | None:
+        exact_matches = list(self.CMC_DATA_DIR.glob(f"{ticker.lower()}_*_{suffix}.csv"))
+        if exact_matches:
+            return exact_matches[0]
+
+        fuzzy_matches = list(self.CMC_DATA_DIR.glob(f"*{ticker.lower()}*_{suffix}.csv"))
+        if fuzzy_matches:
+            return fuzzy_matches[0]
+
+        return None
+
+    def _as_positive_float(self, value: object) -> float | None:
+        if value is None:
+            return None
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if parsed > 0 else None
 
     def _calculate_live_pe(self, info: dict) -> float | None:
         price = info.get("currentPrice") or info.get("regularMarketPrice")
@@ -321,6 +507,82 @@ class YahooProvider(Provider):
         except Exception as exc:
             _log.warning("[ROIC] %s: unexpected error — %s", ticker, exc)
             return None
+
+    def _annual_income_series(self, stock: yf.Ticker, labels: tuple[str, ...]) -> dict[int, float]:
+        inc = stock.income_stmt
+        return self._extract_annual_series(inc, labels=labels)
+
+    def _annual_fcf_series(self, stock: yf.Ticker) -> dict[int, float]:
+        cf = stock.cash_flow
+        if cf is None or cf.empty:
+            return {}
+
+        direct = self._extract_annual_series(cf, labels=("Free Cash Flow",))
+        if direct:
+            return direct
+
+        ocf = self._extract_annual_series(cf, labels=("Operating Cash Flow",))
+        capex = self._extract_annual_series(cf, labels=("Capital Expenditure",))
+        if not ocf or not capex:
+            return {}
+
+        years = sorted(set(ocf).intersection(capex))
+        return {year: ocf[year] - abs(capex[year]) for year in years}
+
+    def _calculate_ttm_fcf(self, stock: yf.Ticker) -> float | None:
+        qcf = stock.quarterly_cashflow
+        if qcf is not None and not qcf.empty:
+            quarter_values = self._extract_period_series(qcf, labels=("Free Cash Flow",))
+            if not quarter_values:
+                ocf = self._extract_period_series(qcf, labels=("Operating Cash Flow",))
+                capex = self._extract_period_series(qcf, labels=("Capital Expenditure",))
+                if ocf and capex:
+                    shared_dates = sorted(set(ocf).intersection(capex))
+                    quarter_values = {d: ocf[d] - abs(capex[d]) for d in shared_dates}
+
+            if quarter_values:
+                series = pd.Series(quarter_values).sort_index()
+                if len(series) >= 4:
+                    return float(series.rolling(window=4).sum().iloc[-1])
+
+        annual_fcf = self._annual_fcf_series(stock)
+        if annual_fcf:
+            latest_year = max(annual_fcf)
+            return float(annual_fcf[latest_year])
+
+        return None
+
+    def _extract_period_series(self, frame: pd.DataFrame | None, labels: tuple[str, ...]) -> dict[pd.Timestamp, float]:
+        if frame is None or frame.empty:
+            return {}
+
+        for label in labels:
+            if label not in frame.index:
+                continue
+            row = frame.loc[label].dropna()
+            if row.empty:
+                continue
+
+            out: dict[pd.Timestamp, float] = {}
+            for idx, value in row.items():
+                if pd.isna(value):
+                    continue
+                ts = pd.to_datetime(idx)
+                out[pd.Timestamp(ts)] = float(value)
+            if out:
+                return out
+
+        return {}
+
+    def _extract_annual_series(self, frame: pd.DataFrame | None, labels: tuple[str, ...]) -> dict[int, float]:
+        period_values = self._extract_period_series(frame, labels=labels)
+        if not period_values:
+            return {}
+
+        by_year: dict[int, float] = {}
+        for timestamp, value in sorted(period_values.items()):
+            by_year[int(timestamp.year)] = float(value)
+        return by_year
 
     def _historical_pe(self, stock: yf.Ticker, ticker: str, period: str = "10y") -> list[float]:
         prices_df = stock.history(period=period)[["Close"]]

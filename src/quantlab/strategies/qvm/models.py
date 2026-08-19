@@ -65,6 +65,40 @@ class ValuationFacts(BaseModel):
     discount_to_average_pct: float | None = None
     discount_to_median_pct: float | None = None
 
+
+class ReverseDCFAnalysis(BaseModel):
+    implied_growth: float | None = None
+
+    discount_rate: float = 0.09
+    terminal_growth: float = 0.03
+    projection_years: int = 10
+
+    revenue_cagr_5y: float | None = None
+    revenue_cagr_10y: float | None = None
+
+    eps_cagr_5y: float | None = None
+    eps_cagr_10y: float | None = None
+
+    fcf_cagr_5y: float | None = None
+    fcf_cagr_10y: float | None = None
+
+    historical_growth_estimate: float | None = None
+    historical_growth_estimate_raw: float | None = None
+    representative_growth_uses_cap: bool = True
+    representative_growth_cap_floor: float = -0.15
+    representative_growth_cap_ceiling: float = 0.25
+    growth_input_count: int = 0
+    growth_dispersion: float | None = None
+    history_quality: str = "Unknown"
+
+    revenue_growth_source: str = "Unavailable"
+    eps_growth_source: str = "Unavailable"
+    fcf_growth_source: str = "Unavailable"
+
+    expectation_gap: float | None = None
+
+    assessment: str = "Unavailable"
+
 class Company(BaseModel):
 
     ticker: str
@@ -90,6 +124,8 @@ class Company(BaseModel):
     growth: AnalysisResult = Field(default_factory=AnalysisResult)
 
     valuation_facts: ValuationFacts = Field(default_factory=ValuationFacts)
+
+    reverse_dcf: ReverseDCFAnalysis = Field(default_factory=ReverseDCFAnalysis)
 
     market_facts: MarketFacts = Field(default_factory=MarketFacts)
 

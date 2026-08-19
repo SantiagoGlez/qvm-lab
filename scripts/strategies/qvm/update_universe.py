@@ -37,7 +37,7 @@ def _sort_for_ranking(df: pd.DataFrame) -> pd.DataFrame:
     ranked = df.copy()
     ranked["_market_sort"] = ranked["market_assessment"].map(sort_map).fillna(len(_MARKET_ASSESSMENT_ORDER))
     ranked = ranked.sort_values(
-        by=["quality", "valuation", "_market_sort", "ticker"],
+        by=["quality", "historical_valuation", "_market_sort", "ticker"],
         ascending=[False, False, True, True],
     )
     return ranked.drop(columns=["_market_sort"])
@@ -65,7 +65,8 @@ def main():
                 "gross_margin":      company.metrics.gross_margin,
                 "operating_margin":  company.metrics.operating_margin,
                 "quality":           company.quality.score,
-                "valuation":         company.valuation.score,
+                "historical_valuation": company.valuation.score,
+                "intrinsic_valuation":  company.reverse_dcf.assessment,
                 "overall":           report_overall_score(company),
                 "market_assessment": company.momentum.recommendation,
                 "action":            company.portfolio.action,
@@ -81,7 +82,15 @@ def main():
     print(f"Saved {len(df)} companies to {OUTPUT_FILE}")
     print()
 
-    display_cols = ["ticker", "name", "quality", "valuation", "market_assessment", "action"]
+    display_cols = [
+        "ticker",
+        "name",
+        "quality",
+        "historical_valuation",
+        "intrinsic_valuation",
+        "market_assessment",
+        "action",
+    ]
 
     # Truncate name for display so the table fits on one line
     for frame_df in [df]:

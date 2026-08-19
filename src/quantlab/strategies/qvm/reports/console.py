@@ -23,6 +23,19 @@ def signed_pct(value: float | None) -> str:
     return f"{sign}{abs(value):.1f}%"
 
 
+def signed_ratio_pct(value: float | None) -> str:
+    if value is None:
+        return "N/A"
+    sign = "+" if value >= 0 else "-"
+    return f"{sign}{abs(value):.1%}"
+
+
+def pct_or_na(value: float | None) -> str:
+    if value is None:
+        return "N/A"
+    return f"{value:.1%}"
+
+
 # ---------------------------------------------------------------------------
 # Qualitative label helpers — thresholds centralized here for easy tuning
 # ---------------------------------------------------------------------------
@@ -173,6 +186,53 @@ def print_report(company: Company) -> None:
     print()
     print(f"  Valuation Score           {company.valuation.score:5.1f}")
 
+    print()
+
+    print("Intrinsic Valuation")
+    print("-" * 30)
+    print()
+    print("Reverse DCF")
+    print()
+    print(f"  Discount Rate            {company.reverse_dcf.discount_rate:.1%}")
+    print(f"  Terminal Growth          {company.reverse_dcf.terminal_growth:.1%}")
+    print(f"  Projection Years         {company.reverse_dcf.projection_years}")
+    print()
+    print(f"  Implied FCF Growth       {pct_or_na(company.reverse_dcf.implied_growth)}")
+    print()
+    print("Historical Growth")
+    print()
+    print(f"  Revenue CAGR 5Y          {pct_or_na(company.reverse_dcf.revenue_cagr_5y)}")
+    print(f"  Revenue CAGR 10Y         {pct_or_na(company.reverse_dcf.revenue_cagr_10y)}")
+    print()
+    print(f"  EPS CAGR 5Y              {pct_or_na(company.reverse_dcf.eps_cagr_5y)}")
+    print(f"  EPS CAGR 10Y             {pct_or_na(company.reverse_dcf.eps_cagr_10y)}")
+    print()
+    print(f"  FCF CAGR 5Y              {pct_or_na(company.reverse_dcf.fcf_cagr_5y)}")
+    print(f"  FCF CAGR 10Y             {pct_or_na(company.reverse_dcf.fcf_cagr_10y)}")
+    print()
+    print(f"  Representative Growth    {pct_or_na(company.reverse_dcf.historical_growth_estimate)}")
+    print(f"  Expectation Gap          {signed_ratio_pct(company.reverse_dcf.expectation_gap)}")
+    print()
+    print("Assessment")
+    print()
+    print(f"  {company.reverse_dcf.assessment}")
+    print()
+    print("Notes")
+    print()
+    if company.reverse_dcf.representative_growth_uses_cap:
+        print(
+            "  - Representative Growth is winsorized before median "
+            f"(cap range {company.reverse_dcf.representative_growth_cap_floor:.0%} to "
+            f"{company.reverse_dcf.representative_growth_cap_ceiling:.0%})."
+        )
+    else:
+        print("  - Representative Growth uses uncapped historical CAGR inputs.")
+    print(
+        "  - History quality "
+        f"{company.reverse_dcf.history_quality} "
+        f"(inputs={company.reverse_dcf.growth_input_count}, "
+        f"dispersion={pct_or_na(company.reverse_dcf.growth_dispersion)})."
+    )
     print()
 
     print(f"Quality              {company.quality.score:5.1f}")
