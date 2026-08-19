@@ -18,6 +18,10 @@ from quantlab.strategies.qvm.backtest.annual import (
     run_quality_battle_test_suite,
     analyse_quality,
 )
+from quantlab.strategies.qvm.backtest.contribution import (
+    ContributionBacktestConfig,
+    run_contribution_experiment_suite,
+)
 from quantlab.strategies.qvm.reports.console import print_report
 from quantlab.strategies.qvm.service import analyse_company
 
@@ -347,6 +351,60 @@ def quality_battletest_cli() -> None:
             f"MaxDD={row.max_drawdown:.2%} | "
             f"Turnover={row.turnover:.2%} | "
             f"WinRate={row.win_rate_vs_spy:.2%}"
+        )
+
+
+def contribution_experiments_cli() -> None:
+    """Run a periodic-contribution comparison for quality-only versus the relaxed action rule."""
+    parser = argparse.ArgumentParser(description="Run QVM contribution-aware experiment suite")
+    parser.add_argument("--start-year", type=int, default=2015)
+    parser.add_argument("--end-year", type=int, default=2025)
+    parser.add_argument("--top-n", type=int, default=10)
+    parser.add_argument("--contribution-months", type=int, default=2)
+    parser.add_argument("--initial-contribution", type=float, default=1.0)
+    parser.add_argument("--contribution-amount", type=float, default=1.0)
+    parser.add_argument("--output-dir", type=Path, default=Path("data/qvm/backtest/contribution_portfolio"))
+    args = parser.parse_args(sys.argv[1:])
+
+    configs = [
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="score",
+            experiment_name="Quality Only + Contributions",
+        ),
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="action_simplified_relaxed_score_band",
+            experiment_name="Action Simplified: Overall>=75 + Not Very Expensive + Contributions",
+        ),
+    ]
+
+    suite = run_contribution_experiment_suite(configs=configs, output_dir=args.output_dir)
+    print(f"Comparison CSV: {suite.comparison_path}")
+    for row in suite.rows:
+        print(
+            f"{row.experiment} | "
+            f"TWR_CAGR={row.twr_cagr:.2%} | "
+            f"MWRR={row.mwrr:.2%} | "
+            f"Benchmark_TWR_CAGR={row.benchmark_twr_cagr:.2%} | "
+            f"Benchmark_MWRR={row.benchmark_mwrr:.2%} | "
+            f"WinRate={row.win_rate:.2%}"
         )
 
 

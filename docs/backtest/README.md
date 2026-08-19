@@ -60,6 +60,24 @@ The comparison table is written to:
 data/qvm/backtest/experiments/experiment_comparison.csv
 ```
 
+### 2b) Periodic contribution comparison
+
+```bash
+uv run qvm-contribution-experiments --start-year 2015 --end-year 2025 --top-n 10 --output-dir data/qvm/backtest/contribution_portfolio
+```
+
+This compares the quality-only strategy against the relaxed action rule using periodic contributions every two months.
+
+Generated files include:
+
+```text
+data/qvm/backtest/contribution_portfolio/contribution_experiment_comparison.csv
+```
+
+See the dedicated guide for this run:
+
+- [CONTRIBUTION_EXPERIMENTS_GUIDE.md](../../data/qvm/backtest/contribution_portfolio/CONTRIBUTION_EXPERIMENTS_GUIDE.md)
+
 ### 3) Quality-only battle testing
 
 ```bash

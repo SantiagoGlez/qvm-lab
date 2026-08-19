@@ -3,11 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Protocol
-import csv
 
 import pandas as pd
-import yfinance as yf
 
 from ..analysis.overall import overall_score
 from ..analysis.quality import analyse_quality, quality_eligible
@@ -18,17 +15,19 @@ from ..historical.repositories import (
     CompaniesMarketCapHistoricalValuationRepository,
 )
 from ..models import Company
-from ..ticker_aliases import YAHOO_TICKER_MAP
+from .common import (
+    AdjustedCloseProvider,
+    DEFAULT_ANNUAL_OUTPUT_DIR,
+    YahooAdjustedCloseProvider,
+    _annual_return,
+    _price_on_or_after,
+    _write_csv,
+    formation_date,
+    load_universe,
+)
 
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
-DEFAULT_UNIVERSE_PATH = REPO_ROOT / "data" / "qvm" / "companies.csv"
-DEFAULT_OUTPUT_DIR = REPO_ROOT / "data" / "qvm" / "backtest" / "annual_portfolio"
-
-
-class AdjustedCloseProvider(Protocol):
-    def __call__(self, ticker: str, start: date, end: date) -> pd.Series:
-        raise NotImplementedError
+DEFAULT_OUTPUT_DIR = DEFAULT_ANNUAL_OUTPUT_DIR
 
 
 @dataclass(slots=True)
@@ -131,80 +130,6 @@ class AnnualBacktestRunResult:
     audit_rows: list[dict[str, object]]
     year_results: list[AnnualBacktestYearResult]
     summary: AnnualBacktestSummary
-
-
-class YahooAdjustedCloseProvider:
-    def __init__(self) -> None:
-        self._cache: dict[tuple[str, str, str], pd.Series] = {}
-
-    def __call__(self, ticker: str, start: date, end: date) -> pd.Series:
-        canonical_ticker = ticker.upper()
-        yf_ticker = YAHOO_TICKER_MAP.get(canonical_ticker, canonical_ticker)
-        cache_key = (canonical_ticker, start.isoformat(), end.isoformat())
-        if cache_key in self._cache:
-            return self._cache[cache_key]
-
-        end_with_buffer = end + timedelta(days=10)
-        frame = yf.download(
-            yf_ticker,
-            start=start.isoformat(),
-            end=end_with_buffer.isoformat(),
-            auto_adjust=True,
-            progress=False,
-        )
-
-        if frame.empty:
-            series = pd.Series(dtype=float, name=canonical_ticker)
-            self._cache[cache_key] = series
-            return series
-
-        close = frame["Close"]
-        if isinstance(close, pd.DataFrame):
-            close = close.iloc[:, 0]
-        close.index = pd.to_datetime(close.index).tz_localize(None)
-        series = close.dropna().sort_index().astype(float)
-        series.name = canonical_ticker
-        self._cache[cache_key] = series
-        return series
-
-
-def load_universe(universe_path: Path | None = None) -> list[str]:
-    path = universe_path or DEFAULT_UNIVERSE_PATH
-    if not path.exists():
-        raise FileNotFoundError(f"Universe file not found: {path}")
-
-    df = pd.read_csv(path, dtype=str)
-    tickers = [str(value).strip().upper() for value in df.get("ticker", pd.Series(dtype=str)).tolist()]
-    return [ticker for ticker in tickers if ticker]
-
-
-def formation_date(year: int, month: int, day: int) -> date:
-    return date(year, month, day)
-
-
-def _price_on_or_after(series: pd.Series, target: date) -> tuple[date, float]:
-    if series.empty:
-        raise ValueError("No price history available")
-
-    index = pd.to_datetime(series.index).tz_localize(None)
-    target_ts = pd.Timestamp(target)
-    matches = index[index >= target_ts]
-    if matches.empty:
-        prior = index[index <= target_ts]
-        if prior.empty:
-            raise ValueError(f"No price available on or after {target.isoformat()}")
-        actual_ts = prior[-1]
-    else:
-        actual_ts = matches[0]
-
-    value = float(series.loc[actual_ts])
-    return actual_ts.date(), value
-
-
-def _annual_return(buy_price: float, sell_price: float) -> float:
-    if buy_price == 0:
-        raise ValueError("Buy price cannot be zero")
-    return (sell_price / buy_price) - 1.0
 
 
 def _score_company(ticker: str, valuation_data: dict[str, object], financial_data: dict[str, object]) -> Company:
@@ -615,15 +540,6 @@ def build_selection_diagnostics_row(
         "selected_coverage_median": round(selected_coverage_median, 4),
         "coverage_median_spread": round(selected_coverage_median - universe_coverage_median, 4),
     }
-
-
-def _write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
 
 
 def _summarize_returns(year_results: list[AnnualBacktestYearResult]) -> AnnualBacktestSummary:

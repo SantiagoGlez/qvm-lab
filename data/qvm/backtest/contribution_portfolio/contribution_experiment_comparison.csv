@@ -1,0 +1,3 @@
+experiment,scoring_mode,selection_policy,rebalance_month,rebalance_day,contribution_months,top_n,years,twr_cagr,benchmark_twr_cagr,excess_twr_cagr,mwrr,benchmark_mwrr,excess_mwrr,total_contributions,final_value,benchmark_final_value,win_rate
+Quality Only + Contributions,quality,score,4,1,2,10,11,0.2359,0.1298,0.1061,0.2275,0.1392,0.0883,66.0,253.9724,148.5742,0.8182
+Action Simplified: Overall>=75 + Not Very Expensive + Contributions,quality,action_simplified_relaxed_score_band,4,1,2,10,11,0.114,0.1298,-0.0158,0.096,0.1392,-0.0431,66.0,114.8266,148.5742,0.5455
