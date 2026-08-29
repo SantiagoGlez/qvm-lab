@@ -4,6 +4,8 @@ This section explains how to run the QVM historical backtests and experiment sui
 
 For the business framing and decision criteria behind the backtest itself, see [business_overview.md](business_overview.md).
 
+For tax-aware contribution policy comparisons (including soft-cap and no-trim variants, SPY-relative returns, and Spain tax estimates), see [qvm_contribution_taxaware_experiments.md](qvm_contribution_taxaware_experiments.md).
+
 ## What the backtest does
 
 The repository runs a simple, annual backtest that:

@@ -1,0 +1,6 @@
+experiment,allocation_policy,turnover,twr_cagr,gross_realized_gain_eur,tax_eur_total,taxable_years,max_single_year_tax_eur,final_value,total_contributions,tax_pct_of_final_value,tax_pct_of_contributions,tax_per_1k_final
+Quality Only + Contributions + Max 1 Replacement + Soft Cap 15%,buy_biased_soft_cap,0.13,0.2134,48940.18,9574.87,10,2444.58,230361.618,40000.0,0.041564519658826155,0.23937175000000002,41.56451965882616
+Quality Only + Contributions + Max 1 Replacement + No Trims,buy_biased_no_trim,0.13,0.2094,50660.98,10125.87,10,4501.74,222514.8464,40000.0,0.0455064916513364,0.25314675000000003,45.5064916513364
+Quality Only + Contributions + Max 2 Replacements,reset_equal_weight,0.23,0.1999,121268.26,28147.23,8,10737.17,205880.6877,40000.0,0.1367162229466363,0.70368075,136.7162229466363
+Quality Only + Contributions + Max 1 Replacement,reset_equal_weight,0.13,0.2194,140209.6,32834.99,8,11426.07,243796.6557,40000.0,0.13468187209427745,0.82087475,134.68187209427745
+Quality Only + Contributions,reset_equal_weight,0.5,0.2338,175035.92,37020.61,9,14828.65,274522.3992,40000.0,0.13485460606450944,0.92551525,134.85460606450945

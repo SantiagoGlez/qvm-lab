@@ -45,7 +45,10 @@ class ContributionBacktestConfig:
     selection_policy: str = "score"
     rebalance_policy: str = "full_refresh"
     max_replacements_per_rebalance: int = 0
+    adaptive_max_replacements_per_rebalance: int = 3
+    adaptive_quality_drop_threshold: float = 15.0
     allocation_policy: str = "reset_equal_weight"
+    soft_trim_weight_cap: float = 0.15
     experiment_name: str = "Quality Only + Contributions"
     quality_metric_exclusions: tuple[str, ...] = ()
     quality_pool_size: int = 20
@@ -106,7 +109,10 @@ class ContributionExperimentComparisonRow:
     selection_policy: str
     rebalance_policy: str
     max_replacements_per_rebalance: int
+    adaptive_max_replacements_per_rebalance: int
+    adaptive_quality_drop_threshold: float
     allocation_policy: str
+    soft_trim_weight_cap: float
     rebalance_month: int
     rebalance_day: int
     contribution_months: int
@@ -223,6 +229,44 @@ def _allocate_cash_without_trimming(
     return spent
 
 
+def _trim_above_weight_cap(
+    shares: dict[str, float],
+    price_cache: dict[str, pd.Series],
+    target: date,
+    selected_tickers: list[str],
+    total_value: float,
+    weight_cap: float,
+) -> float:
+    """Trim only the portion above a soft weight cap and return generated cash."""
+    if not selected_tickers or total_value <= 0 or weight_cap <= 0:
+        return 0.0
+
+    cap_value = total_value * weight_cap
+    generated_cash = 0.0
+
+    for ticker in selected_tickers:
+        share_count = shares.get(ticker, 0.0)
+        if share_count <= 0:
+            continue
+        series = price_cache.get(ticker, pd.Series(dtype=float))
+        if series.empty:
+            continue
+        price = _price_at_date(series, target)
+        if price <= 0:
+            continue
+
+        position_value = share_count * price
+        excess_value = position_value - cap_value
+        if excess_value <= 0:
+            continue
+
+        shares_to_sell = excess_value / price
+        shares[ticker] = max(0.0, share_count - shares_to_sell)
+        generated_cash += excess_value
+
+    return generated_cash
+
+
 def _build_contribution_config(config: ContributionBacktestConfig) -> AnnualBacktestConfig:
     return AnnualBacktestConfig(
         start_year=config.start_year,
@@ -251,7 +295,10 @@ def _build_contribution_comparison_row(
         selection_policy=config.selection_policy,
         rebalance_policy=config.rebalance_policy,
         max_replacements_per_rebalance=config.max_replacements_per_rebalance,
+        adaptive_max_replacements_per_rebalance=config.adaptive_max_replacements_per_rebalance,
+        adaptive_quality_drop_threshold=config.adaptive_quality_drop_threshold,
         allocation_policy=config.allocation_policy,
+        soft_trim_weight_cap=config.soft_trim_weight_cap,
         rebalance_month=config.rebalance_month,
         rebalance_day=config.rebalance_day,
         contribution_months=config.contribution_months,
@@ -284,12 +331,15 @@ def _apply_rebalance_policy(
     top_n: int,
     rebalance_policy: str,
     max_replacements_per_rebalance: int,
+    adaptive_max_replacements_per_rebalance: int,
+    adaptive_quality_drop_threshold: float,
+    previous_quality_scores: dict[str, float] | None,
 ) -> list[Company]:
     policy = rebalance_policy.lower().strip()
     if policy == "full_refresh":
         return selected_companies[:top_n]
 
-    if policy != "limited_replacements":
+    if policy not in {"limited_replacements", "limited_replacements_adaptive"}:
         raise ValueError(f"Unsupported rebalance_policy: {rebalance_policy}")
 
     if not previous_tickers or max_replacements_per_rebalance <= 0:
@@ -307,6 +357,24 @@ def _apply_rebalance_policy(
         return [company_by_ticker[ticker] for ticker in previous_live[:top_n] if ticker in company_by_ticker]
 
     replacements = min(max_replacements_per_rebalance, len(new_candidates), len(previous_live))
+    adaptive_drop_set: set[str] = set()
+
+    if policy == "limited_replacements_adaptive" and previous_quality_scores:
+        if adaptive_max_replacements_per_rebalance > replacements and adaptive_quality_drop_threshold > 0:
+            current_quality_scores = {ticker: company_by_ticker[ticker].quality.score for ticker in previous_live}
+            adaptive_drop_candidates = [
+                ticker
+                for ticker in previous_live
+                if ticker in previous_quality_scores
+                and (previous_quality_scores[ticker] - current_quality_scores[ticker]) >= adaptive_quality_drop_threshold
+            ]
+            adaptive_drop_set = set(adaptive_drop_candidates)
+            extra_slots = min(
+                adaptive_max_replacements_per_rebalance - replacements,
+                len(adaptive_drop_candidates),
+            )
+            replacements = min(replacements + max(0, extra_slots), len(new_candidates), len(previous_live))
+
     if replacements <= 0:
         return [company_by_ticker[ticker] for ticker in previous_live[:top_n] if ticker in company_by_ticker]
 
@@ -318,7 +386,15 @@ def _apply_rebalance_policy(
         [ticker for ticker in previous_live if ticker in selected_set],
         key=lambda ticker: (company_by_ticker[ticker].quality.score, ticker),
     )
-    drop_set = set((out_of_target + in_target)[:replacements])
+
+    adaptive_priority = sorted(
+        [ticker for ticker in in_target if ticker in adaptive_drop_set],
+        key=lambda ticker: (company_by_ticker[ticker].quality.score, ticker),
+    )
+    remaining_in_target = [ticker for ticker in in_target if ticker not in adaptive_drop_set]
+
+    drop_candidates = out_of_target + adaptive_priority + remaining_in_target
+    drop_set = set(drop_candidates[:replacements])
 
     kept = [ticker for ticker in previous_live if ticker not in drop_set]
     added = new_candidates[:replacements]
@@ -405,8 +481,9 @@ def run_contribution_backtest(
     win_count = 0
     holdings_by_year: list[set[str]] = []
     previous_active_tickers: list[str] = []
+    previous_quality_scores: dict[str, float] = {}
     allocation_policy = config.allocation_policy.lower().strip()
-    if allocation_policy not in {"reset_equal_weight", "buy_biased_no_trim"}:
+    if allocation_policy not in {"reset_equal_weight", "buy_biased_no_trim", "buy_biased_soft_cap"}:
         raise ValueError(f"Unsupported allocation_policy: {config.allocation_policy}")
 
     for formation_year in range(config.start_year, config.end_year + 1):
@@ -427,8 +504,12 @@ def run_contribution_backtest(
             top_n=config.top_n,
             rebalance_policy=config.rebalance_policy,
             max_replacements_per_rebalance=config.max_replacements_per_rebalance,
+            adaptive_max_replacements_per_rebalance=config.adaptive_max_replacements_per_rebalance,
+            adaptive_quality_drop_threshold=config.adaptive_quality_drop_threshold,
+            previous_quality_scores=previous_quality_scores,
         )
         previous_active_tickers = [company.ticker for company in active_companies]
+        previous_quality_scores = {company.ticker: company.quality.score for company in active_companies}
         holdings_by_year.append(set(previous_active_tickers))
 
         selected_tickers = [company.ticker for company in active_companies]
@@ -507,6 +588,17 @@ def run_contribution_backtest(
                     portfolio_shares = {ticker: 0.0 for ticker in selected_tickers}
                     _buy_equal_weighted(portfolio_shares, price_cache, contribution_date, portfolio_value_after_contribution)
                 else:
+                    if allocation_policy == "buy_biased_soft_cap":
+                        trimmed_cash = _trim_above_weight_cap(
+                            portfolio_shares,
+                            price_cache,
+                            contribution_date,
+                            selected_tickers,
+                            portfolio_value_before,
+                            config.soft_trim_weight_cap,
+                        )
+                        portfolio_cash_balance += trimmed_cash
+
                     portfolio_cash_balance += contribution_value
                     spent = _allocate_cash_without_trimming(
                         portfolio_shares,
@@ -757,7 +849,10 @@ def run_contribution_experiment_suite(
                 selection_policy=config.selection_policy,
                 rebalance_policy=config.rebalance_policy,
                 max_replacements_per_rebalance=config.max_replacements_per_rebalance,
+                adaptive_max_replacements_per_rebalance=config.adaptive_max_replacements_per_rebalance,
+                adaptive_quality_drop_threshold=config.adaptive_quality_drop_threshold,
                 allocation_policy=config.allocation_policy,
+                soft_trim_weight_cap=config.soft_trim_weight_cap,
                 experiment_name=config.experiment_name,
                 quality_metric_exclusions=config.quality_metric_exclusions,
                 quality_pool_size=config.quality_pool_size,
@@ -776,7 +871,10 @@ def run_contribution_experiment_suite(
             "selection_policy": row.selection_policy,
             "rebalance_policy": row.rebalance_policy,
             "max_replacements_per_rebalance": row.max_replacements_per_rebalance,
+            "adaptive_max_replacements_per_rebalance": row.adaptive_max_replacements_per_rebalance,
+            "adaptive_quality_drop_threshold": round(row.adaptive_quality_drop_threshold, 4),
             "allocation_policy": row.allocation_policy,
+            "soft_trim_weight_cap": round(row.soft_trim_weight_cap, 4),
             "rebalance_month": row.rebalance_month,
             "rebalance_day": row.rebalance_day,
             "contribution_months": row.contribution_months,
@@ -805,7 +903,10 @@ def run_contribution_experiment_suite(
             "selection_policy",
             "rebalance_policy",
             "max_replacements_per_rebalance",
+            "adaptive_max_replacements_per_rebalance",
+            "adaptive_quality_drop_threshold",
             "allocation_policy",
+            "soft_trim_weight_cap",
             "rebalance_month",
             "rebalance_day",
             "contribution_months",

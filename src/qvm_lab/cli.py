@@ -426,6 +426,42 @@ def contribution_experiments_cli() -> None:
             scoring_mode="quality",
             selection_policy="score",
             rebalance_policy="limited_replacements",
+            max_replacements_per_rebalance=1,
+            allocation_policy="buy_biased_soft_cap",
+            soft_trim_weight_cap=0.15,
+            experiment_name="Quality Only + Contributions + Max 1 Replacement + Soft Cap 15%",
+        ),
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="score",
+            rebalance_policy="limited_replacements_adaptive",
+            max_replacements_per_rebalance=1,
+            adaptive_max_replacements_per_rebalance=3,
+            adaptive_quality_drop_threshold=15.0,
+            allocation_policy="buy_biased_soft_cap",
+            soft_trim_weight_cap=0.15,
+            experiment_name="Quality Only + Contributions + Max 1->3 Adaptive + Soft Cap 15%",
+        ),
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="score",
+            rebalance_policy="limited_replacements",
             max_replacements_per_rebalance=2,
             allocation_policy="reset_equal_weight",
             experiment_name="Quality Only + Contributions + Max 2 Replacements",
@@ -439,7 +475,10 @@ def contribution_experiments_cli() -> None:
             f"{row.experiment} | "
             f"Policy={row.rebalance_policy} | "
             f"MaxRepl={row.max_replacements_per_rebalance} | "
+            f"AdaptiveMaxRepl={row.adaptive_max_replacements_per_rebalance} | "
+            f"DropThr={row.adaptive_quality_drop_threshold:.1f} | "
             f"Allocation={row.allocation_policy} | "
+            f"Cap={row.soft_trim_weight_cap:.0%} | "
             f"TWR_CAGR={row.twr_cagr:.2%} | "
             f"MWRR={row.mwrr:.2%} | "
             f"Turnover={suite.run_results[row.experiment].summary.turnover:.2%} | "

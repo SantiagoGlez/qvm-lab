@@ -1,0 +1,2 @@
+formation_year,universe_n,selected_n,universe_val_median,selected_val_median,val_median_spread,selected_val_median_pct_in_universe,universe_expensive_share,selected_expensive_share,expensive_share_spread,universe_cheap_share,selected_cheap_share,cheap_share_spread,universe_quality_median,selected_quality_median,quality_median_spread,universe_coverage_median,selected_coverage_median,coverage_median_spread
+2025,109,10,46.6,57.8,11.2,0.6972,0.6881,0.5,-0.1881,0.1651,0.1,-0.0651,66.5,90.4,23.9,1.0,1.0,0.0

@@ -44,6 +44,8 @@ For the business-facing explanation of how the backtest is designed and interpre
 
 For selection-level diagnostics (selected vs universe, valuation regime by year, and current-year diagnostics command), see [docs/backtest/qvm_selection_diagnostics.md](docs/backtest/qvm_selection_diagnostics.md).
 
+For contribution-based tax-aware experiment variants (including soft-cap vs no-trim, turnover, and Spain capital-gains tax estimates with SPY baseline), see [docs/backtest/qvm_contribution_taxaware_experiments.md](docs/backtest/qvm_contribution_taxaware_experiments.md).
+
 ## Quick start
 
 Install dependencies:
