@@ -355,7 +355,7 @@ def quality_battletest_cli() -> None:
 
 
 def contribution_experiments_cli() -> None:
-    """Run a periodic-contribution comparison for quality-only versus the relaxed action rule."""
+    """Run periodic-contribution experiments including tax-aware limited replacement variants."""
     parser = argparse.ArgumentParser(description="Run QVM contribution-aware experiment suite")
     parser.add_argument("--start-year", type=int, default=2015)
     parser.add_argument("--end-year", type=int, default=2025)
@@ -378,6 +378,8 @@ def contribution_experiments_cli() -> None:
             contribution_amount=args.contribution_amount,
             scoring_mode="quality",
             selection_policy="score",
+            rebalance_policy="full_refresh",
+            allocation_policy="reset_equal_weight",
             experiment_name="Quality Only + Contributions",
         ),
         ContributionBacktestConfig(
@@ -390,8 +392,43 @@ def contribution_experiments_cli() -> None:
             initial_contribution=args.initial_contribution,
             contribution_amount=args.contribution_amount,
             scoring_mode="quality",
-            selection_policy="action_simplified_relaxed_score_band",
-            experiment_name="Action Simplified: Overall>=75 + Not Very Expensive + Contributions",
+            selection_policy="score",
+            rebalance_policy="limited_replacements",
+            max_replacements_per_rebalance=1,
+            allocation_policy="reset_equal_weight",
+            experiment_name="Quality Only + Contributions + Max 1 Replacement",
+        ),
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="score",
+            rebalance_policy="limited_replacements",
+            max_replacements_per_rebalance=1,
+            allocation_policy="buy_biased_no_trim",
+            experiment_name="Quality Only + Contributions + Max 1 Replacement + No Trims",
+        ),
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="score",
+            rebalance_policy="limited_replacements",
+            max_replacements_per_rebalance=2,
+            allocation_policy="reset_equal_weight",
+            experiment_name="Quality Only + Contributions + Max 2 Replacements",
         ),
     ]
 
@@ -400,8 +437,12 @@ def contribution_experiments_cli() -> None:
     for row in suite.rows:
         print(
             f"{row.experiment} | "
+            f"Policy={row.rebalance_policy} | "
+            f"MaxRepl={row.max_replacements_per_rebalance} | "
+            f"Allocation={row.allocation_policy} | "
             f"TWR_CAGR={row.twr_cagr:.2%} | "
             f"MWRR={row.mwrr:.2%} | "
+            f"Turnover={suite.run_results[row.experiment].summary.turnover:.2%} | "
             f"Benchmark_TWR_CAGR={row.benchmark_twr_cagr:.2%} | "
             f"Benchmark_MWRR={row.benchmark_mwrr:.2%} | "
             f"WinRate={row.win_rate:.2%}"

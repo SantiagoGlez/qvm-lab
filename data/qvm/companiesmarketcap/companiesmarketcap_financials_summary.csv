@@ -251,6 +251,20 @@ BR,Broadridge Financial Solutions,broadridge-financial-solutions,shares_outstand
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,dividend_yield,,skipped,21
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,price_to_sales,,skipped,21
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,price_to_book,,skipped,21
+BRK,Berkshire Hathaway,berkshire-hathaway,revenue,revenue,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,eps,eps,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,net_income,earnings,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,operating_margin,operating-margin,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,cash,cash-on-hand,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_debt,total-debt,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_assets,total-assets,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,net_assets,net-assets,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,pe_ratio,pe-ratio,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_liabilities,total-liabilities,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,shares_outstanding,shares-outstanding,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,dividend_yield,,missing,31
+BRK,Berkshire Hathaway,berkshire-hathaway,price_to_sales,ps-ratio,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,price_to_book,pb-ratio,ok,31
 BSX,Boston Scientific,boston-scientific,revenue,,skipped,31
 BSX,Boston Scientific,boston-scientific,eps,,skipped,31
 BSX,Boston Scientific,boston-scientific,net_income,,skipped,31

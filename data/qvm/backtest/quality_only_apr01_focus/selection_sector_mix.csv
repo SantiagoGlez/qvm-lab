@@ -1,0 +1,45 @@
+formation_year,sector,count,selected_n,share
+2015,Technology,4,10,0.4
+2015,Financial Services,2,10,0.2
+2015,Healthcare,2,10,0.2
+2015,Communication Services,1,10,0.1
+2015,Consumer Cyclical,1,10,0.1
+2016,Technology,5,10,0.5
+2016,Communication Services,2,10,0.2
+2016,Healthcare,2,10,0.2
+2016,Consumer Cyclical,1,10,0.1
+2017,Technology,6,10,0.6
+2017,Communication Services,1,10,0.1
+2017,Financial Services,1,10,0.1
+2017,Healthcare,1,10,0.1
+2017,Industrials,1,10,0.1
+2018,Technology,7,10,0.7
+2018,Communication Services,1,10,0.1
+2018,Healthcare,1,10,0.1
+2018,Industrials,1,10,0.1
+2019,Technology,6,10,0.6
+2019,Communication Services,1,10,0.1
+2019,Consumer Cyclical,1,10,0.1
+2019,Financial Services,1,10,0.1
+2019,Healthcare,1,10,0.1
+2020,Technology,4,10,0.4
+2020,Financial Services,2,10,0.2
+2020,Healthcare,2,10,0.2
+2020,Communication Services,1,10,0.1
+2020,Consumer Cyclical,1,10,0.1
+2021,Technology,7,10,0.7
+2021,Communication Services,2,10,0.2
+2021,Healthcare,1,10,0.1
+2022,Technology,7,10,0.7
+2022,Communication Services,2,10,0.2
+2022,Healthcare,1,10,0.1
+2023,Technology,6,10,0.6
+2023,Financial Services,2,10,0.2
+2023,Communication Services,1,10,0.1
+2023,Industrials,1,10,0.1
+2024,Technology,7,10,0.7
+2024,Financial Services,2,10,0.2
+2024,Industrials,1,10,0.1
+2025,Technology,6,10,0.6
+2025,Communication Services,2,10,0.2
+2025,Financial Services,2,10,0.2

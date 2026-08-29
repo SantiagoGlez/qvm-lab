@@ -43,6 +43,9 @@ class ContributionBacktestConfig:
     benchmark_ticker: str = "SPY"
     scoring_mode: str = "quality"
     selection_policy: str = "score"
+    rebalance_policy: str = "full_refresh"
+    max_replacements_per_rebalance: int = 0
+    allocation_policy: str = "reset_equal_weight"
     experiment_name: str = "Quality Only + Contributions"
     quality_metric_exclusions: tuple[str, ...] = ()
     quality_pool_size: int = 20
@@ -82,6 +85,7 @@ class ContributionBacktestSummary:
     final_value: float
     benchmark_final_value: float
     win_rate: float
+    turnover: float
 
 
 @dataclass(slots=True)
@@ -100,6 +104,9 @@ class ContributionExperimentComparisonRow:
     experiment: str
     scoring_mode: str
     selection_policy: str
+    rebalance_policy: str
+    max_replacements_per_rebalance: int
+    allocation_policy: str
     rebalance_month: int
     rebalance_day: int
     contribution_months: int
@@ -160,6 +167,62 @@ def _buy_equal_weighted(
             shares[ticker] += per_holding / price
 
 
+def _allocate_cash_without_trimming(
+    shares: dict[str, float],
+    price_cache: dict[str, pd.Series],
+    target: date,
+    cash: float,
+    selected_tickers: list[str],
+) -> float:
+    """Invest available cash into entrants/underweights without selling persisted holdings."""
+    if cash <= 0 or not selected_tickers:
+        return 0.0
+
+    prices: dict[str, float] = {}
+    current_values: dict[str, float] = {}
+    for ticker in selected_tickers:
+        series = price_cache.get(ticker, pd.Series(dtype=float))
+        if series.empty:
+            continue
+        price = _price_at_date(series, target)
+        if price <= 0:
+            continue
+        prices[ticker] = price
+        current_values[ticker] = shares.get(ticker, 0.0) * price
+
+    if not prices:
+        return 0.0
+
+    total_value = cash + sum(current_values.values())
+    target_value = total_value / len(prices)
+
+    deficits = {
+        ticker: max(0.0, target_value - current_values.get(ticker, 0.0))
+        for ticker in prices
+    }
+    total_deficit = sum(deficits.values())
+
+    if total_deficit <= 0:
+        # If everything is above target already, spread cash equally.
+        allocation = {ticker: cash / len(prices) for ticker in prices}
+    else:
+        allocation = {
+            ticker: cash * (deficits[ticker] / total_deficit)
+            for ticker in prices
+            if deficits[ticker] > 0
+        }
+
+    spent = 0.0
+    for ticker, amount in allocation.items():
+        if amount <= 0:
+            continue
+        price = prices[ticker]
+        shares[ticker] = shares.get(ticker, 0.0) + (amount / price)
+        spent += amount
+
+    return spent
+
+
 def _build_contribution_config(config: ContributionBacktestConfig) -> AnnualBacktestConfig:
     return AnnualBacktestConfig(
         start_year=config.start_year,
@@ -186,6 +249,9 @@ def _build_contribution_comparison_row(
         experiment=config.experiment_name,
         scoring_mode=config.scoring_mode,
         selection_policy=config.selection_policy,
+        rebalance_policy=config.rebalance_policy,
+        max_replacements_per_rebalance=config.max_replacements_per_rebalance,
+        allocation_policy=config.allocation_policy,
         rebalance_month=config.rebalance_month,
         rebalance_day=config.rebalance_day,
         contribution_months=config.contribution_months,
@@ -208,6 +274,87 @@ def _final_cash_flow(cash_flows: list[tuple[date, float]], final_date: date, fin
     ordered = list(cash_flows)
     ordered.append((final_date, final_value))
     return ordered
+
+
+def _apply_rebalance_policy(
+    *,
+    selected_companies: list[Company],
+    eligible_companies: list[Company],
+    previous_tickers: list[str],
+    top_n: int,
+    rebalance_policy: str,
+    max_replacements_per_rebalance: int,
+) -> list[Company]:
+    policy = rebalance_policy.lower().strip()
+    if policy == "full_refresh":
+        return selected_companies[:top_n]
+
+    if policy != "limited_replacements":
+        raise ValueError(f"Unsupported rebalance_policy: {rebalance_policy}")
+
+    if not previous_tickers or max_replacements_per_rebalance <= 0:
+        return selected_companies[:top_n]
+
+    company_by_ticker = {company.ticker: company for company in eligible_companies}
+    previous_live = [ticker for ticker in previous_tickers if ticker in company_by_ticker]
+    if not previous_live:
+        return selected_companies[:top_n]
+
+    selected_rank = {company.ticker: idx for idx, company in enumerate(selected_companies)}
+    selected_set = set(selected_rank)
+    new_candidates = [company.ticker for company in selected_companies if company.ticker not in previous_live]
+    if not new_candidates:
+        return [company_by_ticker[ticker] for ticker in previous_live[:top_n] if ticker in company_by_ticker]
+
+    replacements = min(max_replacements_per_rebalance, len(new_candidates), len(previous_live))
+    if replacements <= 0:
+        return [company_by_ticker[ticker] for ticker in previous_live[:top_n] if ticker in company_by_ticker]
+
+    out_of_target = sorted(
+        [ticker for ticker in previous_live if ticker not in selected_set],
+        key=lambda ticker: (company_by_ticker[ticker].quality.score, ticker),
+    )
+    in_target = sorted(
+        [ticker for ticker in previous_live if ticker in selected_set],
+        key=lambda ticker: (company_by_ticker[ticker].quality.score, ticker),
+    )
+    drop_set = set((out_of_target + in_target)[:replacements])
+
+    kept = [ticker for ticker in previous_live if ticker not in drop_set]
+    added = new_candidates[:replacements]
+
+    final_tickers: list[str] = []
+    for ticker in kept + added:
+        if ticker not in final_tickers:
+            final_tickers.append(ticker)
+
+    for company in selected_companies:
+        if company.ticker not in final_tickers:
+            final_tickers.append(company.ticker)
+        if len(final_tickers) >= top_n:
+            break
+
+    final_tickers = final_tickers[:top_n]
+    ordered = sorted(
+        [company_by_ticker[ticker] for ticker in final_tickers if ticker in company_by_ticker],
+        key=lambda company: (
+            selected_rank.get(company.ticker, 10_000),
+            -company.quality.score,
+            company.ticker,
+        ),
+    )
+    return ordered[:top_n]
+
+
+def _compute_average_turnover(holdings_by_year: list[set[str]], top_n: int) -> float:
+    if len(holdings_by_year) < 2 or top_n <= 0:
+        return 0.0
+
+    turnovers: list[float] = []
+    for previous, current in zip(holdings_by_year[:-1], holdings_by_year[1:]):
+        sold = len(previous - current)
+        turnovers.append(sold / top_n)
+    return sum(turnovers) / len(turnovers) if turnovers else 0.0
 
 
 def run_contribution_backtest(
@@ -256,6 +403,11 @@ def run_contribution_backtest(
     all_benchmark_cash_flows: list[tuple[date, float]] = []
     total_contributions = 0.0
     win_count = 0
+    holdings_by_year: list[set[str]] = []
+    previous_active_tickers: list[str] = []
+    allocation_policy = config.allocation_policy.lower().strip()
+    if allocation_policy not in {"reset_equal_weight", "buy_biased_no_trim"}:
+        raise ValueError(f"Unsupported allocation_policy: {config.allocation_policy}")
 
     for formation_year in range(config.start_year, config.end_year + 1):
         period_start = formation_date(formation_year, config.rebalance_month, config.rebalance_day)
@@ -268,14 +420,42 @@ def run_contribution_backtest(
         selected_companies = [company for company in selected_companies if not price_cache.get(company.ticker, pd.Series(dtype=float)).empty]
         eligible_companies = [company for company in eligible_companies if not price_cache.get(company.ticker, pd.Series(dtype=float)).empty]
 
-        selected_tickers = [company.ticker for company in selected_companies]
+        active_companies = _apply_rebalance_policy(
+            selected_companies=selected_companies,
+            eligible_companies=eligible_companies,
+            previous_tickers=previous_active_tickers,
+            top_n=config.top_n,
+            rebalance_policy=config.rebalance_policy,
+            max_replacements_per_rebalance=config.max_replacements_per_rebalance,
+        )
+        previous_active_tickers = [company.ticker for company in active_companies]
+        holdings_by_year.append(set(previous_active_tickers))
+
+        selected_tickers = [company.ticker for company in active_companies]
         if formation_year == config.start_year:
             portfolio_cash_balance = 0.0
             benchmark_cash_balance = 0.0
         else:
-            portfolio_cash_balance = _value_of_holdings(portfolio_shares, price_cache, period_start)
+            if allocation_policy == "reset_equal_weight":
+                portfolio_cash_balance = _value_of_holdings(portfolio_shares, price_cache, period_start)
 
-        portfolio_shares = {ticker: 0.0 for ticker in selected_tickers}
+        if allocation_policy == "reset_equal_weight":
+            portfolio_shares = {ticker: 0.0 for ticker in selected_tickers}
+        else:
+            # Only sell when forced by membership changes.
+            for ticker, share_count in list(portfolio_shares.items()):
+                if share_count <= 0:
+                    continue
+                if ticker in selected_tickers:
+                    continue
+                series = price_cache.get(ticker, pd.Series(dtype=float))
+                if series.empty:
+                    continue
+                portfolio_cash_balance += share_count * _price_at_date(series, period_start)
+                del portfolio_shares[ticker]
+
+            for ticker in selected_tickers:
+                portfolio_shares.setdefault(ticker, 0.0)
 
         audit_rows.extend(
             build_audit_row(
@@ -287,14 +467,14 @@ def run_contribution_backtest(
                 sell_date=period_end,
                 sell_price=_price_at_date(price_cache[company.ticker], period_end),
             )
-            for rank, company in enumerate(selected_companies, start=1)
+            for rank, company in enumerate(active_companies, start=1)
         )
 
         selection_diagnostics_rows.append(
             build_selection_diagnostics_row(
                 formation_year=formation_year,
                 eligible_companies=eligible_companies,
-                selected_companies=selected_companies,
+                selected_companies=active_companies,
             )
         )
 
@@ -322,12 +502,23 @@ def run_contribution_backtest(
             benchmark_value_after_contribution = benchmark_value_before + contribution_value
 
             if selected_tickers:
-                portfolio_cash_balance = 0.0
-                portfolio_shares = {ticker: 0.0 for ticker in selected_tickers}
-                _buy_equal_weighted(portfolio_shares, price_cache, contribution_date, portfolio_value_after_contribution)
+                if allocation_policy == "reset_equal_weight":
+                    portfolio_cash_balance = 0.0
+                    portfolio_shares = {ticker: 0.0 for ticker in selected_tickers}
+                    _buy_equal_weighted(portfolio_shares, price_cache, contribution_date, portfolio_value_after_contribution)
+                else:
+                    portfolio_cash_balance += contribution_value
+                    spent = _allocate_cash_without_trimming(
+                        portfolio_shares,
+                        price_cache,
+                        contribution_date,
+                        portfolio_cash_balance,
+                        selected_tickers,
+                    )
+                    portfolio_cash_balance -= spent
             else:
                 portfolio_shares = {}
-                portfolio_cash_balance = portfolio_value_after_contribution
+                portfolio_cash_balance += contribution_value
 
             if not benchmark_series.empty and benchmark_value_after_contribution > 0:
                 benchmark_units = benchmark_value_after_contribution / _price_at_date(benchmark_series, contribution_date)
@@ -373,7 +564,7 @@ def run_contribution_backtest(
                 formation_year=formation_year,
                 period_start=period_start,
                 period_end=period_end,
-                selected_count=len(selected_companies),
+                selected_count=len(active_companies),
                 contribution_events=len(contribution_dates),
                 total_contributions=round(year_total_contributions, 4),
                 portfolio_return=year_portfolio_growth - 1.0,
@@ -391,7 +582,7 @@ def run_contribution_backtest(
                 "formation_year": formation_year,
                 "period_start": period_start.isoformat(),
                 "period_end": period_end.isoformat(),
-                "selected_count": len(selected_companies),
+                "selected_count": len(active_companies),
                 "contribution_events": len(contribution_dates),
                 "total_contributions": round(year_total_contributions, 4),
                 "portfolio_return": round(year_portfolio_growth - 1.0, 4),
@@ -428,6 +619,7 @@ def run_contribution_backtest(
         final_value=period_results[-1].final_value if period_results else 0.0,
         benchmark_final_value=period_results[-1].benchmark_final_value if period_results else 0.0,
         win_rate=(win_count / len(period_rows)) if period_rows else 0.0,
+        turnover=_compute_average_turnover(holdings_by_year, config.top_n),
     )
 
     audit_path = output_dir / "audit.csv"
@@ -563,6 +755,9 @@ def run_contribution_experiment_suite(
                 benchmark_ticker=config.benchmark_ticker,
                 scoring_mode=config.scoring_mode,
                 selection_policy=config.selection_policy,
+                rebalance_policy=config.rebalance_policy,
+                max_replacements_per_rebalance=config.max_replacements_per_rebalance,
+                allocation_policy=config.allocation_policy,
                 experiment_name=config.experiment_name,
                 quality_metric_exclusions=config.quality_metric_exclusions,
                 quality_pool_size=config.quality_pool_size,
@@ -579,6 +774,9 @@ def run_contribution_experiment_suite(
             "experiment": row.experiment,
             "scoring_mode": row.scoring_mode,
             "selection_policy": row.selection_policy,
+            "rebalance_policy": row.rebalance_policy,
+            "max_replacements_per_rebalance": row.max_replacements_per_rebalance,
+            "allocation_policy": row.allocation_policy,
             "rebalance_month": row.rebalance_month,
             "rebalance_day": row.rebalance_day,
             "contribution_months": row.contribution_months,
@@ -594,6 +792,7 @@ def run_contribution_experiment_suite(
             "final_value": round(row.final_value, 4),
             "benchmark_final_value": round(row.benchmark_final_value, 4),
             "win_rate": round(row.win_rate, 4),
+            "turnover": round(run_results[row.experiment].summary.turnover, 4),
         }
         for row in rows
     ]
@@ -604,6 +803,9 @@ def run_contribution_experiment_suite(
             "experiment",
             "scoring_mode",
             "selection_policy",
+            "rebalance_policy",
+            "max_replacements_per_rebalance",
+            "allocation_policy",
             "rebalance_month",
             "rebalance_day",
             "contribution_months",
@@ -619,6 +821,7 @@ def run_contribution_experiment_suite(
             "final_value",
             "benchmark_final_value",
             "win_rate",
+            "turnover",
         ],
     )
 

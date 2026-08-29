@@ -2,4 +2,5 @@
 # Add entries here for foreign-listed stocks or symbol differences.
 YAHOO_TICKER_MAP: dict[str, str] = {
     "RNO": "RNO.PA",
+    "BRK": "BRK-B",
 }

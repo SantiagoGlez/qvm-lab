@@ -1,0 +1,5 @@
+experiment,scoring_mode,selection_policy,rebalance_policy,max_replacements_per_rebalance,allocation_policy,rebalance_month,rebalance_day,contribution_months,top_n,years,twr_cagr,benchmark_twr_cagr,excess_twr_cagr,mwrr,benchmark_mwrr,excess_mwrr,total_contributions,final_value,benchmark_final_value,win_rate,turnover
+Quality Only + Contributions,quality,score,full_refresh,0,reset_equal_weight,4,1,12,10,11,0.2338,0.1298,0.104,0.2325,0.1336,0.0989,40000.0,274522.4439,121912.3977,0.7273,0.5
+Quality Only + Contributions + Max 1 Replacement,quality,score,limited_replacements,1,reset_equal_weight,4,1,12,10,11,0.2194,0.1298,0.0896,0.2178,0.1336,0.0842,40000.0,243796.6699,121912.3977,0.8182,0.13
+Quality Only + Contributions + Max 1 Replacement + No Trims,quality,score,limited_replacements,1,buy_biased_no_trim,4,1,12,10,11,0.2094,0.1298,0.0796,0.2066,0.1336,0.073,40000.0,222514.8508,121912.3977,0.9091,0.13
+Quality Only + Contributions + Max 2 Replacements,quality,score,limited_replacements,2,reset_equal_weight,4,1,12,10,11,0.1999,0.1298,0.0701,0.197,0.1336,0.0635,40000.0,205880.7031,121912.3977,0.8182,0.23
