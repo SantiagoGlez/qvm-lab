@@ -113,6 +113,27 @@ All variants below use Quality-first ranking and April 1 formation dates (2015-2
 
 ---
 
+## Intrinsic valuation experiments (Reverse DCF, Universe 130)
+
+All variants below use Quality-first ranking and April 1 formation dates (2015-2025, Top 10).
+
+| Experiment | CAGR | Sharpe | Max DD | Turnover | Win Rate vs SPY |
+|---|---|---|---|---|---|
+| Quality Only Apr-01 | 23.38% | 1.18 | -3.52% | 50.00% | 72.73% |
+| Quality + Intrinsic Guard (Reasonable+) | 17.41% | 0.85 | -3.65% | 51.00% | 72.73% |
+| Quality + Intrinsic Tilt (90/10) | 21.84% | 1.11 | -3.19% | 56.00% | 72.73% |
+| Quality + Intrinsic Tilt (85/15) | 21.36% | 1.07 | -3.55% | 56.00% | 72.73% |
+| Quality + Intrinsic Hybrid (No Very Optimistic, 90/10) | 17.11% | 0.87 | -5.67% | 49.00% | 72.73% |
+
+### Read-through
+
+1. The strict intrinsic guard (Reasonable+) improves expectation discipline but is too costly here on CAGR and Sharpe versus quality-only.
+2. Small intrinsic tilts preserve most of quality-only performance, with 90/10 outperforming 85/15 in this sample.
+3. The hybrid policy lowers turnover but pays for it with weaker risk-adjusted returns and deeper drawdown than quality-only.
+4. In this window, reverse DCF behaves better as a light ranking tilt than as a hard eligibility gate.
+
+---
+
 ## How to use valuation in reports
 
 Two reporting modes are reasonable; both should be shown side-by-side.
@@ -133,3 +154,5 @@ Two reporting modes are reasonable; both should be shown side-by-side.
 ### Suggested default for ongoing comparisons
 
 Keep **Quality Only Apr-01** as the baseline strategy and add **Quality + Soft Valuation Guard (>=30)** as the primary valuation-aware variant, with **(>=20)** as sensitivity. This keeps valuation in the process without letting it dominate stock selection.
+
+For intrinsic-aware monitoring, add **Quality + Intrinsic Tilt (90/10)** as the primary Reverse DCF variant and track **(85/15)** as sensitivity.

@@ -10,6 +10,12 @@ For each experiment, holdings are in that experiment folder's audit.csv file.
 - returns.csv: one row per formation year with selected_count, portfolio_return, benchmark_return, and excess_return.
 - experiment_comparison.csv: one row per experiment with summary metrics (CAGR, Sharpe, Max Drawdown, Turnover, Win Rate vs SPY).
 
+For intrinsic-aware policies, audit.csv also includes:
+
+- intrinsic_assessment
+- intrinsic_history_quality
+- intrinsic_expectation_gap
+
 Important note for Action Simplified experiments:
 
 - Summary rows are in experiment_comparison.csv.
@@ -75,6 +81,34 @@ Important note for Action Simplified experiments:
 - selection_policy: quality_soft_valuation_guard
 - Rule: quality-first ranking with a minimum valuation floor of 40.
 - Output folder: quality_+_soft_valuation_guard_(>=40)
+
+### Quality + Intrinsic Guard (Reasonable+)
+- Name: Quality + Intrinsic Guard (Reasonable+)
+- scoring_mode: quality
+- selection_policy: quality_intrinsic_guard
+- Rule: keep only names with Reverse DCF assessment in Very Conservative, Conservative, or Reasonable; rank remaining names by quality.
+- Output folder: quality_+_intrinsic_guard_(reasonable+)
+
+### Quality + Intrinsic Tilt (90/10)
+- Name: Quality + Intrinsic Tilt (90/10)
+- scoring_mode: quality
+- selection_policy: quality_intrinsic_tilt
+- Rule: rank by 90% quality score and 10% Reverse DCF label-mapped score (with history-quality damping).
+- Output folder: quality_+_intrinsic_tilt_(90_10)
+
+### Quality + Intrinsic Tilt (85/15)
+- Name: Quality + Intrinsic Tilt (85/15)
+- scoring_mode: quality
+- selection_policy: quality_intrinsic_tilt
+- Rule: rank by 85% quality score and 15% Reverse DCF label-mapped score (with history-quality damping).
+- Output folder: quality_+_intrinsic_tilt_(85_15)
+
+### Quality + Intrinsic Hybrid (No Very Optimistic, 90/10)
+- Name: Quality + Intrinsic Hybrid (No Very Optimistic, 90/10)
+- scoring_mode: quality
+- selection_policy: quality_intrinsic_guard_tilt
+- Rule: exclude Very Optimistic Reverse DCF assessments, then rank by 90% quality and 10% Reverse DCF label-mapped score.
+- Output folder: quality_+_intrinsic_hybrid_(no_very_optimistic,_90_10)
 
 ### Quality -> Cheapest Half
 - Name: Quality -> Cheapest Half

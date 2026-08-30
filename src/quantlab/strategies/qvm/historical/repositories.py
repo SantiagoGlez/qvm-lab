@@ -141,6 +141,12 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
         pretax_income = self._prefer_primary_then_fallback(row.get("pretax_income"), sec_snapshot.get("pretax_income"))
         free_cash_flow = self._prefer_primary_then_fallback(row.get("free_cash_flow"), sec_snapshot.get("fcf_computed"))
 
+        revenue_by_year = self._series_by_year(reference_history, "revenue")
+        eps_by_year = self._series_by_year(reference_history, "eps")
+        fcf_by_year = self._series_by_year(reference_history, "free_cash_flow")
+        if free_cash_flow is not None:
+            fcf_by_year[year] = free_cash_flow
+
         return {
             "ticker": ticker,
             "formation_year": formation_year,
@@ -171,7 +177,24 @@ class CompaniesMarketCapHistoricalFinancialRepository(HistoricalFinancialReposit
             "effective_tax_rate": sec_snapshot.get("effective_tax_rate"),
             "equity": sec_snapshot.get("equity"),
             "short_term_investments": sec_snapshot.get("short_term_investments"),
+            "revenue_by_year": revenue_by_year,
+            "eps_by_year": eps_by_year,
+            "fcf_by_year": fcf_by_year,
         }
+
+    def _series_by_year(self, df: pd.DataFrame, column: str) -> dict[int, float]:
+        if column not in df.columns or df.empty:
+            return {}
+
+        series = df[["Year", column]].copy()
+        series["Year"] = pd.to_numeric(series["Year"], errors="coerce")
+        series[column] = pd.to_numeric(series[column], errors="coerce")
+        series = series.dropna(subset=["Year", column])
+
+        out: dict[int, float] = {}
+        for _, row in series.iterrows():
+            out[int(row["Year"])] = float(row[column])
+        return out
 
     def _load_sec_probe_snapshot(self, ticker: str, year: int) -> dict[str, float | None]:
         sec_probe_path = self.DATA_DIR / f"{ticker.lower()}_sec_companyfacts_probe.csv"

@@ -7,10 +7,17 @@ import pandas as pd
 import pytest
 
 from quantlab.strategies.qvm.backtest import annual as annual_backtest
-from quantlab.strategies.qvm.models import AnalysisResult, Company, CompanyMetrics, ValuationFacts
+from quantlab.strategies.qvm.models import AnalysisResult, Company, CompanyMetrics, ReverseDCFAnalysis, ValuationFacts
 
 
-def _make_company(ticker: str, valuation_score: float, quality_score: float, coverage: float = 1.0) -> Company:
+def _make_company(
+    ticker: str,
+    valuation_score: float,
+    quality_score: float,
+    coverage: float = 1.0,
+    intrinsic_assessment: str = "Unavailable",
+    intrinsic_history_quality: str = "Unknown",
+) -> Company:
     company = Company(ticker=ticker)
     company.valuation = AnalysisResult(score=valuation_score)
     company.quality = AnalysisResult(score=quality_score, coverage=coverage)
@@ -28,6 +35,10 @@ def _make_company(ticker: str, valuation_score: float, quality_score: float, cov
         fcf_conversion=0.75,
         net_debt_ebitda=0.2,
         interest_coverage=8.0,
+    )
+    company.reverse_dcf = ReverseDCFAnalysis(
+        assessment=intrinsic_assessment,
+        history_quality=intrinsic_history_quality,
     )
     return company
 
@@ -57,7 +68,7 @@ def test_run_annual_backtest_writes_audit_and_return_csvs(monkeypatch, tmp_path:
     monkeypatch.setattr(
         annual_backtest,
         "score_universe_for_year",
-        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None, intrinsic_price_lookup=None: [
             fake_score_company("AAA", {"used_pe_count": 8}, {}),
             fake_score_company("BBB", {"used_pe_count": 8}, {}),
             fake_score_company("CCC", {"used_pe_count": 8}, {}),
@@ -289,6 +300,107 @@ def test_select_companies_action_simplified_relaxed_score_band_excludes_very_exp
     assert [company.ticker for company in selected] == ["A", "B"]
 
 
+def test_select_companies_quality_intrinsic_guard_filters_on_assessment_labels() -> None:
+    companies = [
+        _make_company("A", valuation_score=70.0, quality_score=95.0, intrinsic_assessment="Reasonable Expectations"),
+        _make_company("B", valuation_score=70.0, quality_score=94.0, intrinsic_assessment="Optimistic Expectations"),
+        _make_company("C", valuation_score=70.0, quality_score=93.0, intrinsic_assessment="Conservative Expectations"),
+    ]
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="quality_intrinsic_guard",
+        quality_pool_size=20,
+        valuation_guard_min_score=20.0,
+        intrinsic_guard_allowed_assessments=(
+            "Very Conservative Expectations",
+            "Conservative Expectations",
+            "Reasonable Expectations",
+        ),
+    )
+
+    assert [company.ticker for company in selected] == ["A", "C"]
+
+
+def test_select_companies_quality_intrinsic_tilt_reorders_close_quality_names() -> None:
+    companies = [
+        _make_company(
+            "A",
+            valuation_score=70.0,
+            quality_score=90.0,
+            intrinsic_assessment="Very Optimistic Expectations",
+            intrinsic_history_quality="Stable",
+        ),
+        _make_company(
+            "B",
+            valuation_score=70.0,
+            quality_score=89.0,
+            intrinsic_assessment="Very Conservative Expectations",
+            intrinsic_history_quality="Stable",
+        ),
+    ]
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=2,
+        scoring_mode="quality",
+        selection_policy="quality_intrinsic_tilt",
+        quality_pool_size=20,
+        valuation_guard_min_score=20.0,
+        intrinsic_tilt_weight=0.15,
+        intrinsic_tilt_unavailable_score=50.0,
+    )
+
+    assert [company.ticker for company in selected] == ["B", "A"]
+
+
+def test_select_companies_quality_intrinsic_hybrid_applies_guard_before_tilt() -> None:
+    companies = [
+        _make_company(
+            "A",
+            valuation_score=70.0,
+            quality_score=91.0,
+            intrinsic_assessment="Very Optimistic Expectations",
+            intrinsic_history_quality="Stable",
+        ),
+        _make_company(
+            "B",
+            valuation_score=70.0,
+            quality_score=90.0,
+            intrinsic_assessment="Conservative Expectations",
+            intrinsic_history_quality="Stable",
+        ),
+        _make_company(
+            "C",
+            valuation_score=70.0,
+            quality_score=89.0,
+            intrinsic_assessment="Reasonable Expectations",
+            intrinsic_history_quality="Stable",
+        ),
+    ]
+
+    selected = annual_backtest.select_companies(
+        companies,
+        top_n=3,
+        scoring_mode="quality",
+        selection_policy="quality_intrinsic_guard_tilt",
+        quality_pool_size=20,
+        valuation_guard_min_score=20.0,
+        intrinsic_guard_allowed_assessments=(
+            "Very Conservative Expectations",
+            "Conservative Expectations",
+            "Reasonable Expectations",
+            "Optimistic Expectations",
+        ),
+        intrinsic_tilt_weight=0.10,
+        intrinsic_tilt_unavailable_score=50.0,
+    )
+
+    assert [company.ticker for company in selected] == ["B", "C"]
+
+
 def test_compute_average_turnover() -> None:
     turnover = annual_backtest._compute_average_turnover(
         [
@@ -306,7 +418,7 @@ def test_run_experiment_suite_writes_comparison_csv(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(
         annual_backtest,
         "score_universe_for_year",
-        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None, intrinsic_price_lookup=None: [
             _make_company("AAA", 90.0, 70.0),
             _make_company("BBB", 80.0, 80.0),
             _make_company("CCC", 70.0, 90.0),
@@ -367,12 +479,66 @@ def test_quality_battle_test_configs_include_requested_dimensions() -> None:
     assert "Q top 20" in names
 
 
+def test_score_universe_for_year_computes_reverse_dcf_when_price_lookup_present(monkeypatch) -> None:
+    class _FakeValRepo:
+        def load(self, ticker: str, formation_year: int) -> dict[str, object]:
+            return {
+                "ticker": ticker,
+                "formation_year": formation_year,
+                "historical_pe_values": [20.0, 22.0, 24.0],
+                "historical_average_pe": 22.0,
+                "historical_median_pe": 22.0,
+                "historical_percentile": 0.5,
+                "current_pe": 24.0,
+                "used_pe_count": 3,
+            }
+
+    class _FakeFinRepo:
+        def load(self, ticker: str, formation_year: int) -> dict[str, object]:
+            return {
+                "ticker": ticker,
+                "formation_year": formation_year,
+                "year": 2020,
+                "revenue": 1300.0,
+                "net_income": 200.0,
+                "eps": 2.0,
+                "operating_margin": 0.2,
+                "cash": 100.0,
+                "total_debt": 50.0,
+                "total_assets": 500.0,
+                "net_assets": 300.0,
+                "shares_outstanding": 10.0,
+                "free_cash_flow": 120.0,
+                "revenue_cagr": 0.1,
+                "revenue_cagr_years": 3,
+                "eps_cagr": 0.1,
+                "eps_cagr_years": 3,
+                "revenue_by_year": {2015: 700.0, 2020: 1300.0},
+                "eps_by_year": {2015: 1.0, 2020: 2.0},
+                "fcf_by_year": {2015: 50.0, 2020: 120.0},
+            }
+
+    companies = annual_backtest.score_universe_for_year(
+        2021,
+        ["AAA"],
+        valuation_repo=_FakeValRepo(),
+        financial_repo=_FakeFinRepo(),
+        intrinsic_price_lookup={"AAA": 100.0},
+    )
+
+    assert len(companies) == 1
+    assert companies[0].reverse_dcf.assessment != "Unavailable"
+    assert companies[0].reverse_dcf.implied_growth is not None
+
+
 def test_run_annual_backtest_handles_missing_benchmark_history(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(annual_backtest, "load_universe", lambda universe_path=None: ["AAA"])
     monkeypatch.setattr(
         annual_backtest,
         "score_universe_for_year",
-        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [_make_company("AAA", 100.0, 90.0)],
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None, intrinsic_price_lookup=None: [
+            _make_company("AAA", 100.0, 90.0)
+        ],
     )
 
     empty_series = pd.Series(dtype=float, name="SPY")
@@ -410,7 +576,7 @@ def test_run_leave_one_year_out_quality_writes_csv(monkeypatch, tmp_path: Path) 
     monkeypatch.setattr(
         annual_backtest,
         "score_universe_for_year",
-        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None, intrinsic_price_lookup=None: [
             _make_company("AAA", 80.0, 90.0),
             _make_company("BBB", 70.0, 85.0),
         ],
@@ -458,7 +624,7 @@ def test_run_experiment_suite_preserves_quality_metric_exclusions(monkeypatch, t
     monkeypatch.setattr(
         annual_backtest,
         "score_universe_for_year",
-        lambda formation_year, tickers, valuation_repo=None, financial_repo=None: [
+        lambda formation_year, tickers, valuation_repo=None, financial_repo=None, intrinsic_price_lookup=None: [
             fake_score_company("AAA", {}, {}),
         ],
     )

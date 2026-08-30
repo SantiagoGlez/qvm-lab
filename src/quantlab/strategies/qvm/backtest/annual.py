@@ -14,6 +14,7 @@ from ..historical.repositories import (
     CompaniesMarketCapHistoricalFinancialRepository,
     CompaniesMarketCapHistoricalValuationRepository,
 )
+from ..intrinsic.reverse_dcf import ReverseDCFInputs, ReverseDCFService
 from ..models import Company
 from .common import (
     AdjustedCloseProvider,
@@ -48,6 +49,26 @@ class AnnualBacktestConfig:
     valuation_guard_min_score: float = 20.0
     quality_hysteresis_keep_top_n: int = 15
     quality_hysteresis_min_gap: float = 2.0
+    intrinsic_guard_allowed_assessments: tuple[str, ...] = ()
+    intrinsic_tilt_weight: float = 0.0
+    intrinsic_tilt_unavailable_score: float = 50.0
+
+
+_INTRINSIC_ASSESSMENT_SCORE_MAP: dict[str, float] = {
+    "very conservative expectations": 80.0,
+    "conservative expectations": 65.0,
+    "reasonable expectations": 50.0,
+    "optimistic expectations": 35.0,
+    "very optimistic expectations": 20.0,
+}
+
+_INTRINSIC_HISTORY_QUALITY_MULTIPLIER: dict[str, float] = {
+    "stable": 1.0,
+    "moderate": 0.7,
+    "volatile": 0.4,
+    "limited": 0.2,
+    "unknown": 0.2,
+}
 
 
 @dataclass(slots=True)
@@ -144,14 +165,66 @@ def _score_company(ticker: str, valuation_data: dict[str, object], financial_dat
     return company
 
 
+def _as_float_or_none(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number
+
+
+def _build_reverse_dcf_inputs(
+    *,
+    current_share_price: float | None,
+    financial_data: dict[str, object],
+) -> ReverseDCFInputs:
+    shares_outstanding = _as_float_or_none(financial_data.get("shares_outstanding"))
+    ttm_free_cash_flow = _as_float_or_none(financial_data.get("free_cash_flow"))
+    market_cap = (
+        (current_share_price * shares_outstanding)
+        if current_share_price is not None and shares_outstanding is not None
+        else None
+    )
+
+    revenue_by_year = {
+        int(year): float(value)
+        for year, value in (financial_data.get("revenue_by_year") or {}).items()
+    }
+    eps_by_year = {
+        int(year): float(value)
+        for year, value in (financial_data.get("eps_by_year") or {}).items()
+    }
+    fcf_by_year = {
+        int(year): float(value)
+        for year, value in (financial_data.get("fcf_by_year") or {}).items()
+    }
+
+    return ReverseDCFInputs(
+        current_share_price=current_share_price,
+        shares_outstanding=shares_outstanding,
+        market_cap=market_cap,
+        ttm_free_cash_flow=ttm_free_cash_flow,
+        revenue_by_year=revenue_by_year,
+        eps_by_year=eps_by_year,
+        fcf_by_year=fcf_by_year,
+        revenue_source="CompaniesMarketCap historical",
+        eps_source="CompaniesMarketCap historical",
+        fcf_source="CompaniesMarketCap+SEC historical",
+    )
+
+
 def score_universe_for_year(
     formation_year: int,
     tickers: list[str],
     valuation_repo: CompaniesMarketCapHistoricalValuationRepository | None = None,
     financial_repo: CompaniesMarketCapHistoricalFinancialRepository | None = None,
+    intrinsic_price_lookup: dict[str, float | None] | None = None,
 ) -> list[Company]:
     valuation_repo = valuation_repo or CompaniesMarketCapHistoricalValuationRepository()
     financial_repo = financial_repo or CompaniesMarketCapHistoricalFinancialRepository()
+    reverse_dcf_service = ReverseDCFService()
 
     companies: list[Company] = []
     for ticker in tickers:
@@ -161,7 +234,16 @@ def score_universe_for_year(
         except (FileNotFoundError, ValueError):
             continue
 
-        companies.append(_score_company(ticker, valuation_data, financial_data))
+        company = _score_company(ticker, valuation_data, financial_data)
+        if intrinsic_price_lookup is not None:
+            price = intrinsic_price_lookup.get(ticker.upper())
+            reverse_inputs = _build_reverse_dcf_inputs(
+                current_share_price=price,
+                financial_data=financial_data,
+            )
+            company.reverse_dcf = reverse_dcf_service.analyse(reverse_inputs)
+
+        companies.append(company)
 
     return companies
 
@@ -214,6 +296,37 @@ def _passes_valuation_guard(company: Company, min_valuation_score: float) -> boo
     return company.valuation.score >= min_valuation_score
 
 
+def _normalize_assessment(value: str | None) -> str:
+    return (value or "").strip().lower()
+
+
+def _passes_intrinsic_guard(company: Company, allowed_assessments: tuple[str, ...]) -> bool:
+    if not allowed_assessments:
+        return True
+    allowed = {_normalize_assessment(label) for label in allowed_assessments}
+    return _normalize_assessment(company.reverse_dcf.assessment) in allowed
+
+
+def _intrinsic_assessment_score(company: Company, unavailable_score: float) -> float:
+    assessment = _normalize_assessment(company.reverse_dcf.assessment)
+    base_score = _INTRINSIC_ASSESSMENT_SCORE_MAP.get(assessment, unavailable_score)
+
+    history_quality = _normalize_assessment(company.reverse_dcf.history_quality)
+    multiplier = _INTRINSIC_HISTORY_QUALITY_MULTIPLIER.get(history_quality, 0.2)
+    # Damp only the distance from neutral (50) so uncertain history is less influential.
+    return 50.0 + ((base_score - 50.0) * multiplier)
+
+
+def _quality_with_intrinsic_tilt_score(
+    company: Company,
+    intrinsic_tilt_weight: float,
+    intrinsic_tilt_unavailable_score: float,
+) -> float:
+    weight = min(max(intrinsic_tilt_weight, 0.0), 1.0)
+    intrinsic_score = _intrinsic_assessment_score(company, intrinsic_tilt_unavailable_score)
+    return ((1.0 - weight) * company.quality.score) + (weight * intrinsic_score)
+
+
 def _score_for_mode(company: Company, scoring_mode: str) -> float:
     mode = scoring_mode.lower().strip()
     if mode == "quality":
@@ -231,6 +344,9 @@ def select_companies(
     selection_policy: str,
     quality_pool_size: int,
     valuation_guard_min_score: float,
+    intrinsic_guard_allowed_assessments: tuple[str, ...] = (),
+    intrinsic_tilt_weight: float = 0.0,
+    intrinsic_tilt_unavailable_score: float = 50.0,
 ) -> list[Company]:
     policy = selection_policy.lower().strip()
     if policy == "score":
@@ -266,6 +382,52 @@ def select_companies(
             ),
         )
         return ranked_by_valuation[:top_n]
+
+    if policy == "quality_intrinsic_guard":
+        ranked_by_quality = rank_companies_with_mode(companies, len(companies), "quality")
+        selected = [
+            company
+            for company in ranked_by_quality
+            if _passes_intrinsic_guard(company, intrinsic_guard_allowed_assessments)
+        ]
+        return selected[:top_n]
+
+    if policy == "quality_intrinsic_tilt":
+        ranked = sorted(
+            companies,
+            key=lambda company: (
+                -_quality_with_intrinsic_tilt_score(
+                    company,
+                    intrinsic_tilt_weight,
+                    intrinsic_tilt_unavailable_score,
+                ),
+                -company.quality.score,
+                -company.valuation.score,
+                company.ticker,
+            ),
+        )
+        return ranked[:top_n]
+
+    if policy == "quality_intrinsic_guard_tilt":
+        guarded = [
+            company
+            for company in companies
+            if _passes_intrinsic_guard(company, intrinsic_guard_allowed_assessments)
+        ]
+        ranked = sorted(
+            guarded,
+            key=lambda company: (
+                -_quality_with_intrinsic_tilt_score(
+                    company,
+                    intrinsic_tilt_weight,
+                    intrinsic_tilt_unavailable_score,
+                ),
+                -company.quality.score,
+                -company.valuation.score,
+                company.ticker,
+            ),
+        )
+        return ranked[:top_n]
 
     if policy == "quality_hysteresis":
         return select_companies_quality_hysteresis(
@@ -466,6 +628,13 @@ def build_audit_row(
             if company.valuation_facts.historical_percentile is not None
             else ""
         ),
+        "intrinsic_assessment": company.reverse_dcf.assessment,
+        "intrinsic_history_quality": company.reverse_dcf.history_quality,
+        "intrinsic_expectation_gap": (
+            round(company.reverse_dcf.expectation_gap, 4)
+            if company.reverse_dcf.expectation_gap is not None
+            else ""
+        ),
         "buy_date": buy_date.isoformat(),
         "buy_price": round(buy_price, 4),
         "sell_date": sell_date.isoformat(),
@@ -499,6 +668,27 @@ def build_selection_diagnostics_row(
     selected_quality = [company.quality.score for company in selected_companies]
     universe_coverage = [company.quality.coverage for company in eligible_companies]
     selected_coverage = [company.quality.coverage for company in selected_companies]
+
+    universe_intrinsic_assessment_coverage = (
+        sum(1 for company in eligible_companies if company.reverse_dcf.assessment != "Unavailable") / len(eligible_companies)
+        if eligible_companies
+        else 0.0
+    )
+    selected_intrinsic_assessment_coverage = (
+        sum(1 for company in selected_companies if company.reverse_dcf.assessment != "Unavailable") / len(selected_companies)
+        if selected_companies
+        else 0.0
+    )
+    universe_intrinsic_gap_coverage = (
+        sum(1 for company in eligible_companies if company.reverse_dcf.expectation_gap is not None) / len(eligible_companies)
+        if eligible_companies
+        else 0.0
+    )
+    selected_intrinsic_gap_coverage = (
+        sum(1 for company in selected_companies if company.reverse_dcf.expectation_gap is not None) / len(selected_companies)
+        if selected_companies
+        else 0.0
+    )
 
     universe_val_median = _safe_quantile(universe_val, 0.5)
     selected_val_median = _safe_quantile(selected_val, 0.5)
@@ -539,6 +729,15 @@ def build_selection_diagnostics_row(
         "universe_coverage_median": round(universe_coverage_median, 4),
         "selected_coverage_median": round(selected_coverage_median, 4),
         "coverage_median_spread": round(selected_coverage_median - universe_coverage_median, 4),
+        "universe_intrinsic_assessment_coverage": round(universe_intrinsic_assessment_coverage, 4),
+        "selected_intrinsic_assessment_coverage": round(selected_intrinsic_assessment_coverage, 4),
+        "intrinsic_assessment_coverage_spread": round(
+            selected_intrinsic_assessment_coverage - universe_intrinsic_assessment_coverage,
+            4,
+        ),
+        "universe_intrinsic_gap_coverage": round(universe_intrinsic_gap_coverage, 4),
+        "selected_intrinsic_gap_coverage": round(selected_intrinsic_gap_coverage, 4),
+        "intrinsic_gap_coverage_spread": round(selected_intrinsic_gap_coverage - universe_intrinsic_gap_coverage, 4),
     }
 
 
@@ -654,7 +853,23 @@ def run_annual_backtest(
         buy_target = formation_date(formation_year, config.formation_month, config.formation_day)
         sell_target = formation_date(formation_year + 1, config.formation_month, config.formation_day)
 
-        companies = score_universe_for_year(formation_year, universe)
+        intrinsic_price_lookup: dict[str, float | None] = {}
+        for ticker in universe:
+            series = price_cache.get(ticker, pd.Series(dtype=float))
+            if series.empty:
+                intrinsic_price_lookup[ticker] = None
+                continue
+            try:
+                _, px = _price_on_or_after(series, buy_target)
+            except ValueError:
+                px = None
+            intrinsic_price_lookup[ticker] = px
+
+        companies = score_universe_for_year(
+            formation_year,
+            universe,
+            intrinsic_price_lookup=intrinsic_price_lookup,
+        )
         for company in companies:
             company.quality = analyse_quality(company, excluded_metrics=config.quality_metric_exclusions)
         eligible_companies = [c for c in companies if quality_eligible(c)]
@@ -677,6 +892,9 @@ def run_annual_backtest(
                 selection_policy=config.selection_policy,
                 quality_pool_size=config.quality_pool_size,
                 valuation_guard_min_score=config.valuation_guard_min_score,
+                intrinsic_guard_allowed_assessments=config.intrinsic_guard_allowed_assessments,
+                intrinsic_tilt_weight=config.intrinsic_tilt_weight,
+                intrinsic_tilt_unavailable_score=config.intrinsic_tilt_unavailable_score,
             )
         holdings_by_year.append({company.ticker for company in ranked})
         selection_diagnostics_rows.append(
@@ -765,6 +983,9 @@ def run_annual_backtest(
             "missing_metrics",
             "historical_pe_observations_used",
             "valuation_percentile",
+            "intrinsic_assessment",
+            "intrinsic_history_quality",
+            "intrinsic_expectation_gap",
             "buy_date",
             "buy_price",
             "sell_date",
@@ -808,6 +1029,12 @@ def run_annual_backtest(
             "universe_coverage_median",
             "selected_coverage_median",
             "coverage_median_spread",
+            "universe_intrinsic_assessment_coverage",
+            "selected_intrinsic_assessment_coverage",
+            "intrinsic_assessment_coverage_spread",
+            "universe_intrinsic_gap_coverage",
+            "selected_intrinsic_gap_coverage",
+            "intrinsic_gap_coverage_spread",
         ],
     )
 
@@ -881,6 +1108,9 @@ def run_experiment_suite(
                 quality_metric_exclusions=config.quality_metric_exclusions,
                 quality_pool_size=config.quality_pool_size,
                 valuation_guard_min_score=config.valuation_guard_min_score,
+                intrinsic_guard_allowed_assessments=config.intrinsic_guard_allowed_assessments,
+                intrinsic_tilt_weight=config.intrinsic_tilt_weight,
+                intrinsic_tilt_unavailable_score=config.intrinsic_tilt_unavailable_score,
             ),
             price_provider=price_provider,
         )

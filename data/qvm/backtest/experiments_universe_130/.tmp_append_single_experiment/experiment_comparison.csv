@@ -1,2 +1,2 @@
 experiment,scoring_mode,selection_policy,formation_month,formation_day,top_n,years,cagr,sharpe,max_drawdown,turnover,win_rate_vs_spy,spy_cagr,excess_cagr
-Action Simplified: Overall>=75 + Not Very Expensive,quality,action_simplified_relaxed_score_band,4,1,10,11,0.1106,0.5834,-0.1525,0.57,0.5455,0.1298,-0.0192
+"Quality + Intrinsic Hybrid (No Very Optimistic, 90/10)",quality,quality_intrinsic_guard_tilt,4,1,10,11,0.1711,0.8696,-0.0567,0.49,0.7273,0.1298,0.0413

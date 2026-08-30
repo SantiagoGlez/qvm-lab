@@ -12,3 +12,7 @@ Quality + Buy/Hold Signals,quality,portfolio_signal,4,1,10,11,0.0,0.0,0.0,0.0,0.
 Action Simplified: Overall>=80 + Fair/Cheap/Deep,quality,action_simplified_strict_band,4,1,10,11,0.0548,0.3316,-0.3983,0.45,0.4545,0.1298,-0.075
 Action Simplified: Overall>=80 + Not Very Expensive,quality,action_simplified_relaxed_band,4,1,10,11,0.0592,0.3436,-0.3983,0.45,0.3636,0.1298,-0.0706
 Action Simplified: Overall>=75 + Not Very Expensive,quality,action_simplified_relaxed_score_band,4,1,10,11,0.1106,0.5834,-0.1525,0.57,0.5455,0.1298,-0.0192
+Quality + Intrinsic Guard (Reasonable+),quality,quality_intrinsic_guard,4,1,10,11,0.1741,0.8484,-0.0365,0.51,0.7273,0.1298,0.0442
+Quality + Intrinsic Tilt (90/10),quality,quality_intrinsic_tilt,4,1,10,11,0.2184,1.1134,-0.0319,0.56,0.7273,0.1298,0.0886
+Quality + Intrinsic Tilt (85/15),quality,quality_intrinsic_tilt,4,1,10,11,0.2136,1.0749,-0.0355,0.56,0.7273,0.1298,0.0838
+"Quality + Intrinsic Hybrid (No Very Optimistic, 90/10)",quality,quality_intrinsic_guard_tilt,4,1,10,11,0.1711,0.8696,-0.0567,0.49,0.7273,0.1298,0.0413
