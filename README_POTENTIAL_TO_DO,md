@@ -1,0 +1,130 @@
+# Potential To-Do: Intrinsic (Reverse DCF) Experiment Extensions
+
+This note captures the next experiment proposals for QVM Universe 130, based on current results.
+
+## Context
+
+Current intrinsic variants show:
+- Guard-heavy variants are too restrictive in this sample.
+- Small tilt variants are promising, especially for drawdown behavior.
+- Quality-only still leads on CAGR and Sharpe.
+
+## Proposal
+
+### 1) Lighter intrinsic tilt variants
+
+Add these experiments:
+- Quality + Intrinsic Tilt (95/5)
+- Quality + Intrinsic Tilt (92.5/7.5)
+
+Formula:
+- final_score = (1 - w) * quality_score + w * intrinsic_score
+- where w in {0.05, 0.075}
+
+Rationale:
+- Keep quality as the dominant driver.
+- Use intrinsic as a tie-breaker / mild reorder only.
+
+### 2) Lenient handling for Unavailable intrinsic signal
+
+Guard policies:
+- Add lenient guard variant where Unavailable passes.
+
+Tilt policies:
+- Use neutral default for missing intrinsic data.
+- Suggested default: intrinsic_tilt_unavailable_score = 50
+- Sensitivity option: intrinsic_tilt_unavailable_score = 55
+
+Rationale:
+- Avoid biasing selection due to data-availability gaps.
+- Prevent underfilled portfolios caused by strict missing-data behavior.
+
+### 3) Hybrid lenient variant
+
+Add:
+- Quality + Intrinsic Hybrid Lenient (No Very Optimistic, 95/5, Unavailable=50)
+
+Rule:
+- Guard: exclude only Very Optimistic
+- Rank: 95% quality + 5% intrinsic
+
+Rationale:
+- Keep broad coverage while filtering the most stretched expectation setups.
+
+## Measurement Plan
+
+For each new variant, compare against Quality Only Apr-01 and current Intrinsic 90/10:
+- CAGR
+- Sharpe
+- Max Drawdown
+- Turnover
+- Win rate vs SPY
+
+Also inspect diagnostics:
+- intrinsic assessment coverage (universe vs selected)
+- intrinsic gap coverage (universe vs selected)
+
+## Execution Plan
+
+1. Add configs in experiments CLI.
+2. Run only new variants with --experiment + --append.
+3. Update:
+- data/qvm/backtest/experiments_universe_130/experiment_comparison.csv
+- data/qvm/backtest/experiments_universe_130/EXPERIMENTS_GUIDE.md
+- docs/backtest/universe_expansion_comparison.md
+
+## Suggested Run Pattern
+
+Run each experiment individually and append to avoid full-suite reruns.
+
+Example:
+- uv run qvm-experiments --start-year 2015 --end-year 2025 --top-n 10 --output-dir data/qvm/backtest/experiments_universe_130 --experiment "<exact experiment name>" --append
+
+## Winner Study Follow-up (Top Price Winners)
+
+Use this as a hypothesis backlog from the first top-winners panel export.
+
+### Initial descriptive patterns to test
+
+- Intrinsic signal coverage improves materially over time, so strict intrinsic rules may be less reliable in early years than recent years.
+- Reverse DCF expectation labels appear directionally sensible in the panel: more conservative expectation buckets show stronger forward returns than optimistic buckets.
+- Historical valuation score shows a contrarian pattern in this winner cohort (higher valuation score is not always associated with higher next-year return).
+- Momentum for these long-run winners appears pullback-sensitive: highly stretched states near highs can be followed by softer 1Y returns.
+- Quality total score is less discriminative inside this elite subset, while growth/cash-flow quality contributions (especially EPS CAGR and FCF conversion) may explain a larger share of variation.
+
+### Next tests (before UX/plots)
+
+1. Re-run the same panel on rolling cohorts (e.g., top-20 by performance up to year t, not full-sample winners) to reduce hindsight bias.
+2. Compare descriptive relationships by regime block (2015-2019, 2020-2022, 2023-2025).
+3. Test lighter intrinsic tilts with lenient missing handling against quality-only on rolling windows.
+4. Add per-ticker trend metrics (slope of quality, slope of valuation, slope of intrinsic gap) and compare with subsequent returns.
+
+### Data artifacts to keep updated
+
+- data/qvm/backtest/top_winners_evolution/top_20_price_winners_summary.csv
+- data/qvm/backtest/top_winners_evolution/top_20_price_winners_yearly_panel.csv
+
+## Experiment design rule (topic isolation)
+
+To keep attribution clean, run each family as a single-topic change while keeping other pillars fixed.
+
+### Family isolation
+
+- Family A (Quality): modify only quality logic.
+- Family B (Valuation/Intrinsic): modify only valuation or Reverse DCF logic.
+- Family C (Momentum): modify only momentum or timing logic.
+
+### Why this matters
+
+- Clear causality: if results move, we know which pillar caused it.
+- Lower interaction noise: avoids false conclusions from mixed parameter changes.
+- Faster iteration: easier to keep or discard variants based on robust evidence.
+
+### Two-phase workflow
+
+1. Phase 1: run single-topic families independently and pick the strongest variant in each family.
+2. Phase 2: run controlled combinations only after Phase 1 winners are selected:
+	- A + B
+	- A + C
+	- B + C
+	- A + B + C

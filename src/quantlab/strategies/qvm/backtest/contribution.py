@@ -49,6 +49,9 @@ class ContributionBacktestConfig:
     adaptive_quality_drop_threshold: float = 15.0
     allocation_policy: str = "reset_equal_weight"
     soft_trim_weight_cap: float = 0.15
+    dip_deploy_trigger_month: int = 9
+    dip_deploy_drawdown_threshold: float = 0.08
+    dip_deploy_base_invest_fraction: float = 0.35
     experiment_name: str = "Quality Only + Contributions"
     quality_metric_exclusions: tuple[str, ...] = ()
     quality_pool_size: int = 20
@@ -267,6 +270,104 @@ def _trim_above_weight_cap(
     return generated_cash
 
 
+def _benchmark_drawdown_since_period_start(
+    benchmark_series: pd.Series,
+    period_start: date,
+    target: date,
+) -> float:
+    if benchmark_series.empty:
+        return 0.0
+
+    start_ts = pd.Timestamp(period_start)
+    target_ts = pd.Timestamp(target)
+    window = benchmark_series[(benchmark_series.index >= start_ts) & (benchmark_series.index <= target_ts)]
+    if window.empty:
+        return 0.0
+
+    current_price = float(window.iloc[-1])
+    peak_price = float(window.max())
+    if peak_price <= 0:
+        return 0.0
+    return (current_price / peak_price) - 1.0
+
+
+def _deployable_cash_for_dip_policy(
+    total_cash_balance: float,
+    *,
+    base_invest_fraction: float,
+    is_triggered: bool,
+) -> float:
+    if total_cash_balance <= 0:
+        return 0.0
+    if is_triggered:
+        return total_cash_balance
+    fraction = min(max(base_invest_fraction, 0.0), 1.0)
+    return total_cash_balance * fraction
+
+
+def _allocate_cash_with_quality_valuation_tilt(
+    shares: dict[str, float],
+    price_cache: dict[str, pd.Series],
+    target: date,
+    cash: float,
+    selected_companies: list[Company],
+    period_start_prices: dict[str, float],
+) -> float:
+    """Allocate cash with a tilt toward quality and improved valuations (price declines)."""
+    if cash <= 0 or not selected_companies:
+        return 0.0
+
+    quality_scores = [company.quality.score for company in selected_companies]
+    min_q = min(quality_scores)
+    max_q = max(quality_scores)
+    quality_range = max(max_q - min_q, 1e-9)
+
+    weights: dict[str, float] = {}
+    prices: dict[str, float] = {}
+    for company in selected_companies:
+        ticker = company.ticker
+        series = price_cache.get(ticker, pd.Series(dtype=float))
+        if series.empty:
+            continue
+        price = _price_at_date(series, target)
+        if price <= 0:
+            continue
+        prices[ticker] = price
+
+        start_price = period_start_prices.get(ticker, price)
+        discount = 0.0
+        if start_price > 0:
+            discount = max(0.0, (start_price - price) / start_price)
+
+        quality_norm = (company.quality.score - min_q) / quality_range
+        valuation_component = company.valuation.score / 100.0
+        tilt_score = (0.60 * quality_norm) + (0.30 * discount) + (0.10 * valuation_component)
+        weights[ticker] = max(tilt_score, 0.0)
+
+    if not prices:
+        return 0.0
+
+    total_weight = sum(weights.values())
+    if total_weight <= 0:
+        equal_weight = cash / len(prices)
+        allocation = {ticker: equal_weight for ticker in prices}
+    else:
+        allocation = {
+            ticker: cash * (weights.get(ticker, 0.0) / total_weight)
+            for ticker in prices
+        }
+
+    spent = 0.0
+    for ticker, amount in allocation.items():
+        if amount <= 0:
+            continue
+        price = prices[ticker]
+        shares[ticker] = shares.get(ticker, 0.0) + (amount / price)
+        spent += amount
+
+    return spent
+
+
 def _build_contribution_config(config: ContributionBacktestConfig) -> AnnualBacktestConfig:
     return AnnualBacktestConfig(
         start_year=config.start_year,
@@ -483,7 +584,12 @@ def run_contribution_backtest(
     previous_active_tickers: list[str] = []
     previous_quality_scores: dict[str, float] = {}
     allocation_policy = config.allocation_policy.lower().strip()
-    if allocation_policy not in {"reset_equal_weight", "buy_biased_no_trim", "buy_biased_soft_cap"}:
+    if allocation_policy not in {
+        "reset_equal_weight",
+        "buy_biased_no_trim",
+        "buy_biased_soft_cap",
+        "buy_biased_seasonal_dip_deploy",
+    }:
         raise ValueError(f"Unsupported allocation_policy: {config.allocation_policy}")
 
     for formation_year in range(config.start_year, config.end_year + 1):
@@ -513,6 +619,12 @@ def run_contribution_backtest(
         holdings_by_year.append(set(previous_active_tickers))
 
         selected_tickers = [company.ticker for company in active_companies]
+        period_start_prices = {
+            ticker: _price_at_date(price_cache[ticker], period_start)
+            for ticker in selected_tickers
+            if ticker in price_cache and not price_cache[ticker].empty
+        }
+        dip_deploy_triggered_this_period = False
         if formation_year == config.start_year:
             portfolio_cash_balance = 0.0
             benchmark_cash_balance = 0.0
@@ -599,14 +711,64 @@ def run_contribution_backtest(
                         )
                         portfolio_cash_balance += trimmed_cash
 
+                    if allocation_policy == "buy_biased_seasonal_dip_deploy":
+                        trimmed_cash = _trim_above_weight_cap(
+                            portfolio_shares,
+                            price_cache,
+                            contribution_date,
+                            selected_tickers,
+                            portfolio_value_before,
+                            config.soft_trim_weight_cap,
+                        )
+                        portfolio_cash_balance += trimmed_cash
+
                     portfolio_cash_balance += contribution_value
-                    spent = _allocate_cash_without_trimming(
-                        portfolio_shares,
-                        price_cache,
-                        contribution_date,
-                        portfolio_cash_balance,
-                        selected_tickers,
-                    )
+
+                    spent = 0.0
+                    if allocation_policy == "buy_biased_seasonal_dip_deploy":
+                        drawdown = _benchmark_drawdown_since_period_start(
+                            benchmark_series,
+                            period_start,
+                            contribution_date,
+                        )
+                        at_or_after_trigger_window = contribution_date.month >= config.dip_deploy_trigger_month
+                        should_trigger = (
+                            (not dip_deploy_triggered_this_period)
+                            and at_or_after_trigger_window
+                            and (drawdown <= -abs(config.dip_deploy_drawdown_threshold))
+                        )
+                        deploy_cash = _deployable_cash_for_dip_policy(
+                            portfolio_cash_balance,
+                            base_invest_fraction=config.dip_deploy_base_invest_fraction,
+                            is_triggered=should_trigger,
+                        )
+                        if deploy_cash > 0:
+                            spent = _allocate_cash_with_quality_valuation_tilt(
+                                portfolio_shares,
+                                price_cache,
+                                contribution_date,
+                                deploy_cash,
+                                active_companies,
+                                period_start_prices,
+                            )
+                            if spent <= 0:
+                                spent = _allocate_cash_without_trimming(
+                                    portfolio_shares,
+                                    price_cache,
+                                    contribution_date,
+                                    deploy_cash,
+                                    selected_tickers,
+                                )
+                        if should_trigger:
+                            dip_deploy_triggered_this_period = True
+                    else:
+                        spent = _allocate_cash_without_trimming(
+                            portfolio_shares,
+                            price_cache,
+                            contribution_date,
+                            portfolio_cash_balance,
+                            selected_tickers,
+                        )
                     portfolio_cash_balance -= spent
             else:
                 portfolio_shares = {}
@@ -733,6 +895,9 @@ def run_contribution_backtest(
             "missing_metrics",
             "historical_pe_observations_used",
             "valuation_percentile",
+            "intrinsic_assessment",
+            "intrinsic_history_quality",
+            "intrinsic_expectation_gap",
             "buy_date",
             "buy_price",
             "sell_date",
@@ -797,6 +962,12 @@ def run_contribution_backtest(
             "universe_coverage_median",
             "selected_coverage_median",
             "coverage_median_spread",
+            "universe_intrinsic_assessment_coverage",
+            "selected_intrinsic_assessment_coverage",
+            "intrinsic_assessment_coverage_spread",
+            "universe_intrinsic_gap_coverage",
+            "selected_intrinsic_gap_coverage",
+            "intrinsic_gap_coverage_spread",
         ],
     )
 
@@ -853,6 +1024,9 @@ def run_contribution_experiment_suite(
                 adaptive_quality_drop_threshold=config.adaptive_quality_drop_threshold,
                 allocation_policy=config.allocation_policy,
                 soft_trim_weight_cap=config.soft_trim_weight_cap,
+                dip_deploy_trigger_month=config.dip_deploy_trigger_month,
+                dip_deploy_drawdown_threshold=config.dip_deploy_drawdown_threshold,
+                dip_deploy_base_invest_fraction=config.dip_deploy_base_invest_fraction,
                 experiment_name=config.experiment_name,
                 quality_metric_exclusions=config.quality_metric_exclusions,
                 quality_pool_size=config.quality_pool_size,

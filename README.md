@@ -46,6 +46,33 @@ For selection-level diagnostics (selected vs universe, valuation regime by year,
 
 For contribution-based tax-aware experiment variants (including soft-cap vs no-trim, turnover, and Spain capital-gains tax estimates with SPY baseline), see [docs/backtest/qvm_contribution_taxaware_experiments.md](docs/backtest/qvm_contribution_taxaware_experiments.md).
 
+## Winner study (Top 20 period price winners)
+
+This study isolates the 20 companies in the universe with the highest price appreciation across the backtest window and exports a yearly factor panel so we can inspect how price evolved together with:
+
+- Quality score and quality subcomponents
+- Historical valuation score/band
+- Intrinsic valuation (Reverse DCF) metrics
+- Momentum assessment and raw momentum indicators
+
+Run:
+
+```bash
+uv run qvm-top-winners-evolution --start-year 2015 --end-year 2025 --top-n 20 --output-dir data/qvm/backtest/top_winners_evolution
+```
+
+Outputs:
+
+- `data/qvm/backtest/top_winners_evolution/top_20_price_winners_summary.csv`
+  - The selected top-20 winners with period buy/sell prices and full-period return.
+- `data/qvm/backtest/top_winners_evolution/top_20_price_winners_yearly_panel.csv`
+  - One row per ticker per formation year with price path, annual return, quality details, valuation fields, intrinsic fields, and momentum fields.
+
+Interpretation note:
+
+- This is a descriptive winner-cohort study (selected with full-period hindsight), useful for pattern discovery and UX/plot design.
+- It should be followed by rolling/out-of-sample tests before drawing causal conclusions.
+
 ## Quick start
 
 Install dependencies:

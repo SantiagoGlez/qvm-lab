@@ -523,6 +523,26 @@ def contribution_experiments_cli() -> None:
             allocation_policy="reset_equal_weight",
             experiment_name="Quality Only + Contributions + Max 2 Replacements",
         ),
+        ContributionBacktestConfig(
+            start_year=args.start_year,
+            end_year=args.end_year,
+            top_n=args.top_n,
+            rebalance_month=4,
+            rebalance_day=1,
+            contribution_months=args.contribution_months,
+            initial_contribution=args.initial_contribution,
+            contribution_amount=args.contribution_amount,
+            scoring_mode="quality",
+            selection_policy="score",
+            rebalance_policy="limited_replacements",
+            max_replacements_per_rebalance=1,
+            allocation_policy="buy_biased_seasonal_dip_deploy",
+            soft_trim_weight_cap=0.15,
+            dip_deploy_trigger_month=9,
+            dip_deploy_drawdown_threshold=0.08,
+            dip_deploy_base_invest_fraction=0.35,
+            experiment_name="Quality Only + Contributions + Sep Dip Deploy",
+        ),
     ]
 
     suite = run_contribution_experiment_suite(configs=configs, output_dir=args.output_dir)
@@ -551,6 +571,17 @@ def quality_diagnostics_cli() -> None:
     script_path = repo_root / "scripts" / "strategies" / "qvm" / "quality_diagnostics.py"
     if not script_path.exists():
         raise FileNotFoundError(f"Quality diagnostics script not found: {script_path}")
+
+    sys.path.insert(0, str(repo_root))
+    runpy.run_path(str(script_path), run_name="__main__")
+
+
+def top_winners_evolution_cli() -> None:
+    """Export yearly factor evolution for top price winners in the backtest window."""
+    repo_root = Path(__file__).resolve().parents[2]
+    script_path = repo_root / "scripts" / "strategies" / "qvm" / "analyze_top_price_winners.py"
+    if not script_path.exists():
+        raise FileNotFoundError(f"Top winners script not found: {script_path}")
 
     sys.path.insert(0, str(repo_root))
     runpy.run_path(str(script_path), run_name="__main__")

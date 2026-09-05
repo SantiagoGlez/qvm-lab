@@ -41,6 +41,7 @@ qvm-contribution-experiments = "qvm_lab.cli:contribution_experiments_cli"
 qvm-selection-diagnostics = "qvm_lab.cli:selection_diagnostics_cli"
 qvm-quality-battletest = "qvm_lab.cli:quality_battletest_cli"
 qvm-quality-diagnostics = "qvm_lab.cli:quality_diagnostics_cli"
+qvm-top-winners-evolution = "qvm_lab.cli:top_winners_evolution_cli"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

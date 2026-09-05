@@ -37,6 +37,17 @@ Both strategies receive the same contribution schedule and are benchmarked again
 - contribution schedule: every 2 months
 - rule: require overall score >= 75 and exclude Very Expensive bands, then rank by quality.
 
+### Quality Only + Contributions + Sep Dip Deploy
+- scoring_mode: quality
+- selection_policy: score
+- rebalance: annual, April 1 (limited replacements: max 1)
+- contribution schedule: every 2 months
+- allocation policy: buy_biased_seasonal_dip_deploy
+- rule:
+	- keep a cash buffer by deploying only a base fraction of available cash on regular contribution dates.
+	- once per annual cycle, at or after September, if SPY drawdown from the cycle peak is at least 8%, deploy accumulated cash.
+	- deployment is tilted to names with higher quality and improved valuation proxy (price down vs period start).
+
 ## How to read the comparison
 
 - TWR CAGR tells you how the strategy itself performed independent of cash-flow timing.
