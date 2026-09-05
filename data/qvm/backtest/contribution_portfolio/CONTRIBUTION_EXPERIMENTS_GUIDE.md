@@ -6,12 +6,9 @@ This folder contains the periodic-contribution backtest outputs.
 
 The contribution backtest keeps the stock selection annual, but adds new capital every two months inside each annual holding period.
 
-It compares two strategies:
+It compares quality-only contribution variants with different rebalance and allocation policies.
 
-- Quality Only + Contributions
-- Action Simplified: Overall>=75 + Not Very Expensive + Contributions
-
-Both strategies receive the same contribution schedule and are benchmarked against SPY using the same dates.
+All variants receive the same contribution schedule and are benchmarked against SPY using the same dates.
 
 ## Where to see the results
 
@@ -30,12 +27,37 @@ Both strategies receive the same contribution schedule and are benchmarked again
 - contribution schedule: every 2 months
 - rule: rank by quality score only and invest equal-weight at each contribution date.
 
-### Action Simplified: Overall>=75 + Not Very Expensive + Contributions
+### Quality Only + Contributions + Max 1 Replacement
 - scoring_mode: quality
-- selection_policy: action_simplified_relaxed_score_band
+- selection_policy: score
 - rebalance: annual, April 1
 - contribution schedule: every 2 months
-- rule: require overall score >= 75 and exclude Very Expensive bands, then rank by quality.
+- rebalance policy: limited_replacements (max 1)
+- allocation policy: reset_equal_weight
+
+### Quality Only + Contributions + Max 1 Replacement + No Trims
+- scoring_mode: quality
+- selection_policy: score
+- rebalance: annual, April 1
+- contribution schedule: every 2 months
+- rebalance policy: limited_replacements (max 1)
+- allocation policy: buy_biased_no_trim
+
+### Quality Only + Contributions + Max 1 Replacement + Soft Cap 15%
+- scoring_mode: quality
+- selection_policy: score
+- rebalance: annual, April 1
+- contribution schedule: every 2 months
+- rebalance policy: limited_replacements (max 1)
+- allocation policy: buy_biased_soft_cap (15% soft trim cap)
+
+### Quality Only + Contributions + Max 1->3 Adaptive + Soft Cap 15%
+- scoring_mode: quality
+- selection_policy: score
+- rebalance: annual, April 1
+- contribution schedule: every 2 months
+- rebalance policy: limited_replacements_adaptive (base max 1, can escalate to 3)
+- allocation policy: buy_biased_soft_cap (15% soft trim cap)
 
 ### Quality Only + Contributions + Sep Dip Deploy
 - scoring_mode: quality
@@ -43,10 +65,9 @@ Both strategies receive the same contribution schedule and are benchmarked again
 - rebalance: annual, April 1 (limited replacements: max 1)
 - contribution schedule: every 2 months
 - allocation policy: buy_biased_seasonal_dip_deploy
-- rule:
-	- keep a cash buffer by deploying only a base fraction of available cash on regular contribution dates.
-	- once per annual cycle, at or after September, if SPY drawdown from the cycle peak is at least 8%, deploy accumulated cash.
-	- deployment is tilted to names with higher quality and improved valuation proxy (price down vs period start).
+- rule: keep a cash buffer by deploying only a base fraction of available cash on regular contribution dates.
+- rule: once per annual cycle, at or after September, if SPY drawdown from the cycle peak is at least 8%, deploy accumulated cash.
+- rule: deployment is tilted to names with higher quality and improved valuation proxy (price down vs period start).
 
 ## How to read the comparison
 
