@@ -223,7 +223,7 @@ def test_select_companies_quality_hysteresis_preserves_protected_holdings() -> N
     assert selected_2[2].ticker == "C"
 
 
-def test_select_companies_portfolio_signal_filters_on_buy_and_hold_actions() -> None:
+def test_select_companies_portfolio_signal_filters_on_positive_action_buckets() -> None:
     companies = [
         _make_company("A", valuation_score=90.0, quality_score=100.0),
         _make_company("B", valuation_score=85.0, quality_score=99.0),
@@ -235,12 +235,12 @@ def test_select_companies_portfolio_signal_filters_on_buy_and_hold_actions() -> 
 
     for company in companies:
         company.portfolio.action = "Watch"
-    companies[0].portfolio.action = "Buy"
-    companies[1].portfolio.action = "Hold"
-    companies[2].portfolio.action = "Buy"
+    companies[0].portfolio.action = "Add"
+    companies[1].portfolio.action = "Keep"
+    companies[2].portfolio.action = "Keep (Monitor)"
     companies[3].portfolio.action = "Watch"
     companies[4].portfolio.action = "Watch"
-    companies[5].portfolio.action = "Sell"
+    companies[5].portfolio.action = "Exit"
 
     selected = annual_backtest.select_companies(
         companies,

@@ -25,7 +25,7 @@ def compute_signals(facts: MarketFacts) -> MarketSignals:
     pullback          = _signal_pullback(facts)
 
     assessment     = _compute_assessment(trend, relative_strength, pullback)
-    reason         = _generate_reason(trend, relative_strength, pullback, assessment)
+    reason         = _generate_reason(facts, trend, relative_strength, pullback, assessment)
     summary        = _build_summary(facts, trend, relative_strength, pullback)
 
     return MarketSignals(
@@ -216,7 +216,14 @@ _ASSESSMENT_CLOSE = {
     "Weak": "Market conditions remain unfavorable and require patience.",
 }
 
+def _format_pct(value: float | None) -> str:
+    if value is None:
+        return "N/A"
+    return f"{value:+.1%}"
+
+
 def _generate_reason(
+    facts: MarketFacts,
     trend: str,
     rs: str,
     pullback: str,
@@ -224,12 +231,26 @@ def _generate_reason(
 ) -> str:
     """Generate a concise explanation of the market assessment."""
 
+    rs_values = [v for v in (facts.rs_6m, facts.rs_12m) if v is not None]
+    avg_rs = (sum(rs_values) / len(rs_values)) if rs_values else None
+
+    context_parts: list[str] = []
+    if facts.distance_from_52w_high_pct is not None:
+        context_parts.append(f"52W high distance: {_format_pct(facts.distance_from_52w_high_pct)}")
+    if facts.distance_from_sma_200_pct is not None:
+        context_parts.append(f"SMA200 distance: {_format_pct(facts.distance_from_sma_200_pct)}")
+    if avg_rs is not None:
+        context_parts.append(f"avg 6M/12M excess vs SPY: {_format_pct(avg_rs)}")
+
     paragraphs = [
         _TREND_SENTENCE.get(trend),
         _RS_SENTENCE.get(rs),
         _PULLBACK_SENTENCE.get(pullback),
         _ASSESSMENT_CLOSE.get(assessment),
     ]
+
+    if context_parts:
+        paragraphs.append("Context: " + "; ".join(context_parts) + ".")
 
     return " ".join(p for p in paragraphs if p)
 

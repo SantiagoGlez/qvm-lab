@@ -63,6 +63,7 @@ def analyse_company(ticker: str) -> Company:
         ticker=ticker,
         quality_score=company.quality.score,
         valuation_band=company.valuation.valuation_band,
+        intrinsic_assessment=company.reverse_dcf.assessment,
         assessment=signals.assessment,
         trend=signals.trend or "",
         rs=signals.relative_strength or "",

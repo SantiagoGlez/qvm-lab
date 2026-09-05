@@ -1,6 +1,8 @@
 import argparse
+import io
 import runpy
 import sys
+from contextlib import redirect_stdout
 from datetime import date
 from pathlib import Path
 
@@ -23,6 +25,7 @@ from quantlab.strategies.qvm.backtest.contribution import (
     run_contribution_experiment_suite,
 )
 from quantlab.strategies.qvm.reports.console import print_report
+from quantlab.strategies.qvm.reports.google_finance_chat import run_google_finance_audit
 from quantlab.strategies.qvm.service import analyse_company
 
 
@@ -30,10 +33,65 @@ def company_cli() -> None:
     """Run QVM analysis for a single ticker and print the full report."""
     parser = argparse.ArgumentParser(description="Run QVM analysis for one ticker")
     parser.add_argument("ticker", help="Ticker symbol to analyze")
+    parser.add_argument(
+        "--google-finance-audit",
+        action="store_true",
+        help="Append Google Finance beta chat QA response to the end of the report.",
+    )
+    parser.add_argument(
+        "--google-finance-audit-mode",
+        choices=["quick", "full"],
+        default="quick",
+        help="Prompt mode for Google Finance chat QA.",
+    )
+    parser.add_argument(
+        "--google-finance-timeout-seconds",
+        type=int,
+        default=120,
+        help="Timeout for Google Finance chat response capture.",
+    )
+    parser.add_argument(
+        "--google-finance-show-browser",
+        action="store_true",
+        help="Run Google Finance chat automation in visible browser mode.",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     company = analyse_company(args.ticker)
-    print_report(company)
+    report_buffer = io.StringIO()
+    with redirect_stdout(report_buffer):
+        print_report(company)
+
+    report_text = report_buffer.getvalue()
+    print(report_text, end="")
+
+    if args.google_finance_audit:
+        print("Google Finance QA")
+        print("-" * 30)
+        print()
+        audit_result = run_google_finance_audit(
+            report_text,
+            mode=args.google_finance_audit_mode,
+            timeout_seconds=args.google_finance_timeout_seconds,
+            headless=not args.google_finance_show_browser,
+        )
+        if audit_result.success:
+            print(audit_result.response)
+        else:
+            print("Google Finance audit was requested but could not be completed automatically.")
+            print(f"Error: {audit_result.error}")
+            print()
+            print("No prompt/report dump was appended.")
+            if "Playwright is not installed" in (audit_result.error or ""):
+                print("To run automatic capture, install Playwright:")
+                print("  uv add playwright")
+                print("  uv run python -m playwright install chromium")
+            else:
+                print("Next checks:")
+                print("  1) Try visible mode: --google-finance-show-browser")
+                print("  2) Complete any consent/login challenge in the opened browser")
+                print("  3) Re-run with a larger timeout (e.g. --google-finance-timeout-seconds 120)")
+            print("Prompt templates are available in docs/specifications.")
 
 
 def universe_cli() -> None:

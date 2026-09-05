@@ -87,6 +87,39 @@ Run a single-company analysis:
 uv run qvm-company MSFT
 ```
 
+Run a single-company analysis and append Google Finance beta chat QA at the end:
+
+```bash
+uv run qvm-company MSFT --google-finance-audit --google-finance-audit-mode quick
+```
+
+Available Google Finance QA flags for `qvm-company`:
+
+- `--google-finance-audit`
+- `--google-finance-audit-mode quick|full` (default: `quick`)
+- `--google-finance-timeout-seconds <n>` (default: `120`)
+- `--google-finance-show-browser` (runs browser in non-headless mode)
+
+If automatic browser capture cannot run (for example Playwright missing, page structure changed, or auth challenge), the command still prints the full company report and then appends a paste-ready QA prompt.
+
+Install optional browser automation dependencies for automatic capture:
+
+```bash
+uv add playwright
+uv run python -m playwright install chromium
+```
+
+Standalone Google Finance QA helper from a saved report file:
+
+```bash
+uv run python scripts/strategies/qvm/google_finance_chat_audit.py --report-file data/qvm/sample_report.txt --mode quick
+```
+
+Prompt templates used by this integration live in:
+
+- `docs/specifications/google_finance_report_audit_quick_prompt.md`
+- `docs/specifications/google_finance_report_audit_full_prompt.md`
+
 Run universe analysis (reads `data/qvm/companies.csv`, writes `data/qvm/results.csv`):
 
 ```bash

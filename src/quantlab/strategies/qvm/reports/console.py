@@ -16,6 +16,13 @@ def num(value: float | None, decimals: int = 1) -> str:
     return f"{value:.{decimals}f}"
 
 
+def usd(value: float | None, decimals: int = 2) -> str:
+    """Format a float as a USD amount."""
+    if value is None:
+        return "-"
+    return f"${value:.{decimals}f}"
+
+
 def signed_pct(value: float | None) -> str:
     if value is None:
         return "-"
@@ -28,6 +35,14 @@ def signed_ratio_pct(value: float | None) -> str:
         return "N/A"
     sign = "+" if value >= 0 else "-"
     return f"{sign}{abs(value):.1%}"
+
+
+def signed_billions(value: float | None) -> str:
+    if value is None:
+        return "N/A"
+    value_bn = value / 1e9
+    sign = "+" if value_bn >= 0 else "-"
+    return f"{sign}{abs(value_bn):.1f}B"
 
 
 def pct_or_na(value: float | None) -> str:
@@ -258,14 +273,9 @@ def print_report(company: Company) -> None:
     print(_row("FCF Conversion",  pct(company.metrics.fcf_conversion),  _label_fcf_conversion(company.metrics.fcf_conversion)))
 
     print("  Financial Strength")
-    net_cash_bn = company.metrics.net_cash / 1e9 if company.metrics.net_cash is not None else None
     net_debt_label = _label_net_debt(company.metrics.net_debt_ebitda, company.metrics.net_cash)
-    if net_cash_bn is not None and net_cash_bn > 0:
-        print(_row("Net Cash",  f"+{net_cash_bn:.1f}B", net_debt_label))
-    elif net_cash_bn is not None and net_cash_bn < 0:
-        print(_row("Net Debt",  f"{abs(net_cash_bn):.1f}B", net_debt_label))
-    else:
-        print(_row("Net Cash/Debt", "N/A", ""))
+    # Keep sign explicit to avoid ambiguity in downstream tools.
+    print(_row("Net Cash (Cash-Debt)", signed_billions(company.metrics.net_cash), net_debt_label))
     if company.metrics.interest_coverage is not None:
         print(_row("Interest Coverage", f"{company.metrics.interest_coverage:.1f}x", _label_interest_coverage(company.metrics.interest_coverage)))
     elif company.metrics.debt_to_ebitda is not None:
@@ -324,6 +334,13 @@ def print_report(company: Company) -> None:
     print("Assess whether current price action provides an attractive entry or management point.")
     print()
     sig = company.momentum
+    mf = company.market_facts
+
+    print("  Price Context")
+    print(f"  {'Current Price':<22}{usd(mf.current_price)}")
+    print(f"  {'52W High':<22}{usd(mf.price_52w_high)}")
+    print(f"  {'SMA200':<22}{usd(mf.sma_200)}")
+    print()
 
     _sig_map: dict[str, str] = {}
     for part in (sig.summary or "").split(" | "):

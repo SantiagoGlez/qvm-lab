@@ -224,55 +224,136 @@ Combines all three signals into a single label:
 
 This section translates QVM outputs into portfolio decisions depending on whether a stock is already held or only monitored in the watchlist universe.
 
+Important distinction:
+- The current implementation uses a simpler action layer.
+- The framework below is the intended decision model for live portfolio management because it aligns better with the stronger backtest evidence: quality-first selection, low-turnover replacement, and valuation used as a secondary modifier.
+
 ### Core signal fields
 
-The action engine should evaluate the following fields for each stock:
+The decision engine should evaluate the following fields for each stock:
 
 | Field | Source | Purpose |
 |---|---|---|
-| `overall_score` | Valuation + Quality | Primary rank/filter signal |
-| `valuation_band` | Historical P/E percentile | Position sizing and trim caution |
+| `quality_score` | Quality model | Primary inclusion and ranking signal |
+| `valuation_band` / `valuation_score` | Historical P/E percentile | Preference, tie-breaks, trim caution |
+| `intrinsic_valuation` | Reverse DCF assessment | Sanity check, secondary ranking tilt |
 | `market_assessment` | Momentum composite | Timing/entry context |
 | `in_portfolio` | Portfolio state | Route to holding vs candidate logic |
 
-### Action labels
+The intended roles are:
+- `quality_score`: decides most of who belongs in the portfolio.
+- `historical_valuation`: soft filter and ranking aid, not the main engine.
+- `intrinsic_valuation`: higher-level cross-check; best used as a modest tilt, not a hard gate.
+- `market_assessment`: controls pace of entry and sizing urgency, not necessarily inclusion.
 
-Use a small set of explicit actions:
+### Action buckets
+
+Use separate action buckets for owned names and external candidates.
+
+#### Portfolio buckets (`in_portfolio = true`)
 
 | Action | Meaning |
 |---|---|
-| `BUY` | Open a new position (universe candidate) |
-| `ADD` | Increase an existing position |
-| `HOLD` | Keep position unchanged |
-| `TRIM` | Reduce position size |
-| `EXIT` | Close the position |
-| `WATCH` | Keep in universe but do not initiate |
-| `DROP` | De-prioritise/remove from active watchlist |
+| `KEEP` | Thesis intact; no action needed beyond routine monitoring |
+| `KEEP (MONITOR)` | Thesis intact but with mild caution; keep position and monitor before moving to `REVIEW` |
+| `ADD` | Existing holding remains a top candidate; add normally |
+| `ADD_SLOW` | Existing holding remains attractive, but add gradually |
+| `REVIEW` | Possible funding source for a stronger candidate |
+| `EXIT` | Thesis broken or clearly dominated by stronger alternatives |
+
+Optional portfolio warning:
+- `REDUCE` is not a primary decision bucket.
+- Use it only as a concentration-control warning, for example when a position grows materially above the intended weight cap.
+- It should not be triggered by market weakness alone.
+
+#### Watchlist buckets (`in_portfolio = false`)
+
+| Action | Meaning |
+|---|---|
+| `ADD` | Open a new position now with normal sizing (high-conviction entry) |
+| `ADD_SLOW` | Open a starter or build gradually |
+| `CANDIDATE TO ADD` | Not a full `ADD` today, but first reserve list when true `ADD` names are limited |
+| `WATCH` | Keep on radar, but do not commit capital yet |
+| `REJECT` | Not attractive enough relative to alternatives |
+
+### Reason content requirements (all actions)
+
+Action reasons should always report nuanced context from the full signal set, not a single pass/fail trigger.
+
+Every reason string should explicitly state:
+- quality stance (`quality_score` level and direction)
+- historical valuation stance (`valuation_band` / percentile context)
+- intrinsic stance (`intrinsic_valuation` support, neutral, or warning)
+- market stance (`market_assessment` and whether it affects pace vs inclusion)
+- ownership context (`in_portfolio` true/false and why that route matters)
+
+This makes `ADD` vs `ADD_SLOW` vs `CANDIDATE TO ADD`, and `KEEP` vs `KEEP (MONITOR)` vs `REVIEW`, explainable without hidden thresholds.
+
+For company update reporting, this nuance should be visible directly in the stock output:
+- `KEEP (MONITOR)` must state the specific mild warning and why it is not yet a replacement case.
+- `REVIEW` must state what changed versus the stronger alternatives and why it is now a funding candidate.
 
 ### A) Stocks already in portfolio (`in_portfolio = true`)
 
-| Signal condition | Action | Rationale |
+| Typical condition | Action | Rationale |
 |---|---|---|
-| `overall_score ≥ 80` and `market_assessment` in {Attractive, Improving} and `valuation_band` in {Deep Value, Cheap, Fair Value} | `ADD` | Strong fundamentals with supportive setup and acceptable valuation |
-| `overall_score ≥ 70` and `market_assessment` in {Attractive, Improving, Recovering, Near-highs} | `HOLD` | Quality remains intact; no forced trading |
-| `overall_score 55-69` or `market_assessment = Weak` | `TRIM` | Deterioration detected; reduce risk gradually |
-| `overall_score < 55` and (`market_assessment = Weak` or `valuation_band` in {Expensive, Very Expensive}) | `EXIT` | Thesis breakdown and/or poor risk-reward |
+| High quality, no major valuation warning, thesis still sound | `KEEP` | Quality remains the main reason to own the business |
+| High quality remains intact, but one mild warning is present (for example expensive historical valuation or weak market tape) without thesis break | `KEEP (MONITOR)` | Keep the position, surface caution, and monitor for either re-upgrade to `KEEP` or downgrade to `REVIEW` |
+| High quality, historical valuation acceptable, intrinsic supportive, market in {Attractive, Improving} | `ADD` | Strong business with supportive setup and acceptable valuation |
+| High quality, historical valuation acceptable, intrinsic supportive, market in {Recovering, Neutral} | `ADD_SLOW` | Good candidate, but entry timing is less favorable |
+| Quality slipping relative to better candidates, or valuation stretched, or market weak enough to lower conviction | `REVIEW` | Keep as a possible funding source for a stronger replacement |
+| Thesis broken, quality weak/broken, or clearly inferior to current alternatives | `EXIT` | Capital should be recycled into higher-conviction opportunities |
+
+Notes:
+- `REVIEW` is not an automatic sell signal.
+- `KEEP (MONITOR)` is the buffer state between `KEEP` and `REVIEW` when conviction is still positive but no longer clean.
+- In a low-turnover process, `REVIEW` means the name is first in line if one replacement is justified.
+- A weak market alone should not force an exit from a strong high-quality business.
+- `REDUCE` should be reserved for overweight control rather than thesis management.
 
 ### B) Stocks in watchlist universe (`in_portfolio = false`)
 
-| Signal condition | Action | Rationale |
+Suggested threshold guardrails for watchlist actions:
+- Quality tiers:
+	- Excellent: `quality_score >= 75`
+	- Average: `55 <= quality_score < 75`
+	- Weak: `quality_score < 55`
+- Historical valuation supportive: valuation band in {`Deep Value`, `Cheap`, `Fair Value`}.
+- Intrinsic supportive: intrinsic assessment in {`Very Conservative Expectations`, `Conservative Expectations`, `Reasonable Expectations`}.
+- Major valuation warning: historical valuation = `Very Expensive`.
+
+| Typical condition | Action | Rationale |
 |---|---|---|
-| `overall_score ≥ 80` and `market_assessment` in {Attractive, Improving} and `valuation_band` in {Deep Value, Cheap, Fair Value} | `BUY` | High-conviction entry candidate |
-| `overall_score ≥ 70` and `market_assessment` in {Recovering, Near-highs} | `WATCH` | Good business, but timing not ideal yet |
-| `overall_score 55-69` | `WATCH` | Keep on radar; wait for quality/valuation improvement |
-| `overall_score < 55` or (`valuation_band = Very Expensive` and `market_assessment = Weak`) | `DROP` | Low expected edge relative to universe |
+| Excellent quality, market in {Attractive, Improving}, and valuation confirmation is strong (both valuation lenses supportive, or one supportive while the other is not a warning) | `ADD` | Highest-conviction immediate deployment bucket |
+| Excellent quality, market in {Recovering, Neutral}, and at least one valuation lens supportive without double-warning | `ADD_SLOW` | Good business and acceptable setup, but build exposure gradually |
+| Excellent quality, market in {Attractive, Improving, Recovering, Neutral}, and valuation is supportive but only partially confirmed | `CANDIDATE TO ADD` | Prioritized reserve list for near-add cases when `ADD` names are few |
+| Reasonable candidate, but clearly weaker than current top opportunities and below candidate priority | `WATCH` | Monitor without committing capital today |
+| Weak quality or too much valuation risk relative to better options | `REJECT` | Preserve attention and capital for stronger names |
+
+Example:
+- A stock can be `ADD_SLOW` even if it is not yet `ADD` because quality and valuation are supportive while market confirmation is incomplete.
+- This is often the right bucket for names like META when business quality and valuation look compelling but momentum still reads as recovering.
+- A stock can be `CANDIDATE TO ADD` when quality is excellent and market context is decent, but valuation confirmation is mixed (for example, one valuation lens warns while the other supports).
+- A stock can still be `ADD` with one non-ideal valuation lens only if the other valuation lens is supportive and there is no double-warning; the reason should state that trade-off explicitly.
 
 ### Practical implementation notes
 
 - Actions are guidance signals, not automatic orders.
-- Recompute signals at each rebalance cycle (for example: monthly).
-- `TRIM` and `EXIT` should still respect risk controls (max turnover, tax constraints, liquidity).
-- If multiple stocks map to `BUY`, rank by `overall_score` first, then favour `Attractive` over `Improving`.
+- Recompute the full decision set at each review cycle.
+- For the live portfolio, a two-month review cadence is a reasonable default because it fits the contribution workflow already tested.
+- In practice, new cash should do most of the portfolio migration work.
+- Replacements should be limited unless the thesis is clearly broken.
+- If a position becomes too large, prefer surfacing a concentration warning before recommending any trim.
+
+Suggested live review workflow every two months:
+1. Add fresh cash.
+2. Classify owned names as `KEEP`, `KEEP (MONITOR)`, `ADD`, `ADD_SLOW`, `REVIEW`, or `EXIT`.
+3. Classify non-owned names as `ADD`, `ADD_SLOW`, `CANDIDATE TO ADD`, `WATCH`, or `REJECT`.
+4. Allocate new cash to the best `ADD` and `ADD_SLOW` names first; use `CANDIDATE TO ADD` only when high-conviction `ADD` capacity is limited.
+5. Allow at most one replacement unless a holding is clearly broken.
+6. Use `REVIEW` names as the primary funding source if a replacement is justified.
+
+This workflow is closer to the stronger backtest families than a full-refresh annual rebalance. In particular, it better matches the lower-turnover quality-first contribution variants with limited replacements.
 
 ---
 

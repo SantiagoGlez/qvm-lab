@@ -444,7 +444,7 @@ def select_companies(
             companies,
             top_n=top_n,
             scoring_mode=scoring_mode,
-            allowed_actions=("Buy", "Hold", "Accumulate"),
+            allowed_actions=("Add", "Add Slow", "Keep", "Keep (Monitor)"),
         )
 
     if policy == "action_simplified_strict_band":
@@ -482,7 +482,7 @@ def select_companies_portfolio_signal(
     *,
     top_n: int,
     scoring_mode: str,
-    allowed_actions: tuple[str, ...] = ("Buy", "Hold", "Accumulate"),
+    allowed_actions: tuple[str, ...] = ("Add", "Add Slow", "Keep", "Keep (Monitor)"),
 ) -> list[Company]:
     """Filter companies to the actionable portfolio decisions and rank the survivors.
 
