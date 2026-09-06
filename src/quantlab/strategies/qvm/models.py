@@ -10,6 +10,9 @@ class CompanyMetrics(BaseModel):
     trailing_pe: float | None = None
 
     market_cap: float | None = None
+    shares_outstanding: float | None = None
+    shares_outstanding_implied: float | None = None
+    float_shares: float | None = None
 
     roe: float | None = None
     roic: float | None = None
@@ -65,6 +68,11 @@ class ValuationFacts(BaseModel):
     discount_to_average_pct: float | None = None
     discount_to_median_pct: float | None = None
 
+    modern_regime_years: int | None = None
+    modern_used_pe_count: int | None = None
+    modern_median_pe: float | None = None
+    modern_percentile: float | None = None
+
 
 class ReverseDCFAnalysis(BaseModel):
     implied_growth: float | None = None
@@ -75,12 +83,23 @@ class ReverseDCFAnalysis(BaseModel):
 
     revenue_cagr_5y: float | None = None
     revenue_cagr_10y: float | None = None
+    revenue_cagr_5y_reason: str | None = None
+    revenue_cagr_10y_reason: str | None = None
 
     eps_cagr_5y: float | None = None
     eps_cagr_10y: float | None = None
+    eps_cagr_5y_reason: str | None = None
+    eps_cagr_10y_reason: str | None = None
 
     fcf_cagr_5y: float | None = None
     fcf_cagr_10y: float | None = None
+    fcf_cagr_5y_reason: str | None = None
+    fcf_cagr_10y_reason: str | None = None
+
+    revenue_windows_available: int = 0
+    eps_windows_available: int = 0
+    fcf_windows_available: int = 0
+    growth_windows_available: int = 0
 
     historical_growth_estimate: float | None = None
     historical_growth_estimate_raw: float | None = None
@@ -96,8 +115,43 @@ class ReverseDCFAnalysis(BaseModel):
     fcf_growth_source: str = "Unavailable"
 
     expectation_gap: float | None = None
+    growth_cushion: float | None = None
 
     assessment: str = "Unavailable"
+
+
+class CapexResilienceAnalysis(BaseModel):
+    relevance: str = "Not Material"
+    relevance_reason: str | None = None
+
+    current_revenue: float | None = None
+    current_operating_cash_flow: float | None = None
+    current_capex: float | None = None
+    current_free_cash_flow: float | None = None
+    net_cash: float | None = None
+
+    capex_to_revenue: float | None = None
+    capex_to_cfo: float | None = None
+    fcf_margin: float | None = None
+    net_cash_to_capex: float | None = None
+
+    historical_capex_to_revenue_median: float | None = None
+    historical_years_used: int = 0
+    excess_capex: float | None = None
+    excess_capex_to_revenue: float | None = None
+
+    stress_free_cash_flow: float | None = None
+    stress_fcf_margin: float | None = None
+    stress_fcf_impact: float | None = None
+    stress_fcf_impact_pct: float | None = None
+
+    resilience: str = "Unavailable"
+    resilience_reason: str | None = None
+
+    operating_cash_flow_source: str = "Unavailable"
+    capex_source: str = "Unavailable"
+    revenue_source: str = "Unavailable"
+    history_source: str = "Unavailable"
 
 class Company(BaseModel):
 
@@ -126,6 +180,8 @@ class Company(BaseModel):
     valuation_facts: ValuationFacts = Field(default_factory=ValuationFacts)
 
     reverse_dcf: ReverseDCFAnalysis = Field(default_factory=ReverseDCFAnalysis)
+
+    capex_resilience: CapexResilienceAnalysis = Field(default_factory=CapexResilienceAnalysis)
 
     market_facts: MarketFacts = Field(default_factory=MarketFacts)
 

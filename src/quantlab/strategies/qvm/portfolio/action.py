@@ -170,7 +170,7 @@ def _supports_normal_add(assessment: str) -> bool:
 
 
 def _supports_slow_add(assessment: str) -> bool:
-    return assessment in {"Recovering", "Neutral"}
+    return assessment in {"Stabilizing", "Recovering", "Neutral"}
 
 
 def _valuation_supportive_on_balance(

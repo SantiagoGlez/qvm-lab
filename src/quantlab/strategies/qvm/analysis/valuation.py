@@ -1,5 +1,7 @@
 from enum import Enum
 
+import pandas as pd
+
 from ..models import AnalysisResult, Company
 
 
@@ -27,6 +29,49 @@ def get_valuation_band(percentile: float | None) -> str | None:
         if percentile < threshold or threshold == 1.0:
             return band.value
     return ValuationBand.VERY_EXPENSIVE.value
+
+
+def get_valuation_band_display_label(valuation_band: str | None) -> str:
+    mapping = {
+        ValuationBand.DEEP_VALUE.value: "Attractive vs History",
+        ValuationBand.CHEAP.value: "Below Historical Norm",
+        ValuationBand.FAIR_VALUE.value: "Historical Fair Value",
+        ValuationBand.EXPENSIVE.value: "Above Historical Norm",
+        ValuationBand.VERY_EXPENSIVE.value: "Rich vs History",
+    }
+    if not valuation_band:
+        return "-"
+    return mapping.get(valuation_band, valuation_band)
+
+
+def compute_modern_regime_stats(
+    historical_pe_values: list[float] | None,
+    current_pe: float | None,
+) -> tuple[int | None, int | None, float | None, float | None]:
+    """Compute 5-7Y PE regime stats for informational display only.
+
+    Returns (years, observations, median, percentile) or all None when data is insufficient.
+    """
+    values = historical_pe_values or []
+    if len(values) < 5:
+        return None, None, None, None
+
+    years = 7 if len(values) >= 7 else 5
+    window = [float(v) for v in values[-years:]]
+    obs = len(window)
+    if obs < 5:
+        return None, None, None, None
+
+    series = pd.Series(window)
+    median_pe = float(series.median())
+
+    percentile = None
+    if current_pe is not None:
+        modern_with_live = window[:-1] + [float(current_pe)]
+        live_series = pd.Series(modern_with_live)
+        percentile = float(live_series.rank(method="average", pct=True).iloc[-1])
+
+    return years, obs, median_pe, percentile
 
 
 def analyse_valuation(company: Company) -> AnalysisResult:
@@ -79,13 +124,13 @@ def analyse_valuation(company: Company) -> AnalysisResult:
     discount_to_median_pct = None
     if company.valuation_facts.current_pe is not None and historical_average_pe:
         discount_to_average_pct = (
-            (company.valuation_facts.current_pe - historical_average_pe)
+            (historical_average_pe - company.valuation_facts.current_pe)
             / historical_average_pe
             * 100.0
         )
     if company.valuation_facts.current_pe is not None and historical_median_pe:
         discount_to_median_pct = (
-            (company.valuation_facts.current_pe - historical_median_pe)
+            (historical_median_pe - company.valuation_facts.current_pe)
             / historical_median_pe
             * 100.0
         )

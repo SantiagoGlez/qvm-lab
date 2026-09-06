@@ -92,6 +92,10 @@ def fetch_market_facts(ticker: str, period: str = "2y") -> MarketFacts:
         facts.distance_from_52w_high_pct = (
             (facts.current_price - facts.price_52w_high) / facts.price_52w_high
         )
+    if facts.price_52w_low and facts.price_52w_low > 0:
+        facts.distance_from_52w_low_pct = (
+            (facts.current_price - facts.price_52w_low) / facts.price_52w_low
+        )
     if facts.sma_200 and facts.sma_200 > 0:
         facts.distance_from_sma_200_pct = (
             (facts.current_price - facts.sma_200) / facts.sma_200

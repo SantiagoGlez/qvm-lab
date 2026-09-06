@@ -55,14 +55,14 @@ class ReverseDCFService:
             projection_years=self.projection_years,
         )
 
-        revenue_cagr_5y = self.compute_window_cagr(inputs.revenue_by_year, 5)
-        revenue_cagr_10y = self.compute_window_cagr(inputs.revenue_by_year, 10)
+        revenue_cagr_5y, revenue_cagr_5y_reason = self.compute_window_cagr_with_reason(inputs.revenue_by_year, 5)
+        revenue_cagr_10y, revenue_cagr_10y_reason = self.compute_window_cagr_with_reason(inputs.revenue_by_year, 10)
 
-        eps_cagr_5y = self.compute_window_cagr(inputs.eps_by_year, 5)
-        eps_cagr_10y = self.compute_window_cagr(inputs.eps_by_year, 10)
+        eps_cagr_5y, eps_cagr_5y_reason = self.compute_window_cagr_with_reason(inputs.eps_by_year, 5)
+        eps_cagr_10y, eps_cagr_10y_reason = self.compute_window_cagr_with_reason(inputs.eps_by_year, 10)
 
-        fcf_cagr_5y = self.compute_window_cagr(inputs.fcf_by_year, 5)
-        fcf_cagr_10y = self.compute_window_cagr(inputs.fcf_by_year, 10)
+        fcf_cagr_5y, fcf_cagr_5y_reason = self.compute_window_cagr_with_reason(inputs.fcf_by_year, 5)
+        fcf_cagr_10y, fcf_cagr_10y_reason = self.compute_window_cagr_with_reason(inputs.fcf_by_year, 10)
 
         growth_candidates = [
             fcf_cagr_5y,
@@ -87,6 +87,11 @@ class ReverseDCFService:
         growth_dispersion = self.growth_dispersion(growth_candidates)
         history_quality = self.classify_history_quality(growth_dispersion, growth_input_count)
 
+        revenue_windows_available = int(revenue_cagr_5y is not None) + int(revenue_cagr_10y is not None)
+        eps_windows_available = int(eps_cagr_5y is not None) + int(eps_cagr_10y is not None)
+        fcf_windows_available = int(fcf_cagr_5y is not None) + int(fcf_cagr_10y is not None)
+        growth_windows_available = revenue_windows_available + eps_windows_available + fcf_windows_available
+
         return ReverseDCFAnalysis(
             implied_growth=implied_growth,
             discount_rate=self.discount_rate,
@@ -94,10 +99,20 @@ class ReverseDCFService:
             projection_years=self.projection_years,
             revenue_cagr_5y=revenue_cagr_5y,
             revenue_cagr_10y=revenue_cagr_10y,
+            revenue_cagr_5y_reason=revenue_cagr_5y_reason,
+            revenue_cagr_10y_reason=revenue_cagr_10y_reason,
             eps_cagr_5y=eps_cagr_5y,
             eps_cagr_10y=eps_cagr_10y,
+            eps_cagr_5y_reason=eps_cagr_5y_reason,
+            eps_cagr_10y_reason=eps_cagr_10y_reason,
             fcf_cagr_5y=fcf_cagr_5y,
             fcf_cagr_10y=fcf_cagr_10y,
+            fcf_cagr_5y_reason=fcf_cagr_5y_reason,
+            fcf_cagr_10y_reason=fcf_cagr_10y_reason,
+            revenue_windows_available=revenue_windows_available,
+            eps_windows_available=eps_windows_available,
+            fcf_windows_available=fcf_windows_available,
+            growth_windows_available=growth_windows_available,
             historical_growth_estimate=historical_growth_estimate,
             historical_growth_estimate_raw=historical_growth_estimate_raw,
             representative_growth_uses_cap=self.enable_representative_growth_cap,
@@ -110,6 +125,7 @@ class ReverseDCFService:
             eps_growth_source=inputs.eps_source,
             fcf_growth_source=inputs.fcf_source,
             expectation_gap=expectation_gap,
+            growth_cushion=expectation_gap,
             assessment=assessment,
         )
 
@@ -245,6 +261,40 @@ class ReverseDCFService:
         end_value = values_by_year.get(end_year)
 
         return cls.compute_cagr(start_value=start_value, end_value=end_value, years=window_years)
+
+    @classmethod
+    def compute_window_cagr_with_reason(
+        cls,
+        values_by_year: dict[int, float],
+        window_years: int,
+    ) -> tuple[float | None, str | None]:
+        if not values_by_year:
+            return None, "no source history"
+        if window_years <= 0:
+            return None, "invalid window"
+
+        end_year = max(values_by_year)
+        start_year = end_year - window_years
+
+        if start_year not in values_by_year:
+            return None, f"missing start year {start_year}"
+        if end_year not in values_by_year:
+            return None, f"missing end year {end_year}"
+
+        start_value = values_by_year.get(start_year)
+        end_value = values_by_year.get(end_year)
+
+        if start_value is None or end_value is None:
+            return None, "missing start/end value"
+        if start_value <= 0:
+            return None, f"non-positive start value ({start_year})"
+        if end_value <= 0:
+            return None, f"non-positive end value ({end_year})"
+
+        value = cls.compute_cagr(start_value=start_value, end_value=end_value, years=window_years)
+        if value is None:
+            return None, "cagr unavailable"
+        return value, None
 
     @staticmethod
     def representative_growth(

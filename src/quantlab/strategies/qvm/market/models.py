@@ -33,6 +33,7 @@ class MarketFacts(BaseModel):
     # --- Momentum / mean-reversion indicators --------------------------------
     rsi_14: float | None = None                  # 0-100
     distance_from_52w_high_pct: float | None = None  # negative = below high
+    distance_from_52w_low_pct: float | None = None   # positive = above low
     distance_from_sma_200_pct: float | None = None   # positive = above SMA200
 
     # --- Volatility -----------------------------------------------------------

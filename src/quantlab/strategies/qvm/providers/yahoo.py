@@ -4,7 +4,12 @@ import yfinance as yf
 from pathlib import Path
 
 from .base import Provider
-from ..intrinsic import ReverseDCFInputs, ReverseDCFService
+from ..intrinsic import (
+    CapexResilienceInputs,
+    CapexResilienceService,
+    ReverseDCFInputs,
+    ReverseDCFService,
+)
 from ..metrics.core import (
     compute_debt_to_ebitda,
     compute_fcf_metrics,
@@ -19,6 +24,7 @@ from ..ticker_aliases import YAHOO_TICKER_MAP
 
 _log = logging.getLogger(__name__)
 _reverse_dcf_service = ReverseDCFService()
+_capex_resilience_service = CapexResilienceService()
 
 
 class YahooProvider(Provider):
@@ -43,6 +49,9 @@ class YahooProvider(Provider):
         company.metrics.trailing_pe = info.get("trailingPE")
 
         company.metrics.market_cap = info.get("marketCap")
+        company.metrics.shares_outstanding = self._as_positive_float(info.get("sharesOutstanding"))
+        company.metrics.shares_outstanding_implied = self._as_positive_float(info.get("impliedSharesOutstanding"))
+        company.metrics.float_shares = self._as_positive_float(info.get("floatShares"))
 
         company.metrics.roe = info.get("returnOnEquity")
         company.metrics.roic = self._calculate_roic(stock)
@@ -62,6 +71,9 @@ class YahooProvider(Provider):
         company.metrics.net_debt_ebitda = net_debt_ebitda
         company.metrics.interest_coverage = interest_coverage
         company.metrics.debt_to_ebitda = debt_to_ebitda
+        company.capex_resilience = _capex_resilience_service.analyse(
+            self._build_capex_resilience_inputs(stock=stock, net_cash=net_cash)
+        )
 
         live_pe = self._calculate_live_pe(info)
         if live_pe is not None:
@@ -76,7 +88,7 @@ class YahooProvider(Provider):
             company.valuation_facts.historical_percentile = self._percentile(historical_pe, historical_pe[-1])
 
         current_share_price = self._current_share_price(info)
-        shares_outstanding = self._as_positive_float(info.get("sharesOutstanding"))
+        shares_outstanding = company.metrics.shares_outstanding
         ttm_fcf = self._calculate_ttm_fcf(stock)
 
         marketcap_revenue, marketcap_eps, marketcap_fcf, marketcap_sources = self._marketcap_historical_series(ticker)
@@ -512,6 +524,14 @@ class YahooProvider(Provider):
         inc = stock.income_stmt
         return self._extract_annual_series(inc, labels=labels)
 
+    def _annual_operating_cash_flow_series(self, stock: yf.Ticker) -> dict[int, float]:
+        cf = stock.cash_flow
+        return self._extract_annual_series(cf, labels=("Operating Cash Flow",))
+
+    def _annual_capex_series(self, stock: yf.Ticker) -> dict[int, float]:
+        cf = stock.cash_flow
+        return self._extract_annual_series(cf, labels=("Capital Expenditure",))
+
     def _annual_fcf_series(self, stock: yf.Ticker) -> dict[int, float]:
         cf = stock.cash_flow
         if cf is None or cf.empty:
@@ -528,6 +548,41 @@ class YahooProvider(Provider):
 
         years = sorted(set(ocf).intersection(capex))
         return {year: ocf[year] - abs(capex[year]) for year in years}
+
+    def _build_capex_resilience_inputs(
+        self,
+        *,
+        stock: yf.Ticker,
+        net_cash: float | None,
+    ) -> CapexResilienceInputs:
+        revenue_by_year = self._annual_income_series(stock, labels=("Total Revenue", "Operating Revenue"))
+        operating_cash_flow_by_year = self._annual_operating_cash_flow_series(stock)
+        capex_by_year = self._annual_capex_series(stock)
+        free_cash_flow_by_year = self._annual_fcf_series(stock)
+
+        return CapexResilienceInputs(
+            revenue=self._latest_annual_value(revenue_by_year),
+            operating_cash_flow=self._latest_annual_value(operating_cash_flow_by_year),
+            capex=self._latest_annual_value(capex_by_year),
+            free_cash_flow=self._latest_annual_value(free_cash_flow_by_year),
+            net_cash=net_cash,
+            revenue_by_year=revenue_by_year,
+            operating_cash_flow_by_year=operating_cash_flow_by_year,
+            capex_by_year=capex_by_year,
+            free_cash_flow_by_year=free_cash_flow_by_year,
+            revenue_source="Yahoo annual statements" if revenue_by_year else "Unavailable",
+            operating_cash_flow_source="Yahoo annual cash flow" if operating_cash_flow_by_year else "Unavailable",
+            capex_source="Yahoo annual cash flow" if capex_by_year else "Unavailable",
+            free_cash_flow_source="Yahoo annual cash flow" if free_cash_flow_by_year else "Unavailable",
+            history_source="Yahoo annual statements" if revenue_by_year or capex_by_year else "Unavailable",
+        )
+
+    @staticmethod
+    def _latest_annual_value(values_by_year: dict[int, float]) -> float | None:
+        if not values_by_year:
+            return None
+        latest_year = max(values_by_year)
+        return float(values_by_year[latest_year])
 
     def _calculate_ttm_fcf(self, stock: yf.Ticker) -> float | None:
         qcf = stock.quarterly_cashflow

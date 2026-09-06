@@ -1,4 +1,5 @@
 from .analysis.scoring import calculate_score
+from .analysis.valuation import compute_modern_regime_stats
 from .models import Company
 from .providers.companiesmarketcap import CompaniesMarketCapProvider
 from .providers.yahoo import YahooProvider
@@ -43,6 +44,15 @@ def analyse_company(ticker: str) -> Company:
         hist = company.valuation_facts.historical_pe_values or []
         if hist:
             company.valuation_facts.historical_percentile = _recompute_percentile(hist, live_pe)
+
+    modern_years, modern_obs, modern_median, modern_percentile = compute_modern_regime_stats(
+        company.valuation_facts.historical_pe_values,
+        company.valuation_facts.current_pe,
+    )
+    company.valuation_facts.modern_regime_years = modern_years
+    company.valuation_facts.modern_used_pe_count = modern_obs
+    company.valuation_facts.modern_median_pe = modern_median
+    company.valuation_facts.modern_percentile = modern_percentile
 
     if not company.name and valuation_company.name:
         company.name = valuation_company.name

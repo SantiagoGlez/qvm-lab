@@ -21,18 +21,58 @@ class GoogleFinanceChatResult:
 
 _QUICK_AUDIT_PROMPT = """Act as a strict QA checker for this stock report.
 Do not give investment advice. Only validate facts, internal consistency, and logic.
+Do not judge portfolio action choices (Add/Add Slow/Watch/Exit), position sizing, or timing.
+Ignore the Portfolio and Decision Rules sections for verdict scoring.
 
 Check in this order:
-1. Data completeness: missing key fields (price, 52W high, SMA200, PE, leverage, growth, action rationale).
+1. Data completeness: missing key fields (price, 52W high, SMA50, SMA200, PE, leverage, growth).
 2. Math sanity: verify any computable percentages/ratios and sign conventions.
 3. Signal consistency: trend/RS/pullback/assessment should not contradict each other.
-4. Narrative fit: does the action and explanation match the actual numbers?
+4. Narrative fit: do factual statements and metric interpretations match the actual numbers?
 5. Business-type caveat: flag if cyclicality/defensive profile makes generic PE-momentum conclusions fragile.
+
+Business-caveat constraints:
+- In quick mode, include at most 1 business-type caveat.
+- Caveat must be selected from this list only:
+    1) Cyclical earnings sensitivity
+    2) Regulated-model metric mismatch
+    3) Commodity-cycle distortion
+    4) Buyback-driven EPS distortion
+    5) Capital-intensity transition risk
+- Each caveat must map to a specific reported metric and include exact quoted evidence.
+- If no direct metric linkage exists, do not include the caveat.
+- Business-type caveats cannot be marked [Critical] (max severity: [Moderate]).
+
+Signal interpretation rule:
+- Do not treat "Trend=Strong/Excellent" plus "RS=Weak" as an automatic contradiction.
+- This can be a valid mixed regime (positive absolute trend, weak relative performance).
+- Flag only if narrative claims clear market outperformance while RS is weak.
+- Do not flag a business caveat unless a generic rule in the report conflicts with company type.
+
+Severity scoring rules:
+- Critical: hard math/sign errors, missing core inputs that break interpretation, or direct internal contradictions.
+- Moderate: partial data gaps or interpretation risks that reduce confidence but do not invalidate the report.
+- Minor: wording/clarity improvements with limited decision impact.
+
+Market-cap/share mismatch rule:
+- Treat market-cap vs share-count mismatch as a data-integrity warning by default.
+- Do not escalate it to a report-level hard stop unless the mismatch is proven to feed a reported valuation calculation.
+- Do not treat this mismatch alone as invalidating PE or Reverse DCF when those are computed from independent inputs.
+
+Evidence requirement (mandatory for every issue):
+- Include "Evidence:" with at least one exact quote from the report (numbers or phrases in double quotes).
+- Include "Why it matters:" in one concise sentence.
+- If evidence is insufficient, mark the issue as [Minor] and state "evidence weak".
+
+Verdict weighting:
+- Fail: 2+ Critical issues, or 1 Critical + 2+ Moderate.
+- Pass with Caveats: 1 Critical, or 2+ Moderate, or 1 Moderate + 2+ Minor.
+- Pass: no Critical and at most 1 Moderate.
 
 Output exactly:
 1. Verdict: Pass / Pass with Caveats / Fail
-2. Top 3 Data Issues
-3. Top 3 Logic Gaps
+2. Top 3 Data Issues (each item must include: [Severity] Issue; Evidence: "..."; Why it matters: ...)
+3. Top 3 Logic Gaps (each item must include: [Severity] Issue; Evidence: "..."; Why it matters: ...)
 4. Confidence Score (0-100)
 5. One-line Decision Safety: Safe to use or Not safe to use
 
@@ -50,6 +90,8 @@ Important:
 3. Be skeptical and explicit.
 4. Do not provide investment advice.
 5. If data is weak, say the report is not decision-grade.
+6. Do not judge portfolio action labels (Add/Add Slow/Watch/Exit), allocation sizing, or market timing calls.
+7. Ignore Portfolio and Decision Rules sections for verdict scoring.
 
 Audit workflow (must follow in order)
 
@@ -70,6 +112,45 @@ Phase 3: Logic and Narrative Audit
 2. Detect contradictions across dimensions.
 3. Flag overconfident wording not supported by data.
 4. Distinguish hard errors from soft gaps.
+5. Exclude critiques about whether the portfolio action itself is right or wrong.
+
+Business-caveat constraints:
+- In full mode, include at most 2 business-type caveats.
+- Caveat must be selected from this list only:
+    1) Cyclical earnings sensitivity
+    2) Regulated-model metric mismatch
+    3) Commodity-cycle distortion
+    4) Buyback-driven EPS distortion
+    5) Capital-intensity transition risk
+- Each caveat must map to a specific reported metric and include exact quoted evidence.
+- If no direct metric linkage exists, do not include the caveat.
+- Business-type caveats cannot be marked [Critical] (max severity: [Moderate]).
+- Do not flag a business caveat unless a generic rule in the report conflicts with company type.
+
+Signal interpretation rule:
+- Do not treat "Trend=Strong/Excellent" plus "RS=Weak" as an automatic contradiction.
+- This can be a valid mixed regime (positive absolute trend, weak relative performance).
+- Flag only if narrative claims clear market outperformance while RS is weak.
+
+Severity scoring rules (must apply to every issue):
+- Critical: hard math/sign errors, missing core inputs that break interpretation, or direct internal contradictions.
+- Moderate: partial data gaps or interpretation risks that reduce confidence but do not invalidate the report.
+- Minor: wording/clarity improvements with limited decision impact.
+
+Market-cap/share mismatch rule:
+- Treat market-cap vs share-count mismatch as a data-integrity warning by default.
+- Do not escalate it to a report-level hard stop unless the mismatch is proven to feed a reported valuation calculation.
+- Do not treat this mismatch alone as invalidating PE or Reverse DCF when those are computed from independent inputs.
+
+Evidence requirement (mandatory for every issue):
+- Include "Evidence:" with at least one exact quote from the report (numbers or phrases in double quotes).
+- Include "Why it matters:" in one concise sentence.
+- If evidence is insufficient, mark the issue as [Minor] and state "evidence weak".
+
+Verdict weighting:
+- Fail: 2+ Critical issues, or 1 Critical + 2+ Moderate.
+- Pass with Caveats: 1 Critical, or 2+ Moderate, or 1 Moderate + 2+ Minor.
+- Pass: no Critical and at most 1 Moderate.
 
 Phase 4: Decision-Grade Verdict
 Return exactly:
@@ -126,39 +207,131 @@ def build_google_finance_audit_prompt_from_docs_or_default(
 
 def _split_issue_lines(block: str) -> list[str]:
     lines = [ln.strip() for ln in block.splitlines() if ln.strip()]
-    issues: list[str] = []
-    current: str | None = None
-    for line in lines:
-        normalized = line.lstrip("-• ").strip()
-        if not normalized:
+    if not lines:
+        return []
+
+    def _clean_prefix(line: str) -> str:
+        line = line.lstrip("-• ").strip()
+        line = re.sub(r"^\d+[\.)]\s*", "", line)
+        return line.strip()
+
+    def _extract_parts(text: str) -> tuple[str, str | None, str | None]:
+        issue_text = text.strip()
+        evidence = None
+        why = None
+
+        parts = [part.strip() for part in text.split(";") if part.strip()]
+        if parts:
+            issue_text = parts[0]
+            for part in parts[1:]:
+                lower = part.lower()
+                if lower.startswith("evidence:"):
+                    evidence = part.split(":", 1)[1].strip()
+                elif lower.startswith("why it matters:"):
+                    why = part.split(":", 1)[1].strip()
+        return issue_text, evidence, why
+
+    issues: list[dict[str, str | None]] = []
+    current: dict[str, str | None] | None = None
+
+    for raw in lines:
+        line = _clean_prefix(raw)
+        if not line:
             continue
 
-        looks_new = (
-            normalized.lower().startswith(("missing ", "no ", "net ", "sign ", "trend ", "action ", "expectation "))
-            or ":" in normalized
-            or re.match(r"^\d+[\.)]\s+", normalized) is not None
-        )
-        if looks_new:
-            if current:
-                issues.append(current.strip())
-            current = re.sub(r"^\d+[\.)]\s*", "", normalized)
-        elif current is None:
-            current = normalized
+        lower = line.lower()
+        is_new_issue = bool(re.search(r"\[(critical|moderate|minor)\]", line, flags=re.IGNORECASE))
+        is_evidence = lower.startswith("evidence:")
+        is_why = lower.startswith("why it matters:")
+
+        if is_new_issue:
+            if current and current.get("issue"):
+                issues.append(current)
+            issue_text, evidence, why = _extract_parts(line)
+            current = {"issue": issue_text, "evidence": evidence, "why": why}
+            continue
+
+        if current is None:
+            # Backward-compatible fallback for unstructured issue text.
+            current = {"issue": line, "evidence": None, "why": None}
+            continue
+
+        if is_evidence:
+            ev = line.split(":", 1)[1].strip() if ":" in line else ""
+            if ev:
+                current["evidence"] = ev if not current.get("evidence") else f"{current['evidence']} {ev}"
+            continue
+
+        if is_why:
+            why_text = line.split(":", 1)[1].strip() if ":" in line else ""
+            if why_text:
+                current["why"] = why_text if not current.get("why") else f"{current['why']} {why_text}"
+            continue
+
+        # Continuation of prior field.
+        if current.get("why"):
+            current["why"] = f"{current['why']} {line}"
+        elif current.get("evidence"):
+            current["evidence"] = f"{current['evidence']} {line}"
         else:
-            current = f"{current} {normalized}"
+            current["issue"] = f"{current.get('issue', '').strip()} {line}".strip()
 
-    if current:
-        issues.append(current.strip())
+    if current and current.get("issue"):
+        issues.append(current)
 
+    formatted: list[str] = []
     seen: set[str] = set()
-    unique_issues: list[str] = []
-    for issue in issues:
-        key = issue.lower()
+    for item in issues:
+        issue = (item.get("issue") or "").strip()
+        if not issue:
+            continue
+        out = issue
+        if item.get("evidence"):
+            out += f'; Evidence: {item["evidence"]}'
+        if item.get("why"):
+            out += f'; Why it matters: {item["why"]}'
+
+        key = out.lower()
         if key in seen:
             continue
         seen.add(key)
-        unique_issues.append(issue)
-    return unique_issues
+        formatted.append(out)
+
+    return formatted
+
+
+def _confidence_meaning(confidence_score: int | None) -> str:
+    if confidence_score is None:
+        return "confidence could not be parsed from model output."
+    if confidence_score >= 85:
+        return "high certainty in the QA findings; low uncertainty in identified issues."
+    if confidence_score >= 70:
+        return "good certainty in the QA findings; some uncertainty remains."
+    if confidence_score >= 55:
+        return "moderate certainty; treat findings as directional and verify key claims."
+    return "low certainty; use findings as hypotheses and verify manually."
+
+
+def _issue_category(issue: str, section: str) -> str:
+    lower = issue.lower()
+    if any(term in lower for term in ("market cap", "share", "timestamp", "source mismatch", "stale-data", "stale data", "data integrity", "mismatch", "discrepancy")):
+        return "Data Integrity"
+    if any(term in lower for term in ("math", "sign", "contradiction", "inverted", "inconsistent", "logic")):
+        return "Logic Error"
+    if any(term in lower for term in ("caveat", "cyclical", "regulated", "commodity", "buyback", "capital-intensity", "capital intensity", "business-type", "business model")):
+        return "Analytical Caveat"
+    if any(term in lower for term in ("missing", "omit", "under-defined", "underdefined", "completeness", "present")):
+        return "Presentation/Completeness"
+
+    if section == "data":
+        return "Data Integrity"
+    if section == "logic":
+        return "Logic Error"
+    return "Presentation/Completeness"
+
+
+def _prefix_category(issue: str, section: str) -> str:
+    return f"[{_issue_category(issue, section)}] {issue}"
 
 
 def _extract_section(text: str, headers: list[str], next_headers: list[str]) -> str:
@@ -220,6 +393,7 @@ def format_google_finance_audit_response(raw_response: str) -> str:
 
     confidence_match = re.search(r"Confidence\s*Score\s*:?\s*(\d{1,3})", text, flags=re.IGNORECASE)
     confidence = confidence_match.group(1) if confidence_match else "N/A"
+    confidence_int = int(confidence) if confidence.isdigit() else None
 
     safety_match = re.search(
         r"(?:One-line\s+)?Decision\s+Safety\s*:?\s*\"?([^\n\"]+)\"?",
@@ -227,6 +401,14 @@ def format_google_finance_audit_response(raw_response: str) -> str:
         flags=re.IGNORECASE,
     )
     safety = safety_match.group(1).strip() if safety_match else "Unknown"
+
+    issue_texts = data_issues + logic_gaps
+    has_any_severity_tags = any(
+        re.search(r"\[(critical|moderate|minor)\]", issue, flags=re.IGNORECASE)
+        for issue in issue_texts
+    )
+    critical_count = sum(1 for issue in issue_texts if "[critical]" in issue.lower())
+    moderate_count = sum(1 for issue in issue_texts if "[moderate]" in issue.lower())
 
     material_terms = (
         "missing",
@@ -238,12 +420,39 @@ def format_google_finance_audit_response(raw_response: str) -> str:
         "mismatch",
         "omitted",
     )
-    has_material_blocker = any(
-        term in issue.lower() for issue in (data_issues + logic_gaps) for term in material_terms
-    )
+    if has_any_severity_tags:
+        # If severities are provided, align hard-stop safety with the weighted
+        # verdict policy: Fail-level findings or any Critical issue.
+        verdict_lower = verdict.lower()
+        has_material_blocker = (critical_count >= 1) or (verdict_lower == "fail")
+    else:
+        # Backward-compatible fallback for older responses without severity tags.
+        has_material_blocker = any(
+            term in issue.lower() for issue in issue_texts for term in material_terms
+        )
+    cap_mismatch_only = False
+    if critical_count:
+        critical_issues = [issue for issue in issue_texts if "[critical]" in issue.lower()]
+        has_cap_mismatch_critical = any(
+            all(keyword in issue.lower() for keyword in ("market cap", "share"))
+            for issue in critical_issues
+        )
+        has_other_critical = any(
+            not all(keyword in issue.lower() for keyword in ("market cap", "share"))
+            for issue in critical_issues
+        )
+        has_fail_verdict = verdict.lower() == "fail"
+        cap_mismatch_only = has_cap_mismatch_critical and not has_other_critical and not has_fail_verdict
+
     safety_overridden = False
     if has_material_blocker and "safe to use" in safety.lower() and "not safe" not in safety.lower():
         safety = "Not safe to use"
+        safety_overridden = True
+    if not has_material_blocker and "not safe" in safety.lower():
+        safety = "Safe to use"
+        safety_overridden = True
+    if cap_mismatch_only and "not safe" in safety.lower():
+        safety = "Safe to use"
         safety_overridden = True
 
     lines: list[str] = []
@@ -252,7 +461,7 @@ def format_google_finance_audit_response(raw_response: str) -> str:
     lines.append("Material Data Issues")
     if data_issues:
         for idx, issue in enumerate(data_issues, start=1):
-            lines.append(f"{idx}. {issue}")
+            lines.append(f"{idx}. {_prefix_category(issue, 'data')}")
     else:
         lines.append("1. None clearly identified.")
 
@@ -260,14 +469,19 @@ def format_google_finance_audit_response(raw_response: str) -> str:
     lines.append("Logic Gaps")
     if logic_gaps:
         for idx, gap in enumerate(logic_gaps, start=1):
-            lines.append(f"{idx}. {gap}")
+            lines.append(f"{idx}. {_prefix_category(gap, 'logic')}")
     else:
         lines.append("1. None clearly identified.")
 
     lines.append("")
     lines.append(f"Decision Safety: {safety}")
     lines.append(f"Confidence Score: {confidence}")
-    lines.append("Confidence Meaning: confidence refers to certainty in identified QA issues, not return potential.")
+    lines.append("Confidence Meaning: confidence measures certainty in audit findings, not return potential.")
+    lines.append(f"Confidence Guidance: {_confidence_meaning(confidence_int)}")
+    if cap_mismatch_only and "safe to use" in safety.lower():
+        lines.append("Safety Basis: cap/share mismatch isolated as data-integrity warning; no proven valuation dependency.")
+    else:
+        lines.append(f"Safety Basis: {'policy override due to material blockers' if safety_overridden else 'model-reported safety (no hard-stop override)'}")
     if safety_overridden:
         lines.append("Safety Rule Applied: marked Not safe to use because material blockers were detected.")
     return "\n".join(lines).strip()

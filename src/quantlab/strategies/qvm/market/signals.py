@@ -159,7 +159,7 @@ def _compute_assessment(trend: str, rs: str, pullback: str) -> str:
     Improving
         Trend is already positive but relative strength is still catching up.
 
-    Recovering
+    Stabilizing
         Trend has stabilized (Neutral) after a meaningful pullback.
 
     Weak
@@ -179,12 +179,12 @@ def _compute_assessment(trend: str, rs: str, pullback: str) -> str:
         return "Improving"
 
     if trend == "Neutral" and pull_t >= _STRONG:
-        return "Recovering"
+        return "Stabilizing"
 
     return "Weak"
 
 _TREND_SENTENCE = {
-    "Excellent": "Long-term momentum is very strong, with price above both the 50-day and 200-day moving averages.",
+    "Excellent": "Absolute trend is strong, with price above both the 50-day and 200-day moving averages.",
     "Strong": "The long-term trend remains positive, with price above the 200-day moving average.",
     "Neutral": "The stock is trading around its long-term trend with no clear directional advantage.",
     "Weak": "The long-term trend remains negative, with price below the 200-day moving average.",
@@ -211,8 +211,8 @@ _PULLBACK_SENTENCE = {
 _ASSESSMENT_CLOSE = {
     "Attractive": "Trend and entry conditions are well aligned.",
     "Near-highs": "Momentum remains strong, but waiting for a pullback may improve the entry.",
-    "Improving": "The trend is healthy, although broader momentum is still developing.",
-    "Recovering": "Early stabilization is visible after the recent correction.",
+    "Improving": "Absolute trend is healthy, while relative performance versus the market is still developing.",
+    "Stabilizing": "Early stabilization is visible after the recent correction, but trend recovery is not yet confirmed.",
     "Weak": "Market conditions remain unfavorable and require patience.",
 }
 
@@ -242,11 +242,19 @@ def _generate_reason(
     if avg_rs is not None:
         context_parts.append(f"avg 6M/12M excess vs SPY: {_format_pct(avg_rs)}")
 
+    mixed_regime_note = None
+    if trend in ("Excellent", "Strong") and rs == "Weak":
+        mixed_regime_note = (
+            "This is a mixed regime: absolute trend can remain positive while "
+            "relative strength versus SPY is still weak."
+        )
+
     paragraphs = [
         _TREND_SENTENCE.get(trend),
         _RS_SENTENCE.get(rs),
         _PULLBACK_SENTENCE.get(pullback),
         _ASSESSMENT_CLOSE.get(assessment),
+        mixed_regime_note,
     ]
 
     if context_parts:
