@@ -188,7 +188,12 @@ def main() -> None:
     parser.add_argument(
         "--include-annual-reports",
         action="store_true",
-        help="Also collect links from /annual-reports/ pages in addition to /annual-reports-10k/",
+        help="Deprecated: annual reports are collected by default unless --only-10k is used.",
+    )
+    parser.add_argument(
+        "--only-10k",
+        action="store_true",
+        help="Collect only /annual-reports-10k/ links and skip /annual-reports/.",
     )
     parser.add_argument(
         "--output",
@@ -211,7 +216,7 @@ def main() -> None:
         companies = companies[: args.max_companies]
 
     page_metrics = ["annual-reports-10k"]
-    if args.include_annual_reports:
+    if not args.only_10k:
         page_metrics.append("annual-reports")
 
     result = collect_filing_links(companies, page_metrics)

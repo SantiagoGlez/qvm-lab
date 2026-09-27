@@ -290,13 +290,6 @@ class YahooProvider(Provider):
             inc_col = inc.columns[0]
             bal_col = bal.columns[0]
 
-            # --- Net Cash (positive = cash, negative = debt) ---
-            net_cash = None
-            if "Net Debt" in bal.index and not pd.isna(bal.loc["Net Debt", bal_col]):
-                net_cash = -float(bal.loc["Net Debt", bal_col])  # Net Debt convention is debt minus cash
-            elif "Total Debt" in bal.index and "Cash Cash Equivalents And Short Term Investments" in bal.index:
-                net_cash = float(bal.loc["Cash Cash Equivalents And Short Term Investments", bal_col]) - float(bal.loc["Total Debt", bal_col])
-
             # --- EBITDA for normalization ---
             ebitda = None
             for label in ("EBITDA", "Normalized EBITDA"):
@@ -310,6 +303,15 @@ class YahooProvider(Provider):
                 if "Cash Cash Equivalents And Short Term Investments" in bal.index and not pd.isna(bal.loc["Cash Cash Equivalents And Short Term Investments", bal_col])
                 else None
             )
+
+            # --- Net Cash (positive = cash, negative = debt) ---
+            # Prefer reconstructing from components when both are present.
+            # Yahoo's "Net Debt" field can be inconsistent for some tickers.
+            net_cash = None
+            if total_debt is not None and cash_total is not None:
+                net_cash = compute_net_cash(total_debt=total_debt, cash=cash_total)
+            elif "Net Debt" in bal.index and not pd.isna(bal.loc["Net Debt", bal_col]):
+                net_cash = -float(bal.loc["Net Debt", bal_col])  # Net Debt convention is debt minus cash
 
             if net_cash is None and total_debt is not None and cash_total is not None:
                 net_cash = compute_net_cash(total_debt=total_debt, cash=cash_total)

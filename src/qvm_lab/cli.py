@@ -3,7 +3,7 @@ import io
 import runpy
 import sys
 from contextlib import redirect_stdout
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -27,6 +27,12 @@ from quantlab.strategies.qvm.backtest.contribution import (
 from quantlab.strategies.qvm.reports.console import print_report
 from quantlab.strategies.qvm.reports.google_finance_chat import run_google_finance_audit
 from quantlab.strategies.qvm.service import analyse_company
+from quantlab.strategies.qvm.analysis.universal_return import (
+    build_universal_inputs,
+    calculate_universal_return,
+    format_universal_return_report,
+)
+from quantlab.strategies.qvm.analysis.correlation import build_correlation_analysis, write_correlation_report
 
 
 def company_cli() -> None:
@@ -92,6 +98,184 @@ def company_cli() -> None:
                 print("  2) Complete any consent/login challenge in the opened browser")
                 print("  3) Re-run with a larger timeout (e.g. --google-finance-timeout-seconds 120)")
             print("Prompt templates are available in docs/specifications.")
+
+
+def universal_return_cli() -> None:
+    """Run standalone Universal Shareholder Return diagnostics."""
+    parser = argparse.ArgumentParser(
+        description="Run standalone Universal Shareholder Return model"
+    )
+    parser.add_argument("ticker", nargs="?", help="Ticker symbol to analyze")
+    parser.add_argument("--horizon-years", type=int, default=5, help="Projection horizon in years")
+    parser.add_argument(
+        "--universe-file",
+        type=str,
+        default="data/qvm/companies.csv",
+        help="CSV file with a 'ticker' column for batch ranking",
+    )
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=20,
+        help="Rows to print for universe ranking mode",
+    )
+    parser.add_argument(
+        "--min-expected-return",
+        type=float,
+        default=None,
+        help="Optional minimum expected annual return percent filter (e.g. 12)",
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        default="data/qvm/universal_return_results.csv",
+        help="Write the full universe results to this CSV file in universe mode",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.horizon_years <= 0:
+        raise ValueError("--horizon-years must be > 0")
+
+    if args.ticker:
+        company = analyse_company(args.ticker)
+        inputs = build_universal_inputs(company)
+        result = calculate_universal_return(inputs, horizon_years=args.horizon_years)
+        print(format_universal_return_report(inputs, result))
+        return
+
+    universe_path = Path(args.universe_file)
+    if not universe_path.exists():
+        raise FileNotFoundError(f"Universe file not found: {universe_path}")
+
+    frame = pd.read_csv(universe_path)
+    if "ticker" not in frame.columns:
+        raise ValueError(f"Universe file must contain a 'ticker' column: {universe_path}")
+
+    rows: list[dict[str, object]] = []
+    for ticker in frame["ticker"].dropna().astype(str).tolist():
+        try:
+            company = analyse_company(ticker)
+            inputs = build_universal_inputs(company)
+            result = calculate_universal_return(inputs, horizon_years=args.horizon_years)
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "expected_annual_return_pct": (
+                        result.expected_annual_return * 100.0
+                        if result.expected_annual_return is not None
+                        else None
+                    ),
+                    "line_1_capital_yield_pct": (
+                        result.line_1_capital_yield * 100.0
+                        if result.line_1_capital_yield is not None
+                        else None
+                    ),
+                    "line_2_growth_pct": (
+                        result.line_2_fundamental_growth * 100.0
+                        if result.line_2_fundamental_growth is not None
+                        else None
+                    ),
+                    "line_3_valuation_delta_pct": (
+                        result.line_3_valuation_delta * 100.0
+                        if result.line_3_valuation_delta is not None
+                        else None
+                    ),
+                    "confidence_label": result.confidence_label,
+                    "missing_inputs": ", ".join(result.missing_inputs),
+                    "warnings_count": len(result.warnings),
+                    "assumptions_count": len(result.assumptions),
+                }
+            )
+        except Exception as exc:
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "expected_annual_return_pct": None,
+                    "line_1_capital_yield_pct": None,
+                    "line_2_growth_pct": None,
+                    "line_3_valuation_delta_pct": None,
+                    "confidence_label": "Low",
+                    "missing_inputs": "analysis failed",
+                    "warnings_count": None,
+                    "assumptions_count": None,
+                    "error": str(exc),
+                }
+            )
+
+    full_out = pd.DataFrame(rows)
+    if args.min_expected_return is not None:
+        display_out = full_out[
+            full_out["expected_annual_return_pct"].notna()
+            & (full_out["expected_annual_return_pct"] >= args.min_expected_return)
+        ]
+    else:
+        display_out = full_out
+
+    full_out = full_out.sort_values(by=["expected_annual_return_pct", "ticker"], ascending=[False, True])
+    display_out = display_out.sort_values(by=["expected_annual_return_pct", "ticker"], ascending=[False, True])
+    output_path = Path(args.output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    full_out.to_csv(output_path, index=False)
+    print("Universal Shareholder Return Ranking (Informative)")
+    print(f"Saved full universe results to {output_path}")
+    print()
+    if display_out.empty:
+        print("No rows to display.")
+        return
+    print(display_out.head(max(args.top, 1)).to_string(index=False))
+
+
+def correlation_cli() -> None:
+    """Measure correlation for a portfolio plus optional external reference assets."""
+    parser = argparse.ArgumentParser(description="Run portfolio correlation analysis")
+    parser.add_argument(
+        "--portfolio-file",
+        type=Path,
+        default=Path("data/qvm/portfolio.csv"),
+        help="CSV file with the main portfolio tickers",
+    )
+    parser.add_argument(
+        "--reference-file",
+        type=Path,
+        default=None,
+        help="Optional CSV file with extra reference assets such as gold or bond proxies",
+    )
+    parser.add_argument(
+        "--lookback-years",
+        type=int,
+        default=5,
+        help="How many years of adjusted-close history to use",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("data/qvm/backtest/correlation"),
+        help="Directory for correlation CSV outputs",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.lookback_years <= 0:
+        raise ValueError("--lookback-years must be > 0")
+
+    end_date = date.today()
+    start_date = end_date - timedelta(days=int(args.lookback_years * 365.25))
+    result = build_correlation_analysis(
+        portfolio_path=args.portfolio_file,
+        reference_path=args.reference_file,
+        start=start_date,
+        end=end_date,
+    )
+    matrix_path, summary_path, returns_path = write_correlation_report(result, args.output_dir)
+
+    print(f"Correlation matrix CSV: {matrix_path}")
+    print(f"Correlation summary CSV: {summary_path}")
+    print(f"Portfolio returns CSV: {returns_path}")
+    if result.missing_assets:
+        print("Missing price history for:")
+        for asset_name in result.missing_assets:
+            print(f"  - {asset_name}")
+    print()
+    print(result.summary_table.to_string(index=False))
 
 
 def universe_cli() -> None:

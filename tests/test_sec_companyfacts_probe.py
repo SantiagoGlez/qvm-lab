@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.probe_sec_companyfacts_metrics import (
     _compute_derived,
     _extract_annual_facts,
+    _load_filing_accessions,
     _parse_accession_from_file_name,
     _resolve_cik_for_ticker,
 )
@@ -114,3 +115,23 @@ def test_resolve_cik_for_ticker_alias_match() -> None:
 
     assert cik == "0000123456"
     assert source == "alias:RNO->RNLSY"
+
+
+def test_load_filing_accessions_includes_annual_report_when_enabled(tmp_path: Path) -> None:
+    csv_path = tmp_path / "filing_links.csv"
+    csv_path.write_text(
+        "ticker,status,report_type,file_name\n"
+        "ABBNY,ok,10k,0000000000-24-000001_abbny-20241231.pdf\n"
+        "ABBNY,ok,annual-report,8052.ar.en.2023.pdf\n"
+        "ABBNY,ok,annual-report,0000000000-23-000777_abbny-20231231.pdf\n"
+        "ABBNY,missing,10k,0000000000-23-000123_abbny-20231231.pdf\n"
+    )
+
+    accessions = _load_filing_accessions(
+        filing_links_csv=csv_path,
+        ticker="ABBNY",
+        report_types={"10k", "annual-report"},
+    )
+
+    assert "0000000000-24-000001" in accessions
+    assert "0000000000-23-000777" in accessions

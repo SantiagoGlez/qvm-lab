@@ -41,6 +41,28 @@ class _FakeTicker:
         self.quarterly_cashflow = pd.DataFrame()
 
 
+class _FinancialHealthTicker:
+    def __init__(self, *, net_debt: float | None, total_debt: float | None, cash_total: float | None) -> None:
+        self.ticker = "FAKE"
+        self.income_stmt = pd.DataFrame(
+            {
+                pd.Timestamp("2024-12-31"): {
+                    "EBITDA": 100.0,
+                    "EBIT": 80.0,
+                    "Interest Expense": -10.0,
+                }
+            }
+        )
+        bal_row: dict[str, float] = {}
+        if net_debt is not None:
+            bal_row["Net Debt"] = float(net_debt)
+        if total_debt is not None:
+            bal_row["Total Debt"] = float(total_debt)
+        if cash_total is not None:
+            bal_row["Cash Cash Equivalents And Short Term Investments"] = float(cash_total)
+        self.balance_sheet = pd.DataFrame({pd.Timestamp("2024-12-31"): bal_row})
+
+
 def test_build_capex_resilience_inputs_uses_latest_annual_values() -> None:
     provider = YahooProvider()
     stock = _FakeTicker()
@@ -89,3 +111,29 @@ def test_load_populates_capex_resilience_from_yahoo_history(monkeypatch) -> None
     assert company.capex_resilience.current_free_cash_flow == 27.0
     assert company.capex_resilience.relevance == "High"
     assert company.capex_resilience.resilience == "Unavailable"
+
+
+def test_financial_health_prefers_component_net_cash_over_net_debt_field() -> None:
+    provider = YahooProvider()
+    # Deliberately inconsistent snapshot: Net Debt field says debt-heavy,
+    # but components imply net cash.
+    stock = _FinancialHealthTicker(net_debt=150.0, total_debt=100.0, cash_total=300.0)
+
+    net_cash, net_debt_ebitda, interest_cov, debt_to_ebitda = provider._calculate_financial_health(stock)
+
+    assert net_cash == 200.0
+    assert net_debt_ebitda == -2.0
+    assert interest_cov == 8.0
+    assert debt_to_ebitda == 1.0
+
+
+def test_financial_health_falls_back_to_net_debt_when_components_missing() -> None:
+    provider = YahooProvider()
+    stock = _FinancialHealthTicker(net_debt=120.0, total_debt=None, cash_total=None)
+
+    net_cash, net_debt_ebitda, interest_cov, debt_to_ebitda = provider._calculate_financial_health(stock)
+
+    assert net_cash == -120.0
+    assert net_debt_ebitda is None
+    assert interest_cov == 8.0
+    assert debt_to_ebitda is None

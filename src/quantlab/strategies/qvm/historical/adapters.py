@@ -120,7 +120,7 @@ class HistoricalQualityAdapter:
 
         metrics.debt_to_ebitda = compute_debt_to_ebitda(total_debt=total_debt, ebitda=ebitda)
         metrics.net_debt_ebitda = compute_net_debt_ebitda(total_debt=total_debt, cash=cash, ebitda=ebitda)
-        if metrics.net_debt_ebitda is None and total_debt is not None and cash is not None and ebitda in (None, 0):
+        if metrics.net_debt_ebitda is None and total_debt is not None and cash is not None and (ebitda is None or ebitda <= 0):
             net_debt = total_debt - cash
             if net_debt != 0:
                 metrics.net_debt_ebitda = float("inf") if net_debt > 0 else float("-inf")

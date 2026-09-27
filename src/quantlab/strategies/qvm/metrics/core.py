@@ -29,7 +29,7 @@ def compute_net_debt_ebitda(
     ebitda: float | None,
     short_term_investments: float | None = None,
 ) -> float | None:
-    if ebitda in (None, 0):
+    if ebitda is None or ebitda <= 0:
         return None
     net_cash = compute_net_cash(total_debt, cash, short_term_investments)
     if net_cash is None:
@@ -38,7 +38,7 @@ def compute_net_debt_ebitda(
 
 
 def compute_debt_to_ebitda(total_debt: float | None, ebitda: float | None) -> float | None:
-    if total_debt is None or ebitda in (None, 0):
+    if total_debt is None or ebitda is None or ebitda <= 0:
         return None
     return float(total_debt) / float(ebitda)
 

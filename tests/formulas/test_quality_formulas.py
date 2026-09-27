@@ -133,3 +133,46 @@ def test_quality_metric_contributions_use_normalized_available_weight() -> None:
         for metric_name in contributions
         if metric_name != "roic"
     )
+
+
+def test_negative_net_debt_to_ebitda_with_positive_net_debt_is_not_rewarded() -> None:
+    company = Company(
+        ticker="RNO_CASE",
+        metrics=CompanyMetrics(
+            net_debt_ebitda=-8.81,
+            net_cash=-49.4,
+            interest_coverage=10.0,
+        ),
+    )
+
+    contributions = quality_metric_contributions(company)
+
+    assert contributions["net_debt_ebitda"] == 0.0
+
+
+def test_negative_net_debt_to_ebitda_with_net_cash_remains_positive_signal() -> None:
+    company = Company(
+        ticker="NET_CASH_CASE",
+        metrics=CompanyMetrics(
+            net_debt_ebitda=-0.8,
+            net_cash=10.0,
+            interest_coverage=10.0,
+        ),
+    )
+
+    contributions = quality_metric_contributions(company)
+
+    assert contributions["net_debt_ebitda"] == pytest.approx(50.0)
+
+
+def test_negative_debt_to_ebitda_fallback_leverage_is_not_rewarded() -> None:
+    company = Company(
+        ticker="NEG_EBITDA_CASE",
+        metrics=CompanyMetrics(
+            debt_to_ebitda=-12.2,
+        ),
+    )
+
+    contributions = quality_metric_contributions(company)
+
+    assert contributions["leverage"] == 0.0

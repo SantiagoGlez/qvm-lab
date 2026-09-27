@@ -71,6 +71,12 @@ AON,Aon,aon,pe_ratio,skipped,31
 AON,Aon,aon,cash,skipped,31
 AON,Aon,aon,total_assets,skipped,31
 AON,Aon,aon,dividend_yield,skipped,31
+AR,Antero Resources,antero-resources,revenue,ok,16
+AR,Antero Resources,antero-resources,net_income,ok,16
+AR,Antero Resources,antero-resources,pe_ratio,ok,16
+AR,Antero Resources,antero-resources,cash,ok,16
+AR,Antero Resources,antero-resources,total_assets,ok,16
+AR,Antero Resources,antero-resources,dividend_yield,missing,16
 ASML,ASML,asml,revenue,skipped,31
 ASML,ASML,asml,net_income,skipped,31
 ASML,ASML,asml,pe_ratio,skipped,31
@@ -107,12 +113,12 @@ BR,Broadridge Financial Solutions,broadridge-financial-solutions,pe_ratio,skippe
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,cash,skipped,21
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,total_assets,skipped,21
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,dividend_yield,skipped,21
-BRK,Berkshire Hathaway,berkshire-hathaway,revenue,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,net_income,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,pe_ratio,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,cash,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,total_assets,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,dividend_yield,missing,31
+BRK,Berkshire Hathaway,berkshire-hathaway,revenue,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,net_income,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,pe_ratio,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,cash,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_assets,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,dividend_yield,skipped,31
 BSX,Boston Scientific,boston-scientific,revenue,skipped,31
 BSX,Boston Scientific,boston-scientific,net_income,skipped,31
 BSX,Boston Scientific,boston-scientific,pe_ratio,skipped,31

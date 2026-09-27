@@ -261,6 +261,7 @@ def _label_net_debt(net_debt_ebitda: float | None, net_cash: float | None) -> st
 
 def _label_interest_coverage(v: float | None) -> str:
     if v is None: return ""
+    if v < 0:   return "Distress"
     if v >= 20: return "Excellent"
     if v >= 10: return "Strong"
     if v >= 5:  return "Good"
@@ -270,16 +271,22 @@ def _label_interest_coverage(v: float | None) -> str:
 
 def _label_debt_to_ebitda(v: float | None) -> str:
     if v is None: return ""
-    if v <= 0:  return "Excellent"
+    if v < 0:   return "Weak"
+    if v == 0:  return "Excellent"
     if v < 1:   return "Strong"
     if v < 2:   return "Good"
     if v < 3:   return "Average"
     return "Weak"
 
 
-def _label_net_debt_to_ebitda(v: float | None) -> str:
+def _label_net_debt_to_ebitda(v: float | None, net_cash: float | None = None) -> str:
     if v is None: return ""
-    if v <= 0:  return "Excellent"
+    if v <= 0:
+        if net_cash is not None and net_cash < 0:
+            return "Weak"
+        if net_cash is None:
+            return "Good"
+        return "Excellent"
     if v < 1:   return "Strong"
     if v < 2:   return "Good"
     if v < 3:   return "Average"
@@ -424,8 +431,9 @@ def print_report(company: Company) -> None:
         print(f"    Percentile                {pct(company.valuation_facts.modern_percentile)}")
         print(f"    Observations              {company.valuation_facts.modern_used_pe_count}")
     print()
-    print(f"  Discount to Average       {signed_pct(company.valuation_facts.discount_to_average_pct)}")
-    print(f"  Discount to Median        {signed_pct(company.valuation_facts.discount_to_median_pct)}")
+    print(f"  Relative to Average       {signed_pct(company.valuation_facts.discount_to_average_pct)}")
+    print(f"  Relative to Median        {signed_pct(company.valuation_facts.discount_to_median_pct)}")
+    print("  Sign Convention          + = discount, - = premium")
     print()
     print(f"  Forward PE                {num(company.metrics.forward_pe, 2)}")
     print(f"  Trailing PE               {num(company.metrics.trailing_pe, 2)}")
@@ -605,7 +613,13 @@ def print_report(company: Company) -> None:
         print(_row("Net Cash (Cash-Debt)", "N/A", ""))
 
     if company.metrics.net_debt_ebitda is not None:
-        print(_row("Net Debt/EBITDA", f"{company.metrics.net_debt_ebitda:.2f}x", _label_net_debt_to_ebitda(company.metrics.net_debt_ebitda)))
+        print(
+            _row(
+                "Net Debt/EBITDA",
+                f"{company.metrics.net_debt_ebitda:.2f}x",
+                _label_net_debt_to_ebitda(company.metrics.net_debt_ebitda, company.metrics.net_cash),
+            )
+        )
 
     if company.metrics.debt_to_ebitda is not None:
         print(_row("Debt/EBITDA", f"{company.metrics.debt_to_ebitda:.1f}x", _label_debt_to_ebitda(company.metrics.debt_to_ebitda)))

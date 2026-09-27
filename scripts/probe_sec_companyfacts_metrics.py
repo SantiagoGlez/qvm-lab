@@ -112,6 +112,8 @@ SEC_TICKER_ALIASES: dict[str, list[str]] = {
     "RHHBY": ["RHHBF"],
 }
 
+DEFAULT_REPORT_TYPES = {"10k", "annual-report"}
+
 
 def _sec_headers() -> dict[str, str]:
     user_agent = os.getenv(
@@ -179,7 +181,11 @@ def _resolve_cik_for_ticker(ticker: str, ticker_cik: dict[str, str]) -> tuple[st
     return None, f"missing:{ticker_upper}"
 
 
-def _load_filing_accessions(filing_links_csv: Path, ticker: str) -> set[str]:
+def _load_filing_accessions(
+    filing_links_csv: Path,
+    ticker: str,
+    report_types: set[str] | None = None,
+) -> set[str]:
     if not filing_links_csv.exists():
         return set()
 
@@ -189,7 +195,9 @@ def _load_filing_accessions(filing_links_csv: Path, ticker: str) -> set[str]:
 
     filtered = df[(df.get("ticker") == ticker) & (df.get("status") == "ok")]
     if "report_type" in filtered.columns:
-        filtered = filtered[filtered["report_type"] == "10k"]
+        allowed = {value.lower().strip() for value in (report_types or DEFAULT_REPORT_TYPES) if value and value.strip()}
+        report_type_series = filtered["report_type"].astype(str).str.lower().str.strip()
+        filtered = filtered[report_type_series.isin(allowed)]
 
     accessions: set[str] = set()
     if "file_name" not in filtered.columns:
@@ -423,6 +431,7 @@ def run_probe(
     output_csv: Path,
     min_year: int | None = None,
     max_year: int | None = None,
+    report_types: set[str] | None = None,
 ) -> pd.DataFrame:
     ticker = ticker.upper().strip()
     ticker_cik = _ticker_to_cik()
@@ -432,7 +441,11 @@ def run_probe(
         alias_note = f" aliases_tried={aliases}" if aliases else ""
         raise ValueError(f"No CIK found for ticker: {ticker}.{alias_note}")
 
-    accessions = _load_filing_accessions(filing_links_csv, ticker)
+    accessions = _load_filing_accessions(
+        filing_links_csv,
+        ticker,
+        report_types=report_types,
+    )
 
     companyfacts = _fetch_json(SEC_COMPANYFACTS_URL.format(cik=cik))
 
@@ -472,6 +485,7 @@ def run_probe_bulk(
     output_dir: Path,
     min_year: int | None = None,
     max_year: int | None = None,
+    report_types: set[str] | None = None,
 ) -> pd.DataFrame:
     output_dir.mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, Any]] = []
@@ -486,6 +500,7 @@ def run_probe_bulk(
                 output_csv=output_csv,
                 min_year=min_year,
                 max_year=max_year,
+                report_types=report_types,
             )
             years = len(df)
             roic_years = int(df["roic_computed"].notna().sum()) if not df.empty and "roic_computed" in df.columns else 0
@@ -593,6 +608,11 @@ def main() -> None:
     )
     parser.add_argument("--min-year", type=int, default=2010)
     parser.add_argument("--max-year", type=int, default=None)
+    parser.add_argument(
+        "--report-types",
+        default="10k,annual-report",
+        help="Comma-separated report_type values from filing links CSV used for accession filtering.",
+    )
     args = parser.parse_args()
 
     if not args.ticker and not args.all:
@@ -602,6 +622,11 @@ def main() -> None:
 
     base_dir = Path.cwd()
     filing_links_csv = (base_dir / args.filing_links_csv).resolve()
+    report_types = {
+        value.lower().strip()
+        for value in args.report_types.split(",")
+        if value.strip()
+    }
 
     if args.all:
         companies_csv = base_dir / "data" / "qvm" / "companies.csv"
@@ -616,6 +641,7 @@ def main() -> None:
             output_dir=output_dir,
             min_year=args.min_year,
             max_year=args.max_year,
+            report_types=report_types,
         )
         summary_output.parent.mkdir(parents=True, exist_ok=True)
         summary.to_csv(summary_output, index=False)
@@ -637,6 +663,7 @@ def main() -> None:
         output_csv=output_csv,
         min_year=args.min_year,
         max_year=args.max_year,
+        report_types=report_types,
     )
 
     print(f"Saved SEC probe output to {output_csv}")

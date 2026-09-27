@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 import re
 import time
+import unicodedata
 from typing import Literal
 
 
@@ -53,6 +54,12 @@ Severity scoring rules:
 - Critical: hard math/sign errors, missing core inputs that break interpretation, or direct internal contradictions.
 - Moderate: partial data gaps or interpretation risks that reduce confidence but do not invalidate the report.
 - Minor: wording/clarity improvements with limited decision impact.
+
+Leverage and sign-convention rules:
+- If EBITDA is non-positive or unavailable, missing Net Debt/EBITDA should be treated as expected-unavailable (max severity: [Moderate]), not a hard contradiction by itself.
+- Negative Debt/EBITDA or Net Debt/EBITDA can occur when EBITDA is negative; do not call this mathematically impossible unless EBITDA sign is explicitly contradicted by the same-period source.
+- Negative interest coverage should be treated as distress/weak by default, not an automatic data-integrity contradiction.
+- FCF margin can be negative while FCF conversion is positive when net income is negative; do not flag as contradiction unless net income sign is explicitly provided and inconsistent.
 
 Market-cap/share mismatch rule:
 - Treat market-cap vs share-count mismatch as a data-integrity warning by default.
@@ -137,6 +144,12 @@ Severity scoring rules (must apply to every issue):
 - Moderate: partial data gaps or interpretation risks that reduce confidence but do not invalidate the report.
 - Minor: wording/clarity improvements with limited decision impact.
 
+Leverage and sign-convention rules:
+- If EBITDA is non-positive or unavailable, missing Net Debt/EBITDA should be treated as expected-unavailable (max severity: [Moderate]), not a hard contradiction by itself.
+- Negative Debt/EBITDA or Net Debt/EBITDA can occur when EBITDA is negative; do not call this mathematically impossible unless EBITDA sign is explicitly contradicted by the same-period source.
+- Negative interest coverage should be treated as distress/weak by default, not an automatic data-integrity contradiction.
+- FCF margin can be negative while FCF conversion is positive when net income is negative; do not flag as contradiction unless net income sign is explicitly provided and inconsistent.
+
 Market-cap/share mismatch rule:
 - Treat market-cap vs share-count mismatch as a data-integrity warning by default.
 - Do not escalate it to a report-level hard stop unless the mismatch is proven to feed a reported valuation calculation.
@@ -210,10 +223,57 @@ def _split_issue_lines(block: str) -> list[str]:
     if not lines:
         return []
 
+    def _normalize_line(line: str) -> str:
+        line = unicodedata.normalize("NFKC", line)
+        # Some model outputs inject separated letters in math/stylized fonts.
+        line = re.sub(r"(?i)\bC\s*r\s*i\s*t\s*i\s*c\s*a\s*l\b", "Critical", line)
+        line = re.sub(r"(?i)\bM\s*o\s*d\s*e\s*r\s*a\s*t\s*e\b", "Moderate", line)
+        line = re.sub(r"(?i)\bM\s*i\s*n\s*o\s*r\b", "Minor", line)
+        # Normalize alternate severity styles emitted by the model.
+        line = re.sub(
+            r"(?i)\[\s*severity\s*\]\s*(critical|moderate|minor)\s*[:\-]?",
+            lambda m: f"[{m.group(1).title()}] ",
+            line,
+        )
+        line = re.sub(
+            r"(?i)\bseverity\s*[:\-]\s*(critical|moderate|minor)\b",
+            lambda m: f"[{m.group(1).title()}]",
+            line,
+        )
+        line = re.sub(r"\b(Critical|Moderate|Minor)\s+\1\b", r"\1", line, flags=re.IGNORECASE)
+        line = re.sub(r"\s+", " ", line)
+        return line.strip()
+
     def _clean_prefix(line: str) -> str:
+        line = _normalize_line(line)
         line = line.lstrip("-• ").strip()
         line = re.sub(r"^\d+[\.)]\s*", "", line)
         return line.strip()
+
+    def _split_compound_issue_text(text: str) -> list[str]:
+        severity_rx = re.compile(r"\[(Critical|Moderate|Minor)\]|\b(Critical|Moderate|Minor)\b", flags=re.IGNORECASE)
+        matches = list(severity_rx.finditer(text))
+        if len(matches) <= 1:
+            return [text]
+
+        category_prefix = ""
+        category_match = re.match(r"^(\[[^\]]+\])\s*", text)
+        if category_match and category_match.group(1).lower() not in {"[critical]", "[moderate]", "[minor]"}:
+            category_prefix = f"{category_match.group(1)} "
+
+        parts: list[str] = []
+        for idx, match in enumerate(matches):
+            severity = (match.group(1) or match.group(2) or "").title()
+            if not severity:
+                continue
+            start = match.end()
+            end = matches[idx + 1].start() if idx + 1 < len(matches) else len(text)
+            body = text[start:end].strip(" :;,-")
+            if not body:
+                continue
+            parts.append(f"{category_prefix}[{severity}] {body}".strip())
+
+        return parts or [text]
 
     def _extract_parts(text: str) -> tuple[str, str | None, str | None]:
         issue_text = text.strip()
@@ -239,42 +299,44 @@ def _split_issue_lines(block: str) -> list[str]:
         if not line:
             continue
 
-        lower = line.lower()
-        is_new_issue = bool(re.search(r"\[(critical|moderate|minor)\]", line, flags=re.IGNORECASE))
-        is_evidence = lower.startswith("evidence:")
-        is_why = lower.startswith("why it matters:")
+        split_lines = _split_compound_issue_text(line)
+        for split_line in split_lines:
+            lower = split_line.lower()
+            is_new_issue = bool(re.search(r"\[(critical|moderate|minor)\]", split_line, flags=re.IGNORECASE))
+            is_evidence = lower.startswith("evidence:")
+            is_why = lower.startswith("why it matters:")
 
-        if is_new_issue:
-            if current and current.get("issue"):
-                issues.append(current)
-            issue_text, evidence, why = _extract_parts(line)
-            current = {"issue": issue_text, "evidence": evidence, "why": why}
-            continue
+            if is_new_issue:
+                if current and current.get("issue"):
+                    issues.append(current)
+                issue_text, evidence, why = _extract_parts(split_line)
+                current = {"issue": issue_text, "evidence": evidence, "why": why}
+                continue
 
-        if current is None:
-            # Backward-compatible fallback for unstructured issue text.
-            current = {"issue": line, "evidence": None, "why": None}
-            continue
+            if current is None:
+                # Backward-compatible fallback for unstructured issue text.
+                current = {"issue": split_line, "evidence": None, "why": None}
+                continue
 
-        if is_evidence:
-            ev = line.split(":", 1)[1].strip() if ":" in line else ""
-            if ev:
-                current["evidence"] = ev if not current.get("evidence") else f"{current['evidence']} {ev}"
-            continue
+            if is_evidence:
+                ev = split_line.split(":", 1)[1].strip() if ":" in split_line else ""
+                if ev:
+                    current["evidence"] = ev if not current.get("evidence") else f"{current['evidence']} {ev}"
+                continue
 
-        if is_why:
-            why_text = line.split(":", 1)[1].strip() if ":" in line else ""
-            if why_text:
-                current["why"] = why_text if not current.get("why") else f"{current['why']} {why_text}"
-            continue
+            if is_why:
+                why_text = split_line.split(":", 1)[1].strip() if ":" in split_line else ""
+                if why_text:
+                    current["why"] = why_text if not current.get("why") else f"{current['why']} {why_text}"
+                continue
 
-        # Continuation of prior field.
-        if current.get("why"):
-            current["why"] = f"{current['why']} {line}"
-        elif current.get("evidence"):
-            current["evidence"] = f"{current['evidence']} {line}"
-        else:
-            current["issue"] = f"{current.get('issue', '').strip()} {line}".strip()
+            # Continuation of prior field.
+            if current.get("why"):
+                current["why"] = f"{current['why']} {split_line}"
+            elif current.get("evidence"):
+                current["evidence"] = f"{current['evidence']} {split_line}"
+            else:
+                current["issue"] = f"{current.get('issue', '').strip()} {split_line}".strip()
 
     if current and current.get("issue"):
         issues.append(current)
@@ -331,7 +393,43 @@ def _issue_category(issue: str, section: str) -> str:
 
 
 def _prefix_category(issue: str, section: str) -> str:
+    match = re.match(r"^(\[[^\]]+\])\s", issue.strip())
+    if match and match.group(1).lower() not in {"[critical]", "[moderate]", "[minor]"}:
+        return issue
     return f"[{_issue_category(issue, section)}] {issue}"
+
+
+def _is_non_blocking_critical(issue: str) -> bool:
+    lower = issue.lower()
+
+    # Known non-hard-stop pattern: cap/share reconciliation mismatch on its own.
+    if "market cap" in lower and "share" in lower:
+        return True
+
+    # Expected-unavailable leverage when EBITDA is non-positive/missing.
+    if "missing leverage" in lower and "net debt/ebitda" in lower:
+        return True
+    if "missing net debt/ebitda" in lower:
+        return True
+    if "ebitda" in lower and "missing" in lower and "net debt/ebitda" in lower:
+        return True
+
+    # Label/sign framing issue rather than hard math break.
+    if "discount" in lower and "premium" in lower and "sign" in lower:
+        return True
+
+    # Partial growth-window coverage can invalidate specific intrinsic outputs,
+    # but is a caveat-level completeness issue rather than a hard-stop bug.
+    if "missing core growth" in lower:
+        return True
+    if "eps cagr" in lower and "fcf cagr" in lower and "missing" in lower:
+        return True
+    if "implied fcf growth" in lower and "n/a" in lower:
+        return True
+    if "assessment unavailable" in lower and "intrinsic" in lower:
+        return True
+
+    return False
 
 
 def _extract_section(text: str, headers: list[str], next_headers: list[str]) -> str:
@@ -359,6 +457,30 @@ def _extract_section(text: str, headers: list[str], next_headers: list[str]) -> 
         if idx != -1:
             end = min(end, idx)
     return block[:end].strip()
+
+
+def _split_issue_fields(issue_text: str) -> tuple[str, str | None, str | None]:
+    issue = issue_text.strip()
+    evidence = None
+    why = None
+
+    evidence_match = re.search(r";\s*Evidence:\s*", issue, flags=re.IGNORECASE)
+    why_match = re.search(r";\s*Why it matters:\s*", issue, flags=re.IGNORECASE)
+
+    if evidence_match:
+        issue = issue[: evidence_match.start()].strip()
+        evidence_start = evidence_match.end()
+        if why_match and why_match.start() > evidence_match.start():
+            evidence = issue_text[evidence_start:why_match.start()].strip(" ;")
+        else:
+            evidence = issue_text[evidence_start:].strip(" ;")
+
+    if why_match:
+        why = issue_text[why_match.end():].strip(" ;")
+        if not evidence_match:
+            issue = issue_text[: why_match.start()].strip(" ;")
+
+    return issue, evidence, why
 
 
 def format_google_finance_audit_response(raw_response: str) -> str:
@@ -407,7 +529,9 @@ def format_google_finance_audit_response(raw_response: str) -> str:
         re.search(r"\[(critical|moderate|minor)\]", issue, flags=re.IGNORECASE)
         for issue in issue_texts
     )
-    critical_count = sum(1 for issue in issue_texts if "[critical]" in issue.lower())
+    critical_issues = [issue for issue in issue_texts if "[critical]" in issue.lower()]
+    critical_count = len(critical_issues)
+    blocking_critical_count = sum(1 for issue in critical_issues if not _is_non_blocking_critical(issue))
     moderate_count = sum(1 for issue in issue_texts if "[moderate]" in issue.lower())
 
     material_terms = (
@@ -424,7 +548,7 @@ def format_google_finance_audit_response(raw_response: str) -> str:
         # If severities are provided, align hard-stop safety with the weighted
         # verdict policy: Fail-level findings or any Critical issue.
         verdict_lower = verdict.lower()
-        has_material_blocker = (critical_count >= 1) or (verdict_lower == "fail")
+        has_material_blocker = (blocking_critical_count >= 1) or (verdict_lower == "fail")
     else:
         # Backward-compatible fallback for older responses without severity tags.
         has_material_blocker = any(
@@ -432,13 +556,13 @@ def format_google_finance_audit_response(raw_response: str) -> str:
         )
     cap_mismatch_only = False
     if critical_count:
-        critical_issues = [issue for issue in issue_texts if "[critical]" in issue.lower()]
         has_cap_mismatch_critical = any(
             all(keyword in issue.lower() for keyword in ("market cap", "share"))
             for issue in critical_issues
         )
         has_other_critical = any(
-            not all(keyword in issue.lower() for keyword in ("market cap", "share"))
+            (not all(keyword in issue.lower() for keyword in ("market cap", "share")))
+            and (not _is_non_blocking_critical(issue))
             for issue in critical_issues
         )
         has_fail_verdict = verdict.lower() == "fail"
@@ -456,12 +580,21 @@ def format_google_finance_audit_response(raw_response: str) -> str:
         safety_overridden = True
 
     lines: list[str] = []
+
+    def _append_issue_block(index: int, raw: str, section: str) -> None:
+        issue, evidence, why = _split_issue_fields(raw)
+        lines.append(f"{index}. {_prefix_category(issue, section)}")
+        if evidence:
+            lines.append(f"   Evidence: {evidence}")
+        if why:
+            lines.append(f"   Why it matters: {why}")
+
     lines.append(f"Verdict: {verdict}")
     lines.append("")
     lines.append("Material Data Issues")
     if data_issues:
         for idx, issue in enumerate(data_issues, start=1):
-            lines.append(f"{idx}. {_prefix_category(issue, 'data')}")
+            _append_issue_block(idx, issue, "data")
     else:
         lines.append("1. None clearly identified.")
 
@@ -469,7 +602,7 @@ def format_google_finance_audit_response(raw_response: str) -> str:
     lines.append("Logic Gaps")
     if logic_gaps:
         for idx, gap in enumerate(logic_gaps, start=1):
-            lines.append(f"{idx}. {_prefix_category(gap, 'logic')}")
+            _append_issue_block(idx, gap, "logic")
     else:
         lines.append("1. None clearly identified.")
 
@@ -483,7 +616,10 @@ def format_google_finance_audit_response(raw_response: str) -> str:
     else:
         lines.append(f"Safety Basis: {'policy override due to material blockers' if safety_overridden else 'model-reported safety (no hard-stop override)'}")
     if safety_overridden:
-        lines.append("Safety Rule Applied: marked Not safe to use because material blockers were detected.")
+        if "not safe" in safety.lower():
+            lines.append("Safety Rule Applied: marked Not safe to use because material blockers were detected.")
+        else:
+            lines.append("Safety Rule Applied: hard-stop override removed because detected issues are caveat-level, not blocking contradictions.")
     return "\n".join(lines).strip()
 
 
@@ -558,13 +694,36 @@ def fetch_google_finance_beta_chat_response(
             'textarea',
             'input[type="text"]',
         ]
-        for selector in input_selectors:
-            locator = page.locator(selector).first
-            try:
-                locator.wait_for(state="visible", timeout=2000)
-                return locator
-            except PlaywrightTimeoutError:
-                continue
+
+        reveal_selectors = [
+            '[role="button"][aria-label*="Search for stocks"]',
+            '[role="button"][aria-label*="Ask"]',
+            'button[aria-label*="Ask AI"]',
+            'button:has-text("Ask AI")',
+        ]
+
+        for _ in range(3):
+            for selector in input_selectors:
+                locator = page.locator(selector).first
+                if locator.count() == 0:
+                    continue
+                try:
+                    locator.wait_for(state="visible", timeout=1200)
+                    return locator
+                except PlaywrightTimeoutError:
+                    continue
+
+            # Try to reveal the chat composer if the input exists but is collapsed.
+            for selector in reveal_selectors:
+                trigger = page.locator(selector).first
+                if trigger.count() == 0:
+                    continue
+                try:
+                    trigger.click(timeout=1000)
+                except Exception:
+                    continue
+            page.wait_for_timeout(700)
+
         return None
 
     def _extract_candidate_response(page) -> str:
@@ -794,6 +953,8 @@ def fetch_google_finance_beta_chat_response(
 
             sent = False
             send_selectors = [
+                'button[aria-label*="Ask AI"]:not([disabled])',
+                'button:has-text("Ask AI")',
                 'button[aria-label*="Send"]',
                 'button:has-text("Send")',
                 'button[data-testid*="send"]',

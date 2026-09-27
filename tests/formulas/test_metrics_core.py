@@ -42,3 +42,10 @@ def test_compute_leverage_ratios() -> None:
     assert compute_net_cash(total_debt=30.0, cash=10.0, short_term_investments=5.0) == pytest.approx(-15.0)
     assert compute_debt_to_ebitda(total_debt=30.0, ebitda=10.0) == pytest.approx(3.0)
     assert compute_net_debt_ebitda(total_debt=30.0, cash=10.0, short_term_investments=5.0, ebitda=10.0) == pytest.approx(1.5)
+
+
+def test_compute_leverage_ratios_non_positive_ebitda_unavailable() -> None:
+    assert compute_debt_to_ebitda(total_debt=30.0, ebitda=0.0) is None
+    assert compute_debt_to_ebitda(total_debt=30.0, ebitda=-10.0) is None
+    assert compute_net_debt_ebitda(total_debt=30.0, cash=10.0, short_term_investments=5.0, ebitda=0.0) is None
+    assert compute_net_debt_ebitda(total_debt=30.0, cash=10.0, short_term_investments=5.0, ebitda=-10.0) is None

@@ -203,13 +203,17 @@ def _score_fcf_conversion(conversion: float | None) -> float:
     return 0
 
 
-def _score_net_debt_ebitda(ratio: float | None) -> float:
-    """Lower (or negative) is better: negative ratio means net cash position."""
+def _score_net_debt_ebitda(ratio: float | None, net_cash: float | None = None) -> float:
+    """Lower is better; negative ratio is only bullish when supported by net cash."""
     if ratio is None:
         return 0
 
     if ratio <= 0:
-        return 100  # net cash
+        if net_cash is not None and net_cash < 0:
+            return 0
+        if net_cash is None:
+            return 70
+        return 100
 
     if ratio <= 0.5:
         return 85
@@ -250,7 +254,11 @@ def _score_debt_to_ebitda(ratio: float | None) -> float:
     if ratio is None:
         return 0
 
-    if ratio <= 0:
+    # A negative Debt/EBITDA usually means negative EBITDA (loss-making), not low debt.
+    if ratio < 0:
+        return 0
+
+    if ratio == 0:
         return 100
 
     if ratio <= 0.5:
@@ -430,7 +438,10 @@ def _quality_metric_scores(company: Company) -> dict[str, tuple[float | None, fl
     eps_cagr_score = _score_cagr(company.metrics.eps_cagr)
     fcf_margin_score = _score_fcf_margin(company.metrics.fcf_margin)
     fcf_conversion_score = _score_fcf_conversion(company.metrics.fcf_conversion)
-    net_debt_score = _score_net_debt_ebitda(company.metrics.net_debt_ebitda)
+    net_debt_score = _score_net_debt_ebitda(
+        company.metrics.net_debt_ebitda,
+        net_cash=company.metrics.net_cash,
+    )
     leverage_score = (
         _score_interest_coverage(company.metrics.interest_coverage)
         if company.metrics.interest_coverage is not None

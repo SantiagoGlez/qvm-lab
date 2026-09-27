@@ -32,6 +32,28 @@ These scripts populate the QVM data files under the `data/qvm` folder.
 - Valuation history output: `data/qvm/companiesmarketcap/{ticker}_{slug}_valuation.csv`
 - Financial metrics output: `data/qvm/companiesmarketcap/{ticker}_{slug}_financials.csv`
 
+### Filing links and SEC probe pipeline
+
+To build filing-link data used by the SEC companyfacts probe:
+
+```bash
+uv run python scripts/scrape_companiesmarketcap_filing_links.py
+```
+
+This now collects both `10k` and `annual-report` (AR) links by default. Use `--only-10k` to restrict collection.
+
+To run the SEC probe with accession filtering from filing links:
+
+```bash
+uv run python scripts/probe_sec_companyfacts_metrics.py --all
+```
+
+By default the probe uses both `10k` and `annual-report` report types. You can override with `--report-types`, for example:
+
+```bash
+uv run python scripts/probe_sec_companyfacts_metrics.py --all --report-types 10k
+```
+
 ## Business logic
 
 The scoring rules and decision framework are documented in [docs/specifications/qvm_scoring.md](docs/specifications/qvm_scoring.md).
@@ -41,6 +63,8 @@ The scoring rules and decision framework are documented in [docs/specifications/
 The backtest workflow, commands, and experiment outputs are documented in [docs/backtest/README.md](docs/backtest/README.md).
 
 For the business-facing explanation of how the backtest is designed and interpreted, see [docs/backtest/business_overview.md](docs/backtest/business_overview.md).
+
+For portfolio correlation analysis, including external reference assets such as gold and US bonds, see [docs/qvm_portfolio_correlation.md](docs/qvm_portfolio_correlation.md).
 
 For selection-level diagnostics (selected vs universe, valuation regime by year, and current-year diagnostics command), see [docs/backtest/qvm_selection_diagnostics.md](docs/backtest/qvm_selection_diagnostics.md).
 
