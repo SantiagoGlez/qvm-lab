@@ -105,6 +105,97 @@ Install dependencies:
 uv sync
 ```
 
+### Call screening for directional option ideas
+
+The project now includes a conservative call-screening workflow that ranks companies by quality, intrinsic valuation, historical valuation, momentum, and portfolio action across 6, 9, and 12 month horizons.
+
+- Primary filter: intrinsic valuation (reverse DCF)
+- Secondary check: historical valuation regime
+- Additional gates: quality score, market trend, and action
+- Optional layer: IV / volume / open interest penalty when option-market data is provided
+
+Run the shortlist from the default universe:
+
+```bash
+uv run qvm-call-screen --months 6 --top 10
+```
+
+Run against a custom universe file:
+
+```bash
+uv run qvm-call-screen --universe-file data/qvm/companies.csv --months 9 --top 20
+```
+
+Add optional option-market data using a CSV with columns `ticker, iv, volume, open_interest`:
+
+```bash
+uv run qvm-call-screen --universe-file data/qvm/companies.csv --option-data-file data/qvm/option_market.csv --months 12 --top 10
+```
+
+Example option data file:
+
+```csv
+ticker,iv,volume,open_interest
+NVDA,0.62,850000,3200
+MSFT,0.48,610000,2800
+```
+
+This screening layer is intentionally conservative: it prefers high-quality, reasonably valued, improving names and only penalizes crowded or expensive option setups when real option-market inputs are available.
+
+### Call recommendation layer and execution gate
+
+The project also includes a trade-level recommendation layer built on top of the stock screen. The workflow is intentionally staged:
+
+1. Screen the universe for candidates on 6/9/12 month horizons.
+2. Build a directional call recommendation with strike, break-even, target, stop, risk level, and liquidity check.
+3. Apply a final execution gate: `approve`, `watch`, or `reject`.
+4. Optionally validate the thesis with Google Finance before acting on the idea.
+
+This is designed to keep the process conservative: underlying stock quality and intrinsic valuation remain the main gate, while option-market quality is treated as a secondary risk filter and not the primary decision driver.
+
+Use the universe summary first for a compact shortlist:
+
+```bash
+uv run qvm-call-reco --months 9 --top 5
+```
+
+Use the same summary with optional option-market data:
+
+```bash
+uv run qvm-call-reco --universe-file data/qvm/companies.csv --option-data-file data/qvm/option_market.csv --months 9 --top 5
+```
+
+Validate each recommendation with Google Finance in the shortlist view:
+
+```bash
+uv run qvm-call-reco --months 9 --top 5 --google-finance-audit --google-finance-audit-mode quick
+```
+
+For the detailed per-company view, use the single-ticker command that mirrors the QVM update-company flow:
+
+```bash
+uv run qvm-call-reco-detail NVDA --months 9 --google-finance-audit --google-finance-audit-mode quick
+```
+
+This detail view prints the full recommendation rationale, risk parameters, and the structured Google Finance audit sections (verdict, issues, logic gaps, confidence, and safety) for one company only.
+
+Available recommendation flags:
+
+- `--months 6|9|12`
+- `--top <n>`
+- `--universe-file <path>`
+- `--option-data-file <path>`
+- `--google-finance-audit`
+- `--google-finance-audit-mode quick|full`
+- `--google-finance-timeout-seconds <n>`
+- `--google-finance-show-browser`
+
+The recommendation output contains a structured trade summary including the final decision gate, for example:
+
+- `approve`: aligned thesis, acceptable liquidity, and no major external concern
+- `watch`: viable idea but needs tighter risk control or a cautious stance
+- `reject`: weak option liquidity or a failed external audit
+
 Run a single-company analysis:
 
 ```bash

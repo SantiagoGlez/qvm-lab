@@ -45,6 +45,9 @@ qvm-quality-diagnostics = "qvm_lab.cli:quality_diagnostics_cli"
 qvm-top-winners-evolution = "qvm_lab.cli:top_winners_evolution_cli"
 qvm-universal-return = "qvm_lab.cli:universal_return_cli"
 qvm-correlation = "qvm_lab.cli:correlation_cli"
+qvm-call-screen = "qvm_lab.cli:call_screening_cli"
+qvm-call-reco = "qvm_lab.cli:call_recommendation_cli"
+qvm-call-reco-detail = "qvm_lab.cli:call_recommendation_detail_cli"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

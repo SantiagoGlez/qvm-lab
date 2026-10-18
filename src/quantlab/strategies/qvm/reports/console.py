@@ -407,14 +407,14 @@ def print_report(company: Company) -> None:
     # price is what matters for today's entry point — but be aware that large
     # divergences (e.g. >30%) may reflect earnings growth since the last CSV
     # scrape rather than a true valuation change.
-    print(f"  Current PE                {num(company.valuation_facts.current_pe, 2)}")
-    print(f"  Current PE Source         {company.valuation_facts.current_pe_source or 'CSV (last annual)'}")
+    print(f"  Live PE (history compare) {num(company.valuation_facts.current_pe, 2)}")
+    print(f"  Live PE Source            {company.valuation_facts.current_pe_source or 'CSV (last annual)'}")
     print(f"  Historical Average PE     {num(company.valuation_facts.historical_average_pe, 2)}")
     print(f"  Historical Median PE      {num(company.valuation_facts.historical_median_pe, 2)}")
     print(f"  Historical Percentile     {pct(company.valuation_facts.historical_percentile)}")
     band_raw = company.valuation.valuation_band
     band_display = get_valuation_band_display_label(band_raw)
-    print(f"  Valuation Band (vs history) {band_display}")
+    print(f"  Valuation Band (percentile rank) {band_display}")
     if band_raw and band_display != band_raw:
         print(f"  Valuation Band (model)      {band_raw}")
     print()
@@ -431,12 +431,13 @@ def print_report(company: Company) -> None:
         print(f"    Percentile                {pct(company.valuation_facts.modern_percentile)}")
         print(f"    Observations              {company.valuation_facts.modern_used_pe_count}")
     print()
-    print(f"  Relative to Average       {signed_pct(company.valuation_facts.discount_to_average_pct)}")
-    print(f"  Relative to Median        {signed_pct(company.valuation_facts.discount_to_median_pct)}")
-    print("  Sign Convention          + = discount, - = premium")
+    print(f"  Discount vs Average PE   {signed_pct(company.valuation_facts.discount_to_average_pct)}")
+    print(f"  Discount vs Median PE    {signed_pct(company.valuation_facts.discount_to_median_pct)}")
+    print("  Sign Convention          + = current PE below baseline (cheaper), - = above baseline (richer)")
+    print("  Baseline Note            Percentile rank and average/median discount use different history comparisons; small or skewed samples can make them diverge.")
     print()
-    print(f"  Forward PE                {num(company.metrics.forward_pe, 2)}")
-    print(f"  Trailing PE               {num(company.metrics.trailing_pe, 2)}")
+    print(f"  Yahoo Forward PE          {num(company.metrics.forward_pe, 2)}")
+    print(f"  Yahoo Trailing PE         {num(company.metrics.trailing_pe, 2)}")
     print()
     print(f"  Valuation Score           {company.valuation.score:5.1f}")
 

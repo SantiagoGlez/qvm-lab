@@ -20,12 +20,21 @@ from quantlab.strategies.qvm.backtest.annual import (
     run_quality_battle_test_suite,
     analyse_quality,
 )
+from quantlab.strategies.qvm.options.recommendation import (
+    build_call_recommendations,
+    finalize_trade_decision,
+    validate_recommendation_with_google_finance,
+)
+from quantlab.strategies.qvm.options.screen import screen_call_candidates
 from quantlab.strategies.qvm.backtest.contribution import (
     ContributionBacktestConfig,
     run_contribution_experiment_suite,
 )
 from quantlab.strategies.qvm.reports.console import print_report
-from quantlab.strategies.qvm.reports.google_finance_chat import run_google_finance_audit
+from quantlab.strategies.qvm.reports.google_finance_chat import (
+    format_google_finance_audit_response,
+    run_google_finance_audit,
+)
 from quantlab.strategies.qvm.service import analyse_company
 from quantlab.strategies.qvm.analysis.universal_return import (
     build_universal_inputs,
@@ -98,6 +107,335 @@ def company_cli() -> None:
                 print("  2) Complete any consent/login challenge in the opened browser")
                 print("  3) Re-run with a larger timeout (e.g. --google-finance-timeout-seconds 120)")
             print("Prompt templates are available in docs/specifications.")
+
+
+def call_screening_cli() -> None:
+    """Print a call-screening shortlist for 6, 9, or 12 month expiries."""
+    parser = argparse.ArgumentParser(description="Screen the universe for call candidates")
+    parser.add_argument(
+        "--months",
+        type=int,
+        choices=[6, 9, 12],
+        default=None,
+        help="Optional single maturity in months to screen; defaults to all 6/9/12.",
+    )
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=10,
+        help="Maximum number of rows to print per maturity bucket.",
+    )
+    parser.add_argument(
+        "--universe-file",
+        type=Path,
+        default=Path("data/qvm/companies.csv"),
+        help="Universe CSV file with a 'ticker' column.",
+    )
+    parser.add_argument(
+        "--option-data-file",
+        type=Path,
+        default=None,
+        help="Optional CSV with columns: ticker, iv, volume, open_interest.",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    universe_path = args.universe_file
+    if not universe_path.exists():
+        raise FileNotFoundError(f"Universe file not found: {universe_path}")
+
+    option_market_data: dict[str, dict[str, float]] | None = None
+    if args.option_data_file is not None and args.option_data_file.exists():
+        frame = pd.read_csv(args.option_data_file)
+        option_market_data = {}
+        for _, row in frame.iterrows():
+            ticker = str(row.get("ticker", "")).strip().upper()
+            if not ticker:
+                continue
+            option_market_data[ticker] = {
+                "iv": float(row.get("iv", 0.0) or 0.0),
+                "volume": float(row.get("volume", 0.0) or 0.0),
+                "open_interest": float(row.get("open_interest", 0.0) or 0.0),
+            }
+
+    tickers = load_universe(universe_path)
+    companies = []
+    for ticker in tickers:
+        try:
+            companies.append(analyse_company(ticker))
+        except Exception:
+            continue
+
+    maturities = [args.months] if args.months is not None else [6, 9, 12]
+    results = screen_call_candidates(
+        companies,
+        maturities=maturities,
+        top_n=args.top,
+        option_market_data=option_market_data,
+    )
+
+    if not results:
+        print("No qualifying call candidates found.")
+        return
+
+    table = pd.DataFrame(results)
+    table = table.sort_values(["maturity_months", "score"], ascending=[True, False])
+    print("Call screening candidates")
+    print(table.to_string(index=False))
+
+
+def call_recommendation_cli() -> None:
+    """Print trade-level call recommendations for the screened shortlist."""
+    parser = argparse.ArgumentParser(description="Build call recommendations from screened candidates")
+    parser.add_argument(
+        "--months",
+        type=int,
+        choices=[6, 9, 12],
+        default=9,
+        help="Maturity to recommend for.",
+    )
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=5,
+        help="Maximum number of recommended trades to print.",
+    )
+    parser.add_argument(
+        "--universe-file",
+        type=Path,
+        default=Path("data/qvm/companies.csv"),
+        help="Universe CSV file with a 'ticker' column.",
+    )
+    parser.add_argument(
+        "--option-data-file",
+        type=Path,
+        default=None,
+        help="Optional CSV with columns: ticker, iv, volume, open_interest.",
+    )
+    parser.add_argument(
+        "--google-finance-audit",
+        action="store_true",
+        help="Validate each recommendation using the Google Finance QA flow.",
+    )
+    parser.add_argument(
+        "--google-finance-audit-mode",
+        choices=["quick", "full"],
+        default="quick",
+        help="Google Finance audit mode for recommendation validation.",
+    )
+    parser.add_argument(
+        "--google-finance-timeout-seconds",
+        type=int,
+        default=120,
+        help="Timeout for Google Finance audit requests.",
+    )
+    parser.add_argument(
+        "--google-finance-show-browser",
+        action="store_true",
+        help="Run the Google Finance audit in visible browser mode.",
+    )
+    parser.add_argument(
+        "--detail",
+        "--full-detail",
+        dest="detail",
+        action="store_true",
+        help="Print the compact recommendation table plus a structured Google Finance detail block for each ticker.",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    universe_path = args.universe_file
+    if not universe_path.exists():
+        raise FileNotFoundError(f"Universe file not found: {universe_path}")
+
+    option_market_data: dict[str, dict[str, float]] | None = None
+    if args.option_data_file is not None and args.option_data_file.exists():
+        frame = pd.read_csv(args.option_data_file)
+        option_market_data = {}
+        for _, row in frame.iterrows():
+            ticker = str(row.get("ticker", "")).strip().upper()
+            if not ticker:
+                continue
+            option_market_data[ticker] = {
+                "iv": float(row.get("iv", 0.0) or 0.0),
+                "volume": float(row.get("volume", 0.0) or 0.0),
+                "open_interest": float(row.get("open_interest", 0.0) or 0.0),
+            }
+
+    tickers = load_universe(universe_path)
+    companies = []
+    for ticker in tickers:
+        try:
+            companies.append(analyse_company(ticker))
+        except Exception:
+            continue
+
+    screened = screen_call_candidates(
+        companies,
+        maturities=[args.months],
+        top_n=args.top,
+        option_market_data=option_market_data,
+    )
+    if not screened:
+        print("No screened call candidates available for the selected maturity.")
+        return
+
+    recommendations = build_call_recommendations(companies, screened, option_market_data=option_market_data)
+    if not recommendations:
+        print("No actionable call recommendation could be generated.")
+        return
+
+    if args.google_finance_audit:
+        for recommendation in recommendations:
+            company = next((item for item in companies if item.ticker == recommendation["ticker"]), None)
+            if company is None:
+                continue
+            audit = validate_recommendation_with_google_finance(
+                company,
+                recommendation,
+                mode=args.google_finance_audit_mode,
+                timeout_seconds=args.google_finance_timeout_seconds,
+                headless=not args.google_finance_show_browser,
+            )
+            recommendation["google_finance_verdict"] = audit["google_finance_verdict"]
+            recommendation["google_finance_success"] = audit["google_finance_success"]
+            recommendation["google_finance_error"] = audit["google_finance_error"]
+            recommendation["google_finance_response"] = audit.get("google_finance_response")
+            recommendation.update(
+                finalize_trade_decision(
+                    recommendation,
+                    google_finance_verdict=audit["google_finance_verdict"],
+                )
+            )
+
+    table = pd.DataFrame(recommendations)
+    summary_columns = [
+        "ticker",
+        "name",
+        "current_price",
+        "maturity_months",
+        "decision",
+        "confidence",
+        "risk_level",
+        "suggested_strike",
+        "break_even",
+        "target",
+        "stop_loss",
+        "google_finance_verdict",
+    ]
+    available_summary_columns = [
+        column for column in summary_columns if column in table.columns
+    ]
+    summary_table = table[available_summary_columns].copy()
+
+    print("Call recommendations")
+    print(summary_table.to_string(index=False))
+
+    if args.detail:
+        print("\nDetailed recommendation notes")
+        for recommendation in recommendations:
+            print(f"\n=== {recommendation.get('ticker', 'N/A')} | {recommendation.get('name', 'N/A')} ===")
+            print(f"Decision: {recommendation.get('decision', 'n/a')}")
+            print(f"Reason: {recommendation.get('decision_reason', 'n/a')}")
+            print(f"Thesis: {recommendation.get('thesis', 'n/a')}")
+            print(f"Current price: {recommendation.get('current_price', 'n/a')}")
+            print(f"Suggested strike: {recommendation.get('suggested_strike', 'n/a')}")
+            print(f"Break-even: {recommendation.get('break_even', 'n/a')}")
+            print(f"Target: {recommendation.get('target', 'n/a')}")
+            print(f"Stop loss: {recommendation.get('stop_loss', 'n/a')}")
+            print(f"Risk level: {recommendation.get('risk_level', 'n/a')}")
+            print(f"Liquidity ok: {recommendation.get('liquidity_ok', 'n/a')}")
+            if recommendation.get("google_finance_response"):
+                print()
+                print(format_google_finance_audit_response(str(recommendation["google_finance_response"])))
+            else:
+                print("Google Finance audit: not available.")
+
+
+def call_recommendation_detail_cli() -> None:
+    """Print the full recommendation detail for one company, mirroring the QVM update-company flow."""
+    parser = argparse.ArgumentParser(description="Print the full trade detail for one company")
+    parser.add_argument("ticker", help="Ticker symbol to analyze")
+    parser.add_argument(
+        "--months",
+        type=int,
+        choices=[6, 9, 12],
+        default=9,
+        help="Maturity to review.",
+    )
+    parser.add_argument(
+        "--google-finance-audit",
+        action="store_true",
+        help="Include the structured Google Finance audit for this recommendation.",
+    )
+    parser.add_argument(
+        "--google-finance-audit-mode",
+        choices=["quick", "full"],
+        default="quick",
+        help="Google Finance audit mode for the single-company view.",
+    )
+    parser.add_argument(
+        "--google-finance-timeout-seconds",
+        type=int,
+        default=120,
+        help="Timeout for the Google Finance audit request.",
+    )
+    parser.add_argument(
+        "--google-finance-show-browser",
+        action="store_true",
+        help="Run the Google Finance audit in visible browser mode.",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    company = analyse_company(args.ticker)
+    screened = screen_call_candidates([company], maturities=[args.months], top_n=1)
+    if not screened:
+        print(f"No screened call recommendation is available for {company.ticker} at {args.months} months.")
+        return
+
+    recommendation = build_call_recommendations([company], screened)[0]
+
+    if args.google_finance_audit:
+        audit = validate_recommendation_with_google_finance(
+            company,
+            recommendation,
+            mode=args.google_finance_audit_mode,
+            timeout_seconds=args.google_finance_timeout_seconds,
+            headless=not args.google_finance_show_browser,
+        )
+        recommendation["google_finance_verdict"] = audit["google_finance_verdict"]
+        recommendation["google_finance_success"] = audit["google_finance_success"]
+        recommendation["google_finance_error"] = audit["google_finance_error"]
+        recommendation["google_finance_response"] = audit.get("google_finance_response")
+        recommendation.update(
+            finalize_trade_decision(
+                recommendation,
+                google_finance_verdict=audit["google_finance_verdict"],
+            )
+        )
+
+    print(f"Recommendation detail for {company.ticker} | {company.name or company.ticker}")
+    print(f"Decision: {recommendation.get('decision', 'n/a')}")
+    print(f"Reason: {recommendation.get('decision_reason', 'n/a')}")
+    print(f"Maturity months: {recommendation.get('maturity_months', 'n/a')}")
+    print(f"Current price: {recommendation.get('current_price', 'n/a')}")
+    print(f"Quality score: {getattr(getattr(company, 'quality', None), 'score', 'n/a')}")
+    print(f"Intrinsic valuation: {getattr(company.reverse_dcf, 'assessment', 'Unavailable')}")
+    print(f"Historical valuation: {getattr(company.valuation, 'valuation_band', 'Unavailable')}")
+    print(f"Market assessment: {getattr(company.momentum, 'recommendation', 'Unknown')}")
+    print(f"Portfolio action: {getattr(getattr(company, 'portfolio', None), 'action', 'Unknown')}")
+    print(f"Thesis: {recommendation.get('thesis', 'n/a')}")
+    print(f"Suggested strike: {recommendation.get('suggested_strike', 'n/a')}")
+    print(f"Delta target: {recommendation.get('delta_target', 'n/a')}")
+    print(f"Break-even: {recommendation.get('break_even', 'n/a')}")
+    print(f"Target: {recommendation.get('target', 'n/a')}")
+    print(f"Stop loss: {recommendation.get('stop_loss', 'n/a')}")
+    print(f"Risk level: {recommendation.get('risk_level', 'n/a')}")
+    print(f"Liquidity ok: {recommendation.get('liquidity_ok', 'n/a')}")
+    print(f"Confidence: {recommendation.get('confidence', 'n/a')}")
+    if recommendation.get("google_finance_response"):
+        print()
+        print(format_google_finance_audit_response(str(recommendation["google_finance_response"])))
+    else:
+        print("Google Finance audit: not available.")
 
 
 def universal_return_cli() -> None:

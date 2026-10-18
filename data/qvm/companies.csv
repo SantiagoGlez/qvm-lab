@@ -4,6 +4,7 @@ ABBNY,ABB
 ABBV,AbbVie
 ABT,Abbott Laboratories
 ADBE,Adobe
+ADSK,Autodesk
 ADI,Analog Devices
 ADP,Automatic Data Processing
 AMAT,Applied Materials
@@ -11,6 +12,7 @@ AME,Ametek
 AMZN,Amazon.com
 ANET,Arista Networks
 AON,Aon
+APH,Amphenol
 AR,Antero Resources
 ASML,ASML
 AVGO,Broadcom
@@ -46,6 +48,7 @@ FAST,Fastenal
 FER,Ferrovial
 FICO,Fair Isaac
 FTNT,Fortinet
+GE,GE Aerospace
 GOOGL,Alphabet
 GWW,W.W. Grainger
 HCA,HCA Healthcare
@@ -66,6 +69,7 @@ KLAC,KLA
 KMB,Kimberly-Clark
 KO,Coca-Cola
 LIN,Linde
+LLY,Eli Lilly
 LOW,Lowe's
 LRCX,Lam Research
 MA,Mastercard
@@ -74,6 +78,7 @@ MCD,McDonald's
 MCHP,Microchip Technology
 MCO,Moody's
 MDT,Medtronic
+MELI,MercadoLibre
 META,Meta Platforms
 MMC,Marsh & McLennan
 MO,Altria Group
@@ -81,10 +86,12 @@ MPWR,Monolithic Power Systems
 MSCI,MSCI
 MSFT,Microsoft
 MSI,Motorola Solutions
+NFLX,Netflix
 NKE,Nike
 NOC,Northrop Grumman
 NVDA,NVIDIA
 NVO,Novo Nordisk
+NOW,ServiceNow
 NXPI,NXP Semiconductors
 ODFL,Old Dominion Freight Line
 ORCL,Oracle
@@ -122,12 +129,14 @@ TMO,Thermo Fisher Scientific
 TSM,Taiwan Semiconductor Manufacturing
 TT,Trane Technologies
 TXN,Texas Instruments
+UBER,Uber Technologies
 UNH,UnitedHealth Group
 UNP,Union Pacific
 V,Visa
 VRSK,Verisk Analytics
 WKL,Wolters Kluwer
 WM,Waste Management
+WMT,Walmart
 XYL,Xylem
 YUM,Yum! Brands
 ZTS,Zoetis

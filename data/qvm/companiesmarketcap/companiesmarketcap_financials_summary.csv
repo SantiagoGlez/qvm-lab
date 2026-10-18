@@ -69,6 +69,20 @@ ADBE,Adobe,adobe,shares_outstanding,,skipped,31
 ADBE,Adobe,adobe,dividend_yield,,skipped,31
 ADBE,Adobe,adobe,price_to_sales,,skipped,31
 ADBE,Adobe,adobe,price_to_book,,skipped,31
+ADSK,Autodesk,autodesk,revenue,,skipped,31
+ADSK,Autodesk,autodesk,eps,,skipped,31
+ADSK,Autodesk,autodesk,net_income,,skipped,31
+ADSK,Autodesk,autodesk,operating_margin,,skipped,31
+ADSK,Autodesk,autodesk,cash,,skipped,31
+ADSK,Autodesk,autodesk,total_debt,,skipped,31
+ADSK,Autodesk,autodesk,total_assets,,skipped,31
+ADSK,Autodesk,autodesk,net_assets,,skipped,31
+ADSK,Autodesk,autodesk,pe_ratio,,skipped,31
+ADSK,Autodesk,autodesk,total_liabilities,,skipped,31
+ADSK,Autodesk,autodesk,shares_outstanding,,skipped,31
+ADSK,Autodesk,autodesk,dividend_yield,,skipped,31
+ADSK,Autodesk,autodesk,price_to_sales,,skipped,31
+ADSK,Autodesk,autodesk,price_to_book,,skipped,31
 ADI,Analog Devices,analog-devices,revenue,,skipped,47
 ADI,Analog Devices,analog-devices,eps,,skipped,47
 ADI,Analog Devices,analog-devices,net_income,,skipped,47
@@ -167,6 +181,34 @@ AON,Aon,aon,shares_outstanding,,skipped,47
 AON,Aon,aon,dividend_yield,,skipped,47
 AON,Aon,aon,price_to_sales,,skipped,47
 AON,Aon,aon,price_to_book,,skipped,47
+APH,Amphenol,amphenol,revenue,,skipped,36
+APH,Amphenol,amphenol,eps,,skipped,36
+APH,Amphenol,amphenol,net_income,,skipped,36
+APH,Amphenol,amphenol,operating_margin,,skipped,36
+APH,Amphenol,amphenol,cash,,skipped,36
+APH,Amphenol,amphenol,total_debt,,skipped,36
+APH,Amphenol,amphenol,total_assets,,skipped,36
+APH,Amphenol,amphenol,net_assets,,skipped,36
+APH,Amphenol,amphenol,pe_ratio,,skipped,36
+APH,Amphenol,amphenol,total_liabilities,,skipped,36
+APH,Amphenol,amphenol,shares_outstanding,,skipped,36
+APH,Amphenol,amphenol,dividend_yield,,skipped,36
+APH,Amphenol,amphenol,price_to_sales,,skipped,36
+APH,Amphenol,amphenol,price_to_book,,skipped,36
+AR,Antero Resources,antero-resources,revenue,,skipped,17
+AR,Antero Resources,antero-resources,eps,,skipped,17
+AR,Antero Resources,antero-resources,net_income,,skipped,17
+AR,Antero Resources,antero-resources,operating_margin,,skipped,17
+AR,Antero Resources,antero-resources,cash,,skipped,17
+AR,Antero Resources,antero-resources,total_debt,,skipped,17
+AR,Antero Resources,antero-resources,total_assets,,skipped,17
+AR,Antero Resources,antero-resources,net_assets,,skipped,17
+AR,Antero Resources,antero-resources,pe_ratio,,skipped,17
+AR,Antero Resources,antero-resources,total_liabilities,,skipped,17
+AR,Antero Resources,antero-resources,shares_outstanding,,skipped,17
+AR,Antero Resources,antero-resources,dividend_yield,,skipped,17
+AR,Antero Resources,antero-resources,price_to_sales,,skipped,17
+AR,Antero Resources,antero-resources,price_to_book,,skipped,17
 ASML,ASML,asml,revenue,,skipped,32
 ASML,ASML,asml,eps,,skipped,32
 ASML,ASML,asml,net_income,,skipped,32
@@ -251,20 +293,20 @@ BR,Broadridge Financial Solutions,broadridge-financial-solutions,shares_outstand
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,dividend_yield,,skipped,21
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,price_to_sales,,skipped,21
 BR,Broadridge Financial Solutions,broadridge-financial-solutions,price_to_book,,skipped,21
-BRK,Berkshire Hathaway,berkshire-hathaway,revenue,revenue,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,eps,eps,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,net_income,earnings,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,operating_margin,operating-margin,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,cash,cash-on-hand,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,total_debt,total-debt,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,total_assets,total-assets,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,net_assets,net-assets,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,pe_ratio,pe-ratio,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,total_liabilities,total-liabilities,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,shares_outstanding,shares-outstanding,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,dividend_yield,,missing,31
-BRK,Berkshire Hathaway,berkshire-hathaway,price_to_sales,ps-ratio,ok,31
-BRK,Berkshire Hathaway,berkshire-hathaway,price_to_book,pb-ratio,ok,31
+BRK,Berkshire Hathaway,berkshire-hathaway,revenue,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,eps,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,net_income,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,operating_margin,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,cash,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_debt,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_assets,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,net_assets,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,pe_ratio,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,total_liabilities,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,shares_outstanding,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,dividend_yield,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,price_to_sales,,skipped,31
+BRK,Berkshire Hathaway,berkshire-hathaway,price_to_book,,skipped,31
 BSX,Boston Scientific,boston-scientific,revenue,,skipped,31
 BSX,Boston Scientific,boston-scientific,eps,,skipped,31
 BSX,Boston Scientific,boston-scientific,net_income,,skipped,31
@@ -643,6 +685,20 @@ FTNT,Fortinet,fortinet,shares_outstanding,,skipped,21
 FTNT,Fortinet,fortinet,dividend_yield,,skipped,21
 FTNT,Fortinet,fortinet,price_to_sales,,skipped,21
 FTNT,Fortinet,fortinet,price_to_book,,skipped,21
+GE,GE Aerospace,general-electric,revenue,revenue,ok,57
+GE,GE Aerospace,general-electric,eps,eps,ok,57
+GE,GE Aerospace,general-electric,net_income,earnings,ok,57
+GE,GE Aerospace,general-electric,operating_margin,operating-margin,ok,57
+GE,GE Aerospace,general-electric,cash,cash-on-hand,ok,57
+GE,GE Aerospace,general-electric,total_debt,total-debt,ok,57
+GE,GE Aerospace,general-electric,total_assets,total-assets,ok,57
+GE,GE Aerospace,general-electric,net_assets,net-assets,ok,57
+GE,GE Aerospace,general-electric,pe_ratio,pe-ratio,ok,57
+GE,GE Aerospace,general-electric,total_liabilities,total-liabilities,ok,57
+GE,GE Aerospace,general-electric,shares_outstanding,shares-outstanding,ok,57
+GE,GE Aerospace,general-electric,dividend_yield,dividend-yield,ok,57
+GE,GE Aerospace,general-electric,price_to_sales,ps-ratio,ok,57
+GE,GE Aerospace,general-electric,price_to_book,pb-ratio,ok,57
 GOOGL,Alphabet,alphabet-google,revenue,,skipped,26
 GOOGL,Alphabet,alphabet-google,eps,,skipped,26
 GOOGL,Alphabet,alphabet-google,net_income,,skipped,26
@@ -923,6 +979,20 @@ LIN,Linde,linde,shares_outstanding,,skipped,35
 LIN,Linde,linde,dividend_yield,,skipped,35
 LIN,Linde,linde,price_to_sales,,skipped,35
 LIN,Linde,linde,price_to_book,,skipped,35
+LLY,Eli Lilly,eli-lilly,revenue,,skipped,55
+LLY,Eli Lilly,eli-lilly,eps,,skipped,55
+LLY,Eli Lilly,eli-lilly,net_income,,skipped,55
+LLY,Eli Lilly,eli-lilly,operating_margin,,skipped,55
+LLY,Eli Lilly,eli-lilly,cash,,skipped,55
+LLY,Eli Lilly,eli-lilly,total_debt,,skipped,55
+LLY,Eli Lilly,eli-lilly,total_assets,,skipped,55
+LLY,Eli Lilly,eli-lilly,net_assets,,skipped,55
+LLY,Eli Lilly,eli-lilly,pe_ratio,,skipped,55
+LLY,Eli Lilly,eli-lilly,total_liabilities,,skipped,55
+LLY,Eli Lilly,eli-lilly,shares_outstanding,,skipped,55
+LLY,Eli Lilly,eli-lilly,dividend_yield,,skipped,55
+LLY,Eli Lilly,eli-lilly,price_to_sales,,skipped,55
+LLY,Eli Lilly,eli-lilly,price_to_book,,skipped,55
 LOW,Lowe's,lowes-companies,revenue,,skipped,47
 LOW,Lowe's,lowes-companies,eps,,skipped,47
 LOW,Lowe's,lowes-companies,net_income,,skipped,47
@@ -1035,6 +1105,20 @@ MDT,Medtronic,medtronic,shares_outstanding,,skipped,54
 MDT,Medtronic,medtronic,dividend_yield,,skipped,54
 MDT,Medtronic,medtronic,price_to_sales,,skipped,54
 MDT,Medtronic,medtronic,price_to_book,,skipped,54
+MELI,MercadoLibre,mercadolibre,revenue,,skipped,25
+MELI,MercadoLibre,mercadolibre,eps,,skipped,25
+MELI,MercadoLibre,mercadolibre,net_income,,skipped,25
+MELI,MercadoLibre,mercadolibre,operating_margin,,skipped,25
+MELI,MercadoLibre,mercadolibre,cash,,skipped,25
+MELI,MercadoLibre,mercadolibre,total_debt,,skipped,25
+MELI,MercadoLibre,mercadolibre,total_assets,,skipped,25
+MELI,MercadoLibre,mercadolibre,net_assets,,skipped,25
+MELI,MercadoLibre,mercadolibre,pe_ratio,,skipped,25
+MELI,MercadoLibre,mercadolibre,total_liabilities,,skipped,25
+MELI,MercadoLibre,mercadolibre,shares_outstanding,,skipped,25
+MELI,MercadoLibre,mercadolibre,dividend_yield,,skipped,25
+MELI,MercadoLibre,mercadolibre,price_to_sales,,skipped,25
+MELI,MercadoLibre,mercadolibre,price_to_book,,skipped,25
 META,Meta Platforms,meta-platforms,revenue,,skipped,17
 META,Meta Platforms,meta-platforms,eps,,skipped,17
 META,Meta Platforms,meta-platforms,net_income,,skipped,17
@@ -1133,6 +1217,20 @@ MSI,Motorola Solutions,motorola-solutions,shares_outstanding,,skipped,57
 MSI,Motorola Solutions,motorola-solutions,dividend_yield,,skipped,57
 MSI,Motorola Solutions,motorola-solutions,price_to_sales,,skipped,57
 MSI,Motorola Solutions,motorola-solutions,price_to_book,,skipped,57
+NFLX,Netflix,netflix,revenue,,skipped,27
+NFLX,Netflix,netflix,eps,,skipped,27
+NFLX,Netflix,netflix,net_income,,skipped,27
+NFLX,Netflix,netflix,operating_margin,,skipped,27
+NFLX,Netflix,netflix,cash,,skipped,27
+NFLX,Netflix,netflix,total_debt,,skipped,27
+NFLX,Netflix,netflix,total_assets,,skipped,27
+NFLX,Netflix,netflix,net_assets,,skipped,27
+NFLX,Netflix,netflix,pe_ratio,,skipped,27
+NFLX,Netflix,netflix,total_liabilities,,skipped,27
+NFLX,Netflix,netflix,shares_outstanding,,skipped,27
+NFLX,Netflix,netflix,dividend_yield,,skipped,27
+NFLX,Netflix,netflix,price_to_sales,,skipped,27
+NFLX,Netflix,netflix,price_to_book,,skipped,27
 NKE,Nike,nike,revenue,,skipped,47
 NKE,Nike,nike,eps,,skipped,47
 NKE,Nike,nike,net_income,,skipped,47
@@ -1189,6 +1287,20 @@ NVO,Novo Nordisk,novo-nordisk,shares_outstanding,,skipped,46
 NVO,Novo Nordisk,novo-nordisk,dividend_yield,,skipped,46
 NVO,Novo Nordisk,novo-nordisk,price_to_sales,,skipped,46
 NVO,Novo Nordisk,novo-nordisk,price_to_book,,skipped,46
+NOW,ServiceNow,servicenow,revenue,,skipped,17
+NOW,ServiceNow,servicenow,eps,,skipped,17
+NOW,ServiceNow,servicenow,net_income,,skipped,17
+NOW,ServiceNow,servicenow,operating_margin,,skipped,17
+NOW,ServiceNow,servicenow,cash,,skipped,17
+NOW,ServiceNow,servicenow,total_debt,,skipped,17
+NOW,ServiceNow,servicenow,total_assets,,skipped,17
+NOW,ServiceNow,servicenow,net_assets,,skipped,17
+NOW,ServiceNow,servicenow,pe_ratio,,skipped,17
+NOW,ServiceNow,servicenow,total_liabilities,,skipped,17
+NOW,ServiceNow,servicenow,shares_outstanding,,skipped,17
+NOW,ServiceNow,servicenow,dividend_yield,,skipped,17
+NOW,ServiceNow,servicenow,price_to_sales,,skipped,17
+NOW,ServiceNow,servicenow,price_to_book,,skipped,17
 NXPI,NXP Semiconductors,nxp-semiconductors,revenue,,skipped,19
 NXPI,NXP Semiconductors,nxp-semiconductors,eps,,skipped,19
 NXPI,NXP Semiconductors,nxp-semiconductors,net_income,,skipped,19
@@ -1707,6 +1819,20 @@ TXN,Texas Instruments,texas-instruments,shares_outstanding,,skipped,55
 TXN,Texas Instruments,texas-instruments,dividend_yield,,skipped,55
 TXN,Texas Instruments,texas-instruments,price_to_sales,,skipped,55
 TXN,Texas Instruments,texas-instruments,price_to_book,,skipped,55
+UBER,Uber Technologies,uber,revenue,,skipped,11
+UBER,Uber Technologies,uber,eps,,skipped,11
+UBER,Uber Technologies,uber,net_income,,skipped,11
+UBER,Uber Technologies,uber,operating_margin,,skipped,11
+UBER,Uber Technologies,uber,cash,,skipped,11
+UBER,Uber Technologies,uber,total_debt,,skipped,11
+UBER,Uber Technologies,uber,total_assets,,skipped,11
+UBER,Uber Technologies,uber,net_assets,,skipped,11
+UBER,Uber Technologies,uber,pe_ratio,,skipped,11
+UBER,Uber Technologies,uber,total_liabilities,,skipped,11
+UBER,Uber Technologies,uber,shares_outstanding,,skipped,11
+UBER,Uber Technologies,uber,dividend_yield,,skipped,11
+UBER,Uber Technologies,uber,price_to_sales,,skipped,11
+UBER,Uber Technologies,uber,price_to_book,,skipped,11
 UNH,UnitedHealth Group,united-health,revenue,,skipped,43
 UNH,UnitedHealth Group,united-health,eps,,skipped,43
 UNH,UnitedHealth Group,united-health,net_income,,skipped,43
@@ -1791,6 +1917,20 @@ WM,Waste Management,waste-management,shares_outstanding,,skipped,39
 WM,Waste Management,waste-management,dividend_yield,,skipped,39
 WM,Waste Management,waste-management,price_to_sales,,skipped,39
 WM,Waste Management,waste-management,price_to_book,,skipped,39
+WMT,Walmart,walmart,revenue,,skipped,55
+WMT,Walmart,walmart,eps,,skipped,55
+WMT,Walmart,walmart,net_income,,skipped,55
+WMT,Walmart,walmart,operating_margin,,skipped,55
+WMT,Walmart,walmart,cash,,skipped,55
+WMT,Walmart,walmart,total_debt,,skipped,55
+WMT,Walmart,walmart,total_assets,,skipped,55
+WMT,Walmart,walmart,net_assets,,skipped,55
+WMT,Walmart,walmart,pe_ratio,,skipped,55
+WMT,Walmart,walmart,total_liabilities,,skipped,55
+WMT,Walmart,walmart,shares_outstanding,,skipped,55
+WMT,Walmart,walmart,dividend_yield,,skipped,55
+WMT,Walmart,walmart,price_to_sales,,skipped,55
+WMT,Walmart,walmart,price_to_book,,skipped,55
 XYL,Xylem,xylem,revenue,,skipped,18
 XYL,Xylem,xylem,eps,,skipped,18
 XYL,Xylem,xylem,net_income,,skipped,18

@@ -45,3 +45,28 @@ def test_print_report_includes_capex_resilience_not_material_note(capsys) -> Non
     assert "Relevance                Not Material" in output
     assert "Current Burden" not in output
     assert "capex does not appear materially elevated versus current or historical burden" in output
+
+
+def test_print_report_clarifies_valuation_baselines(capsys) -> None:
+    company = Company(ticker="TEST", name="Test Co")
+    company.metrics.forward_pe = 15.65
+    company.metrics.trailing_pe = 15.48
+    company.valuation.score = 42.5
+    company.valuation.valuation_band = "Expensive"
+    company.valuation_facts.current_pe = 15.14
+    company.valuation_facts.current_pe_source = "Yahoo (Price / TTM EPS)"
+    company.valuation_facts.historical_average_pe = 32.53
+    company.valuation_facts.historical_median_pe = 17.00
+    company.valuation_facts.historical_percentile = 0.667
+    company.valuation_facts.discount_to_average_pct = 53.5
+    company.valuation_facts.discount_to_median_pct = 10.9
+
+    print_report(company)
+    output = capsys.readouterr().out
+
+    assert "Live PE (history compare) 15.14" in output
+    assert "Valuation Band (percentile rank) Above Historical Norm" in output
+    assert "Discount vs Average PE   +53.5%" in output
+    assert "+ = current PE below baseline (cheaper), - = above baseline (richer)" in output
+    assert "Baseline Note            Percentile rank and average/median discount use different history comparisons" in output
+    assert "Yahoo Trailing PE         15.48" in output

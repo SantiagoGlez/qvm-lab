@@ -11,11 +11,16 @@ import pandas as pd
 
 
 def _recompute_percentile(historical_pe_values: list[float], current_pe: float) -> float | None:
-    """Rank current_pe within the historical distribution (current_pe replaces last element)."""
+    """Rank current_pe against the full historical distribution."""
     if not historical_pe_values:
         return None
-    series = pd.Series(historical_pe_values[:-1] + [current_pe])
-    return float(series.rank(method="average", pct=True).iloc[-1])
+    series = pd.Series(historical_pe_values + [current_pe]).dropna().sort_values()
+    if series.empty:
+        return None
+
+    values = [float(value) for value in series.tolist()]
+    rank = sum(1 for value in values if value <= float(current_pe))
+    return float((rank - 1) / max(len(values) - 1, 1))
 
 
 def analyse_company(ticker: str) -> Company:

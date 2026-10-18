@@ -24,6 +24,7 @@ COMPANY_SLUG_OVERRIDES = {
     "DE": "deere-company",
     "EMR": "emerson",
     "FICO": "fico",
+    "GE": "general-electric",
     "GWW": "ww-grainger",
     "HLT": "hilton-hotels",
     "IFX": "infineon",
@@ -34,6 +35,7 @@ COMPANY_SLUG_OVERRIDES = {
     "SPGI": "sp-global",
     "SYK": "stryker-corporation",
     "TSM": "tsmc",
+    "UBER": "uber",
     "UNP": "union-pacific-corporation",
     "YUM": "yum",
 }
