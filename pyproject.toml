@@ -48,6 +48,7 @@ qvm-correlation = "qvm_lab.cli:correlation_cli"
 qvm-call-screen = "qvm_lab.cli:call_screening_cli"
 qvm-call-reco = "qvm_lab.cli:call_recommendation_cli"
 qvm-call-reco-detail = "qvm_lab.cli:call_recommendation_detail_cli"
+qvm-call-standalone = "qvm_lab.cli:standalone_call_report_cli"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

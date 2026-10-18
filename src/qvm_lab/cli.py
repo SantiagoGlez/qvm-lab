@@ -21,7 +21,9 @@ from quantlab.strategies.qvm.backtest.annual import (
     analyse_quality,
 )
 from quantlab.strategies.qvm.options.recommendation import (
+    build_call_payoff_table,
     build_call_recommendations,
+    build_standalone_call_report,
     finalize_trade_decision,
     validate_recommendation_with_google_finance,
 )
@@ -240,6 +242,11 @@ def call_recommendation_cli() -> None:
         action="store_true",
         help="Print the compact recommendation table plus a structured Google Finance detail block for each ticker.",
     )
+    parser.add_argument(
+        "--ignore-liquidity",
+        action="store_true",
+        help="Bypass the strict liquidity gate and show the option numbers anyway while retaining the warning.",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     universe_path = args.universe_file
@@ -278,7 +285,12 @@ def call_recommendation_cli() -> None:
         print("No screened call candidates available for the selected maturity.")
         return
 
-    recommendations = build_call_recommendations(companies, screened, option_market_data=option_market_data)
+    recommendations = build_call_recommendations(
+        companies,
+        screened,
+        option_market_data=option_market_data,
+        ignore_liquidity=args.ignore_liquidity,
+    )
     if not recommendations:
         print("No actionable call recommendation could be generated.")
         return
@@ -315,6 +327,7 @@ def call_recommendation_cli() -> None:
         "decision",
         "confidence",
         "risk_level",
+        "estimated_option_source",
         "suggested_strike",
         "break_even",
         "target",
@@ -337,11 +350,15 @@ def call_recommendation_cli() -> None:
             print(f"Reason: {recommendation.get('decision_reason', 'n/a')}")
             print(f"Thesis: {recommendation.get('thesis', 'n/a')}")
             print(f"Current price: {recommendation.get('current_price', 'n/a')}")
+            print(f"Option estimate source: {recommendation.get('estimated_option_source', 'n/a')}")
+            if recommendation.get("estimated_option_fallback_reason"):
+                print(f"Fallback reason: {recommendation.get('estimated_option_fallback_reason', 'n/a')}")
             print(f"Suggested strike: {recommendation.get('suggested_strike', 'n/a')}")
-            print(f"Break-even: {recommendation.get('break_even', 'n/a')}")
-            print(f"Target: {recommendation.get('target', 'n/a')}")
+            print(f"Break-even: {recommendation.get('break_even', 'n/a')} ({recommendation.get('break_even_pct', 'n/a')}% move)")
+            print(f"Target: {recommendation.get('target', 'n/a')} ({recommendation.get('target_move_pct', 'n/a')}% move)")
             print(f"Stop loss: {recommendation.get('stop_loss', 'n/a')}")
             print(f"Risk level: {recommendation.get('risk_level', 'n/a')}")
+            print(f"Risk reason: {recommendation.get('risk_level_reason', 'n/a')}")
             print(f"Liquidity ok: {recommendation.get('liquidity_ok', 'n/a')}")
             if recommendation.get("google_finance_response"):
                 print()
@@ -383,6 +400,11 @@ def call_recommendation_detail_cli() -> None:
         action="store_true",
         help="Run the Google Finance audit in visible browser mode.",
     )
+    parser.add_argument(
+        "--ignore-liquidity",
+        action="store_true",
+        help="Bypass the strict liquidity gate and show the option numbers anyway while retaining the warning.",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     company = analyse_company(args.ticker)
@@ -391,7 +413,11 @@ def call_recommendation_detail_cli() -> None:
         print(f"No screened call recommendation is available for {company.ticker} at {args.months} months.")
         return
 
-    recommendation = build_call_recommendations([company], screened)[0]
+    recommendation = build_call_recommendations([company], screened, ignore_liquidity=args.ignore_liquidity)[0]
+    if args.ignore_liquidity and recommendation.get("estimated_option_source") == "live_chain":
+        recommendation["liquidity_ok"] = False
+        recommendation["risk_level"] = recommendation.get("risk_level", "cautious")
+        recommendation["trade_status"] = "live-chain best effort: ignoring the strict liquidity gate to show the numbers anyway"
 
     if args.google_finance_audit:
         audit = validate_recommendation_with_google_finance(
@@ -423,19 +449,115 @@ def call_recommendation_detail_cli() -> None:
     print(f"Market assessment: {getattr(company.momentum, 'recommendation', 'Unknown')}")
     print(f"Portfolio action: {getattr(getattr(company, 'portfolio', None), 'action', 'Unknown')}")
     print(f"Thesis: {recommendation.get('thesis', 'n/a')}")
+    print(f"Option estimate source: {recommendation.get('estimated_option_source', 'n/a')}")
+    if recommendation.get("estimated_option_fallback_reason"):
+        print(f"Fallback reason: {recommendation.get('estimated_option_fallback_reason', 'n/a')}")
     print(f"Suggested strike: {recommendation.get('suggested_strike', 'n/a')}")
     print(f"Delta target: {recommendation.get('delta_target', 'n/a')}")
-    print(f"Break-even: {recommendation.get('break_even', 'n/a')}")
-    print(f"Target: {recommendation.get('target', 'n/a')}")
+    print(f"Break-even: {recommendation.get('break_even', 'n/a')} ({recommendation.get('break_even_pct', 'n/a')}% move)")
+    print(f"Target: {recommendation.get('target', 'n/a')} ({recommendation.get('target_move_pct', 'n/a')}% move)")
     print(f"Stop loss: {recommendation.get('stop_loss', 'n/a')}")
+    print(f"Premium: {recommendation.get('premium_estimate', 'n/a')} ({recommendation.get('premium_pct_of_stock', 'n/a')}% of stock)")
     print(f"Risk level: {recommendation.get('risk_level', 'n/a')}")
+    print(f"Risk reason: {recommendation.get('risk_level_reason', 'n/a')}")
     print(f"Liquidity ok: {recommendation.get('liquidity_ok', 'n/a')}")
     print(f"Confidence: {recommendation.get('confidence', 'n/a')}")
+    if recommendation.get("estimated_option_source") == "live_chain":
+        payoff_rows = build_call_payoff_table(
+            float(recommendation.get("current_price", 0.0) or 0.0),
+            float(recommendation.get("suggested_strike", 0.0) or 0.0),
+            float(recommendation.get("premium_estimate", 0.0) or 0.0),
+            target=float(recommendation.get("target", 0.0) or 0.0),
+            break_even=float(recommendation.get("break_even", 0.0) or 0.0),
+        )
+        print()
+        print("Payoff table (1 contract = 100 shares)")
+        payoff_frame = pd.DataFrame(payoff_rows)
+        print(
+            payoff_frame[
+                [
+                    "stock_price",
+                    "pct_move",
+                    "intrinsic_value",
+                    "profit_per_share",
+                    "profit_contract",
+                    "profit_contract_pct",
+                    "stock_direct_profit",
+                ]
+            ]
+            .to_string(index=False, float_format=lambda value: f"{value:,.2f}")
+        )
     if recommendation.get("google_finance_response"):
         print()
         print(format_google_finance_audit_response(str(recommendation["google_finance_response"])))
     else:
         print("Google Finance audit: not available.")
+
+
+def standalone_call_report_cli() -> None:
+    """Print an option-only report for any ticker without QVM screening or approval logic."""
+    parser = argparse.ArgumentParser(description="Print a standalone option report for any ticker")
+    parser.add_argument("ticker", help="Ticker symbol to analyze")
+    parser.add_argument(
+        "--months",
+        type=int,
+        choices=[6, 9, 12],
+        default=9,
+        help="Option maturity to review.",
+    )
+    parser.add_argument(
+        "--current-price",
+        type=float,
+        default=None,
+        help="Optional override for the current price; otherwise the last close is used.",
+    )
+    parser.add_argument(
+        "--ignore-liquidity",
+        action="store_true",
+        help="Bypass the strict liquidity gate and show the option numbers anyway while keeping the warning visible.",
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    report = build_standalone_call_report(
+        args.ticker,
+        current_price=args.current_price,
+        maturity_months=args.months,
+        ignore_liquidity=args.ignore_liquidity,
+    )
+
+    print(f"Standalone call report for {report['ticker']}")
+    print(f"Current price: {report['current_price']}")
+    print(f"Maturity months: {report['maturity_months']}")
+    print(f"Option estimate source: {report['estimated_option_source']}")
+    print(f"Suggested strike: {report['suggested_strike']}")
+    print(f"Delta target: {report['delta_target']}")
+    print(f"Break-even: {report['break_even']} ({report.get('break_even_pct', 'n/a')}% move)")
+    print(f"Target: {report['target']} ({report.get('target_move_pct', 'n/a')}% move)")
+    print(f"Stop loss: {report['stop_loss']}")
+    print(f"Premium: {report.get('premium_estimate', 'n/a')} ({report.get('premium_pct_of_stock', 'n/a')}% of stock)")
+    print(f"Risk level: {report['risk_level']}")
+    print(f"Risk reason: {report.get('risk_level_reason', 'n/a')}")
+    print(f"Liquidity ok: {report['liquidity_ok']}")
+    print(f"Confidence: {report['confidence']}")
+    if report.get("estimated_option_fallback_reason"):
+        print(f"Fallback reason: {report['estimated_option_fallback_reason']}")
+    print()
+    print("Payoff table (1 contract = 100 shares)")
+    payoff_frame = pd.DataFrame(report["payoff_table"])
+    print(
+        payoff_frame[
+            [
+                "stock_price",
+                "pct_move",
+                "intrinsic_value",
+                "profit_per_share",
+                "profit_contract",
+                "profit_contract_pct",
+                "stock_direct_profit",
+            ]
+        ]
+        .to_string(index=False, float_format=lambda value: f"{value:,.2f}")
+    )
 
 
 def universal_return_cli() -> None:

@@ -179,6 +179,27 @@ uv run qvm-call-reco-detail NVDA --months 9 --google-finance-audit --google-fina
 
 This detail view prints the full recommendation rationale, risk parameters, and the structured Google Finance audit sections (verdict, issues, logic gaps, confidence, and safety) for one company only.
 
+### Standalone option-only report (no QVM screen)
+
+For an arbitrary ticker outside the universe, use the standalone option report. This ignores the QVM stock-selection layer and focuses only on the live call setup:
+
+```bash
+uv run qvm-call-standalone AR --months 9
+```
+
+This report prints:
+
+- current price
+- maturity
+- option estimate source (`live_chain` or `heuristic`)
+- suggested strike and delta target
+- premium estimate
+- break-even and stop-loss
+- risk level and liquidity check
+- payoff table with stock price, percentage move, intrinsic value, per-share profit, contract profit, and direct-stock comparison profit
+
+This is useful when you want to evaluate a stock not in the universe, or when you want to review a call setup without tying it to a QVM approval decision.
+
 Available recommendation flags:
 
 - `--months 6|9|12`
@@ -189,6 +210,11 @@ Available recommendation flags:
 - `--google-finance-audit-mode quick|full`
 - `--google-finance-timeout-seconds <n>`
 - `--google-finance-show-browser`
+
+Standalone call report flags:
+
+- `--months 6|9|12`
+- `--current-price <price>` (optional override for the last close)
 
 The recommendation output contains a structured trade summary including the final decision gate, for example:
 
